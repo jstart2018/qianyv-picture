@@ -1,0 +1,51 @@
+server:
+  port: 8123
+  servlet:
+    context-path: /api
+
+
+spring:
+  profiles:
+    active: local
+  datasource:
+    url: jdbc:mysql://localhost:3306/qypicture?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      database: 2
+  mail:
+    host: ${email.host}
+    username: ${email.username}
+    password: ${email.password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true # 开启驼峰命名
+  global-config:
+    db-config:
+      logic-delete-field: delete_time
+      logic-delete-value: now()
+      logic-not-delete-value: 'null'
+
+knife4j:
+  enable: true
+  openapi:
+    title: 接口文档
+    version: v1.0
+    group:
+      default: #组别
+        # group-name: 默认分组  组名(如果要写尽量写英文，避免前端自动生成接口错误)
+        api-rule: package   #用什么规则识别接口，package表示扫描包，把这个包下的接口扫描出来
+        api-rule-resources:
+          - com.jstart.qypicture.controller # 包的位置
