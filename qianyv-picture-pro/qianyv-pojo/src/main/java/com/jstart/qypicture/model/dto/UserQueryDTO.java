@@ -1,9 +1,6 @@
 package com.jstart.qypicture.model.dto;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.jstart.qypicture.model.PageParams;
+import com.jstart.qypicture.model.PageRequest;
 import lombok.Data;
 
 import java.util.Date;
@@ -12,7 +9,7 @@ import java.util.Date;
  * 用户表
  */
 @Data
-public class UserQueryDTO extends PageParams {
+public class UserQueryDTO extends PageRequest {
     /**
      * 主键id
      */

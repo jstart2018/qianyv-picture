@@ -6,9 +6,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jstart.qypicture.constant.UserConstant;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
-import com.jstart.qypicture.manager.sendCodeTemplate.SendCodeTemplate;
-import com.jstart.qypicture.manager.sendCodeTemplate.SendEmail;
-import com.jstart.qypicture.manager.sendCodeTemplate.SendSMS;
+import com.jstart.qypicture.template.sendCodeTemplate.SendCodeTemplate;
+import com.jstart.qypicture.template.sendCodeTemplate.SendEmail;
+import com.jstart.qypicture.template.sendCodeTemplate.SendSMS;
 import com.jstart.qypicture.model.dto.UserLoginByCodeDTO;
 import com.jstart.qypicture.model.dto.UserLoginByPasswordDTO;
 import com.jstart.qypicture.model.dto.SendCodeDTO;
@@ -24,10 +24,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author 28435
@@ -87,7 +84,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         //4. 不存在则注册
         if(this.count(getQueryWrapper(user)) == 0){
-            user.setNickname("用户" + ((int) ((Math.random() * 9 + 1) * 100000)));
+            user.setNickname("千语" + ((int) ((Math.random() * 9 + 1) * 100000)));
             try {
                 this.saveOrUpdate(user);
             }catch (Exception e){

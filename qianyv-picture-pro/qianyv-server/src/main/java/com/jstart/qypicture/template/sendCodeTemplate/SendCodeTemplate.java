@@ -1,4 +1,4 @@
-package com.jstart.qypicture.manager.sendCodeTemplate;
+package com.jstart.qypicture.template.sendCodeTemplate;
 
 /**
  * 发送验证码模板方法

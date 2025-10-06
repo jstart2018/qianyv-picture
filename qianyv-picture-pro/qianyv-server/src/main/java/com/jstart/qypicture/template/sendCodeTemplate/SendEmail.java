@@ -1,4 +1,4 @@
-package com.jstart.qypicture.manager.sendCodeTemplate;
+package com.jstart.qypicture.template.sendCodeTemplate;
 
 
 import com.jstart.qypicture.constant.UserConstant;
@@ -6,7 +6,6 @@ import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.MailException;

@@ -6,11 +6,9 @@ import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.model.entity.User;
 import com.jstart.qypicture.service.UserService;
 import jakarta.annotation.Resource;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,17 +35,17 @@ public class StpInterfaceImpl implements StpInterface {
     @Override
     public List<String> getRoleList(Object loginId, String loginType) {
         User user = userService.getById(Long.valueOf(loginId.toString()));
-        SystemRole systemRole = SystemRole.getByKey(user.getRole());
-        if (systemRole == null) {
+        SystemRoleEnum systemRoleEnum = SystemRoleEnum.getByKey(user.getRole());
+        if (systemRoleEnum == null) {
             log.error("sa-token 获取角色失败，用户id：{}，不能存在对应角色",loginId);
             throw new BusinessException(ResultEnum.SYSTEM_ERROR,"系统异常，请联系管理员");
         }
-        if (systemRole.equals(SystemRole.BOSS)) {
-            return List.of(SystemRole.user.getRoleName(),SystemRole.ADMIN.getRoleName(),SystemRole.BOSS.getRoleName());
-        }else if (systemRole.equals(SystemRole.ADMIN)){
-            return List.of(SystemRole.user.getRoleName(),SystemRole.ADMIN.getRoleName());
+        if (systemRoleEnum.equals(SystemRoleEnum.BOSS)) {
+            return List.of(SystemRoleEnum.user.getValue(), SystemRoleEnum.ADMIN.getValue(), SystemRoleEnum.BOSS.getValue());
+        }else if (systemRoleEnum.equals(SystemRoleEnum.ADMIN)){
+            return List.of(SystemRoleEnum.user.getValue(), SystemRoleEnum.ADMIN.getValue());
         }else {
-            return List.of(SystemRole.user.getRoleName());
+            return List.of(SystemRoleEnum.user.getValue());
         }
     }
 

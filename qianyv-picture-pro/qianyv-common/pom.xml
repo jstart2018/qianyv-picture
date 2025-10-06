@@ -31,10 +31,21 @@
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
         </dependency>
-        <!-- Sa-Token 权限认证，在线文档：https://sa-token.cc -->
+        <!-- Sa-Token 权限认证，在线文档：https://sa-token.cc 此处用于统一处理异常 -->
         <dependency>
             <groupId>cn.dev33</groupId>
             <artifactId>sa-token-spring-boot3-starter</artifactId>
+        </dependency>
+        <!-- cos对象存储 https://mvnrepository.com/artifact/com.qcloud/cos_api -->
+        <dependency>
+            <groupId>com.qcloud</groupId>
+            <artifactId>cos_api</artifactId>
+        </dependency>
+        <!-- hutool工具包 https://doc.hutool.cn/pages/index/ -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.26</version>
         </dependency>
     </dependencies>
 

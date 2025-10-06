@@ -1,4 +1,4 @@
-package com.jstart.qypicture.manager.sendCodeTemplate;
+package com.jstart.qypicture.template.sendCodeTemplate;
 
 
 import com.jstart.qypicture.enums.ResultEnum;

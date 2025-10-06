@@ -6,21 +6,21 @@ import lombok.Getter;
  * 角色枚举
  */
 @Getter
-public enum SystemRole {
+public enum SystemRoleEnum {
     BOSS(0,"boss"),
     ADMIN(1,"admin"),
     user(2,"user");
 
     private final Integer key;
-    private final String roleName;
+    private final String value;
 
-    SystemRole(Integer key,String roleName) {
+    SystemRoleEnum(Integer key, String value) {
         this.key = key;
-        this.roleName = roleName;
+        this.value = value;
     }
 
-    public static SystemRole getByKey(Integer key) {
-        for (SystemRole role : SystemRole.values()) {
+    public static SystemRoleEnum getByKey(Integer key) {
+        for (SystemRoleEnum role : SystemRoleEnum.values()) {
             if (role.getKey().equals(key)) {
                 return role;
             }

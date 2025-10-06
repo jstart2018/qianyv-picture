@@ -34,9 +34,20 @@ mybatis-plus:
     map-underscore-to-camel-case: true # 开启驼峰命名
   global-config:
     db-config:
-      logic-delete-field: delete_time
+      logic-delete-field: delete_time # 开启逻辑删除
       logic-delete-value: now()
       logic-not-delete-value: 'null'
+
+cos:
+  client:
+    host: ${cosClient.host} #域名
+    secretId: ${cosClient.secretId} #秘钥id
+    secretKey: ${cosClient.secretKey}   #秘钥key
+    region: ${cosClient.region}  #区域
+    bucket: ${cosClient.bucket} #桶名
+
+
+
 
 knife4j:
   enable: true
