@@ -12,12 +12,14 @@ import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
 import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
 
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,7 +55,7 @@ public abstract class PictureUploadTemplate {
         }
         //3、构建新文件名字
         String fileName = String.format("%s_%s.%s",
-                DateTime.now(),
+                LocalDate.now(),
                 UUID.randomUUID().toString().replaceAll("-", "").substring(0, 16),
                 pictureSuffix);
 
@@ -85,9 +87,11 @@ public abstract class PictureUploadTemplate {
             throw new BusinessException(ResultEnum.OPERATION_ERROR, "上传文件失败");
         } finally {
             //9、删除文件
-            boolean delete = file.delete();
-            if (!delete) {
-                log.error("file delete error, filepath = {}", file.getAbsoluteFile());//打印绝对路径
+            if (file != null){
+                boolean delete = file.delete();
+                if (!delete) {
+                    log.error("file delete error, filepath = {}", file.getAbsoluteFile());//打印绝对路径
+                }
             }
         }
 
@@ -119,8 +123,8 @@ public abstract class PictureUploadTemplate {
 
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + key);
         if (thumbnailCiObject != null)
-            uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
-        uploadPictureResult.setPicName(originalFilename.substring(0, originalFilename.lastIndexOf(".")));
+            uploadPictureResult.setThumbUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
+        uploadPictureResult.setName(originalFilename);
         uploadPictureResult.setPicSize(file.length());
         uploadPictureResult.setPicWidth(picWidth);
         uploadPictureResult.setPicHeight(picHeight);

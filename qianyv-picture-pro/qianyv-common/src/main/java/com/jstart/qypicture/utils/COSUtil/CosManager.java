@@ -71,10 +71,13 @@ public class CosManager {
             thumbnailRule.setBucket(cosClientConfig.getBucket());
             String fileMainName = key.substring(0, key.lastIndexOf(".")); //获取文件主名称
             String fileSuffix = key.substring(key.lastIndexOf(".") + 1); //获取文件后缀
-            String thumbnailKey = fileMainName + "_thumbnail." + fileSuffix;
+            //缩略图路径，uuid比原路径少4位，并且加上 _thumb
+            String thumbnailKey = fileMainName.substring(0, fileMainName.length() - 4) + "_t." + fileSuffix;
+
+
             thumbnailRule.setFileId(thumbnailKey);
             // 缩放规则 /thumbnail/<Width>x<Height>>（如果大于原图宽高，则不处理）
-            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 256, 256));
+            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 512, 512));
             rules.add(thumbnailRule);
             // 构造处理参数
             picOperations.setRules(rules);

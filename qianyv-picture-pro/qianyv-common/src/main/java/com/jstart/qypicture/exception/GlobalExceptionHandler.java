@@ -48,5 +48,11 @@ public class GlobalExceptionHandler {
         return Result.error(ResultEnum.NO_AUTH_ERROR, "无权限操作");
     }
 
+    @ExceptionHandler(SaTokenException.class)
+    public Result<?> SaTokenExceptionHandler(SaTokenException e) {
+        log.error("SaTokenException", e);
+        return Result.error(ResultEnum.NO_AUTH_ERROR, "账号错误");
+    }
+
 
 }

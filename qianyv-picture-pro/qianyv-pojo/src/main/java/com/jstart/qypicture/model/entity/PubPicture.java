@@ -3,19 +3,16 @@ package com.jstart.qypicture.model.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
 import java.util.Date;
-
 import lombok.Data;
 
 /**
  * 图片表
- *
- * @TableName picture
+ * @TableName pub_picture
  */
-@TableName(value = "picture")
+@TableName(value = "pub_picture")
 @Data
-public class Picture {
+public class PubPicture {
     /**
      * id
      */
@@ -38,19 +35,24 @@ public class Picture {
     private String url;
 
     /**
+     * 缩略图 url
+     */
+    private String thumbUrl;
+
+    /**
      * 简介
      */
     private String introduction;
 
     /**
-     * 分类
+     * 分类id
      */
     private Long categoryId;
 
     /**
      * 标签（JSON 数组）
      */
-    private Object tags;
+    private String tags;
 
     /**
      * 图片体积
@@ -78,19 +80,19 @@ public class Picture {
     private String picFormat;
 
     /**
-     * 存储类型：0-公共; 1-私有; 2-团队
-     */
-    private Integer spaceType;
-
-    /**
-     * 所属空间id，默认0表示公共空间
-     */
-    private Long spaceId;
-
-    /**
      * 收藏数量
      */
     private Long collectCount;
+
+    /**
+     * 上传状态：0-preview预览; 1-formal正式
+     */
+    private Integer uploadStatus;
+
+    /**
+     * 是否精选：0-否; 1-是
+     */
+    private Integer isRecommend;
 
     /**
      * 审核状态：0-待审核; 1-通过; 2-拒绝

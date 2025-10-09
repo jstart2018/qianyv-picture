@@ -38,36 +38,34 @@ drop table if exists pub_picture;
 create table pub_picture
 (
     id             bigint auto_increment comment 'id' primary key,
-    user_id        bigint                             not null comment '创建用户 id',
+    user_id        bigint                                 not null comment '创建用户 id',
     blog_id        bigint comment '关联博客id',
-    url            varchar(512)                       not null comment '图片 url',
-    introduction   varchar(512)                       null comment '简介',
-    category_id    bigint                             not null comment '分类id',
-    tags           json                               null comment '标签（JSON 数组）',
-    pic_size       bigint                             null comment '图片体积',
-    pic_width      int                                null comment '图片宽度',
-    pic_height     int                                null comment '图片高度',
-    pic_scale      double                             null comment '图片宽高比例',
-    pic_format     varchar(32)                        null comment '图片格式',
-    space_type     tinyint                            not null comment '存储类型：0-公共; 1-私有; 2-团队',
-    space_id       bigint   default 0                 not null comment '所属空间id，默认0表示公共空间',
-    collect_count  bigint   default 0                 not null comment '收藏数量',
-    upload_status  tinyint  DEFAULT 0                 NOT NULL COMMENT '上传状态：0-temp临时; 1-formal正式',
-    is_recommend   tinyint  DEFAULT 0                 NOT NULL COMMENT '是否精选：0-否; 1-是',
-    review_status  tinyint  DEFAULT 0                 NOT NULL COMMENT '审核状态：0-待审核; 1-通过; 2-拒绝',
-    review_message VARCHAR(512)                       NULL COMMENT '审核信息',
-    reviewer_id    BIGINT                             NULL COMMENT '审核人 ID',
-    review_time    datetime default NULL COMMENT '审核时间',
-    create_time    datetime default CURRENT_TIMESTAMP not null comment '创建时间',
-    update_time    datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
-    delete_time    datetime DEFAULT null COMMENT '逻辑删除：null-正常, 非null-删除时间',
-    INDEX idx_tags ((JSON_UNQUOTE(JSON_EXTRACT(tags, '$[*]')))), -- 函数索引优化json查询(mysql 8.0+ 支持)
-    INDEX idx_category (category_id),                            -- 提升基于分类的查询性能
-    INDEX idx_userId (user_id),                                  -- 提升基于用户 ID 的查询性能
-    INDEX idx_spaceId (space_id),                                -- 提升基于空间 ID 的查询性能
-    INDEX idx_uploadStatus (upload_status),                      -- 提升基于上传状态的查询性能
-    INDEX idx_reviewStatus (review_status),                      -- 提升基于审核状态的查询性能
-    INDEX idx_blogId (blog_id)                                   -- 提升基于博客 ID 的查询性能
+    url            varchar(512)                           not null comment '图片 url',
+    thumb_url      varchar(512)                           not null comment '缩略图 url',
+    introduction   varchar(512)                           null comment '简介',
+    category_id    bigint comment '分类id',
+    tags           varchar(512)                           null comment '标签（JSON 数组）',
+    pic_size       bigint                                 null comment '图片体积',
+    pic_width      int                                    null comment '图片宽度',
+    pic_height     int                                    null comment '图片高度',
+    pic_scale      double                                 null comment '图片宽高比例',
+    pic_format     varchar(32)                            null comment '图片格式',
+    collect_count  bigint       default 0                 not null comment '收藏数量',
+    upload_status  tinyint      DEFAULT 0                 NOT NULL COMMENT '上传状态：0-preview预览; 1-formal正式',
+    is_recommend   tinyint      DEFAULT 0                 NOT NULL COMMENT '是否精选：0-否; 1-是',
+    review_status  tinyint      DEFAULT 0                 NOT NULL COMMENT '审核状态：0-待审核; 1-通过; 2-拒绝',
+    review_message VARCHAR(512) DEFAULT '未审核'          NOT NULL COMMENT '审核信息',
+    reviewer_id    BIGINT                                 NULL COMMENT '审核人 ID',
+    review_time    datetime     default NULL COMMENT '审核时间',
+    create_time    datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time    datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    delete_time    datetime     DEFAULT NULL COMMENT '逻辑删除：null-正常, 非null-删除时间',
+    INDEX idx_blogId (blog_id),             -- 提升基于博客 ID 的查询性能
+    INDEX idx_tags (tags),                  -- 提升基于标签的查询性能
+    INDEX idx_category (category_id),       -- 提升基于分类的查询性能
+    INDEX idx_userId (user_id),             -- 提升基于用户 ID 的查询性能
+    INDEX idx_uploadStatus (upload_status), -- 提升基于上传状态的查询性能
+    INDEX idx_reviewStatus (review_status)  -- 提升基于审核状态的查询性能
 ) comment '图片表' collate = utf8mb4_unicode_ci;
 
 -- 3、图片分类表
@@ -86,35 +84,36 @@ create table pic_category
     index idx_sort (sort)                               -- 加速按排序权重的查询（如获取“排序靠前的前10个分类”）
 ) comment '图片分类表' collate = utf8mb4_unicode_ci;
 
-
 -- 4、空间图片表
-drop table if exists pri_picture;
-create table pri_picture
+drop table if exists spa_picture;
+create table spa_picture
 (
     id             bigint auto_increment comment 'id' primary key,
-    user_id        bigint                             not null comment '创建用户 id',
-    space_id       bigint   default 0                 not null comment '所属空间id',
-    catalog_id     bigint                             not null comment '目录 id',
-    url            varchar(512)                       not null comment '图片 url',
-    introduction   varchar(512)                       null comment '简介',
-    tags           json                               null comment '标签（JSON 数组）',
-    pic_size       bigint                             null comment '图片体积',
-    pic_width      int                                null comment '图片宽度',
-    pic_height     int                                null comment '图片高度',
-    pic_scale      double                             null comment '图片宽高比例',
-    pic_format     varchar(32)                        null comment '图片格式',
-    upload_status  tinyint  DEFAULT 0                 NOT NULL COMMENT '上传状态：0-temp临时; 1-formal正式',
-    review_status  tinyint  DEFAULT 0                 NOT NULL COMMENT '审核状态：0-待审核; 1-临时通过; 2-正式通过; 3-拒绝',
-    review_message VARCHAR(512)                       NULL COMMENT '审核信息',
-    reviewer_id    BIGINT                             NOT NULL DEFAULT 0 COMMENT '审核人 ID，0-表示系统自动审核',
-    review_time    datetime default NULL COMMENT '审核时间',
-    create_time    datetime default CURRENT_TIMESTAMP not null comment '创建时间',
-    update_time    datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
-    delete_time    datetime DEFAULT null COMMENT '逻辑删除：null-正常, 非null-删除时间',
-    INDEX idx_tags ((JSON_UNQUOTE(JSON_EXTRACT(tags, '$[*]')))), -- 函数索引优化json查询(mysql 8.0+ 支持)
-    INDEX idx_userId (user_id),                                  -- 提升基于用户 ID 的查询性能
-    INDEX idx_spaceId (space_id),                                -- 提升基于空间 ID 的查询性能
-    INDEX idx_reviewStatus (review_status)                       -- 提升基于审核状态的查询性能
+    name           varchar(512)                           not null comment '图片名称',
+    user_id        bigint                                 not null comment '创建用户 id',
+    space_id       bigint       default 0                 not null comment '所属空间id',
+    catalog_id     bigint                                 not null comment '目录 id',
+    url            varchar(512)                           not null comment '图片 url',
+    thumb_url      varchar(512)                           not null comment '缩略图 url',
+    introduction   varchar(512)                           null comment '简介',
+    tags           varchar(512)                           null comment '标签（JSON 数组）',
+    pic_size       bigint                                 null comment '图片体积',
+    pic_width      int                                    null comment '图片宽度',
+    pic_height     int                                    null comment '图片高度',
+    pic_scale      double                                 null comment '图片宽高比例',
+    pic_format     varchar(32)                            null comment '图片格式',
+    upload_status  tinyint      DEFAULT 0                 NOT NULL COMMENT '上传状态：0-preview预览; 1-formal正式',
+    review_status  tinyint      DEFAULT 0                 NOT NULL COMMENT '审核状态：0-待审核; 1-临时通过; 2-正式通过; 3-拒绝',
+    review_message VARCHAR(512) DEFAULT '未审核'          NOT NULL COMMENT '审核信息',
+    reviewer_id    BIGINT       DEFAULT 0                 NOT NULL COMMENT '审核人 ID，0-表示系统自动审核',
+    review_time    datetime     default NULL COMMENT '审核时间',
+    create_time    datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time    datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    delete_time    datetime     DEFAULT null COMMENT '逻辑删除：null-正常, 非null-删除时间',
+    INDEX idx_tags (tags),                 -- 提升基于标签的查询性能
+    INDEX idx_userId (user_id),            -- 提升基于用户 ID 的查询性能
+    INDEX idx_spaceId (space_id),          -- 提升基于空间 ID 的查询性能
+    INDEX idx_reviewStatus (review_status) -- 提升基于审核状态的查询性能
 ) comment '图片表' collate = utf8mb4_unicode_ci;
 
 -- 5、空间目录表
@@ -171,4 +170,29 @@ create table if not exists space_user
     INDEX idx_userId (user_id)                        -- 提升按用户查询的性能
 ) comment '空间用户关联' collate = utf8mb4_unicode_ci;
 
-
+-- 8、博客表
+drop table if exists blog;
+CREATE TABLE `blog`
+(
+    `id`            bigint                                 NOT NULL AUTO_INCREMENT COMMENT '文章ID',
+    `user_id`       bigint                                 NOT NULL COMMENT '作者ID',
+    `title`         varchar(200)                           NOT NULL COMMENT '文章标题',
+    `content`       text                                   NOT NULL COMMENT '文章内容',
+    `view_count`    int                                    NOT NULL DEFAULT 0 COMMENT '浏览量',
+    `like_count`    int                                    NOT NULL DEFAULT 0 COMMENT '点赞数',
+    `comment_count` int                                    NOT NULL DEFAULT 0 COMMENT '评论数',
+    collect_count   bigint       default 0                 not null comment '收藏数量',
+    is_recommend    tinyint      DEFAULT 0                 NOT NULL COMMENT '是否精选：0-否; 1-是',
+    sort            int          DEFAULT 99                NOT NULL COMMENT '排序权重（越小越前）',
+    review_status   tinyint      DEFAULT 0                 NOT NULL COMMENT '审核状态：0-待审核; 1-通过; 2-拒绝',
+    review_message  VARCHAR(512) DEFAULT '未审核'          NOT NULL COMMENT '审核信息',
+    reviewer_id     BIGINT       DEFAULT 0                 NOT NULL COMMENT '审核人 ID',
+    review_time     datetime     default NULL COMMENT '审核时间',
+    create_time     datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time     datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    delete_time     datetime     DEFAULT NULL COMMENT '逻辑删除：null-正常, 非null-删除时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`) COMMENT '按作者查询文章',
+    FULLTEXT KEY `idx_title_content` (`title`, `content`) COMMENT '标题+内容全文检索'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='博客表';

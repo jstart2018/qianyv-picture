@@ -9,7 +9,7 @@ import lombok.Getter;
 public enum SpaceRoleEnum {
     CREATOR(0,"creator"),
     ADMIN(1,"admin"),
-    USER(2,"editor"),
+    EDITOR(2, "editor"),
     VIEWER(3,"viewer");
 
     private final Integer key;

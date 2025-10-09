@@ -2,24 +2,24 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.jstart.qypicture.mapper.PictureMapper">
+<mapper namespace="com.jstart.qypicture.mapper.PubPictureMapper">
 
-    <resultMap id="BaseResultMap" type="com.jstart.qypicture.model.entity.Picture">
+    <resultMap id="BaseResultMap" type="com.jstart.qypicture.model.entity.PubPicture">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="userId" column="user_id" jdbcType="BIGINT"/>
         <result property="blogId" column="blog_id" jdbcType="BIGINT"/>
         <result property="url" column="url" jdbcType="VARCHAR"/>
         <result property="introduction" column="introduction" jdbcType="VARCHAR"/>
         <result property="categoryId" column="category_id" jdbcType="BIGINT"/>
-        <result property="tags" column="tags" jdbcType="OTHER"/>
+        <result property="tags" column="tags" jdbcType="VARCHAR"/>
         <result property="picSize" column="pic_size" jdbcType="BIGINT"/>
         <result property="picWidth" column="pic_width" jdbcType="INTEGER"/>
         <result property="picHeight" column="pic_height" jdbcType="INTEGER"/>
         <result property="picScale" column="pic_scale" jdbcType="DOUBLE"/>
         <result property="picFormat" column="pic_format" jdbcType="VARCHAR"/>
-        <result property="spaceType" column="space_type" jdbcType="TINYINT"/>
-        <result property="spaceId" column="space_id" jdbcType="BIGINT"/>
         <result property="collectCount" column="collect_count" jdbcType="BIGINT"/>
+        <result property="uploadStatus" column="upload_status" jdbcType="TINYINT"/>
+        <result property="isRecommend" column="is_recommend" jdbcType="TINYINT"/>
         <result property="reviewStatus" column="review_status" jdbcType="TINYINT"/>
         <result property="reviewMessage" column="review_message" jdbcType="VARCHAR"/>
         <result property="reviewerId" column="reviewer_id" jdbcType="BIGINT"/>
@@ -34,7 +34,7 @@
         url,introduction,category_id,
         tags,pic_size,pic_width,
         pic_height,pic_scale,pic_format,
-        space_type,space_id,collect_count,
+        collect_count,upload_status,is_recommend,
         review_status,review_message,reviewer_id,
         review_time,create_time,update_time,
         delete_time
