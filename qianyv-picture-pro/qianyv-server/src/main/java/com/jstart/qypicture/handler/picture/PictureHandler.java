@@ -8,6 +8,8 @@ import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
 
+import java.util.List;
+
 public interface PictureHandler<T> {
 
     /**
@@ -27,11 +29,11 @@ public interface PictureHandler<T> {
     /**
      * 删除图片
      *
-     * @param id      图片ID
+     * @param ids      图片ID集合
      * @param spaceId 空间ID，如果是公共空间则为null
      * @return 返回缩略图url，给外部删除云服务中的文件
      */
-    String delete(Long id, Long spaceId);
+    List<String> delete(List<Long> ids, Long spaceId);
 
     /**
      * 编辑图片信息

@@ -102,18 +102,18 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
     }
 
     @Override
-    public String delete(Long id, Long spaceId) {
+    public List<String> delete(List<Long> ids, Long spaceId) {
         //1.校验图片是否存在
-        SpaPicture spaPicture = spaPictureMapper.selectById(id);
-        ThrowUtils.throwIf(spaPicture == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
+        List<SpaPicture> pictureList = spaPictureMapper.selectByIds(ids);
+        ThrowUtils.throwIf(pictureList == null || pictureList.isEmpty(), ResultEnum.NOT_FOUND_ERROR, "图片不存在");
         //2.校验空间权限
         validateSpaceAuth(spaceId, SpaceRoleEnum.EDITOR);
 
         //3.删除图片
-        int delete = spaPictureMapper.deleteById(id);
+        int delete = spaPictureMapper.deleteByIds(ids);
         ThrowUtils.throwIf(delete <= 0, ResultEnum.OPERATION_ERROR, "图片删除失败");
 
-        return spaPicture.getThumbUrl();
+        return pictureList.stream().map(SpaPicture::getThumbUrl).toList();
     }
 
     @Override

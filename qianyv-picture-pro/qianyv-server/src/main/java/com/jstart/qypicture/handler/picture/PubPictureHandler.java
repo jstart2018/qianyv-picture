@@ -73,17 +73,18 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
     }
 
     @Override
-    public String delete(Long id, Long spaceId) {
+    public List<String> delete(List<Long> ids, Long spaceId) {
         //1、图片是否存在
-        PubPicture pubPicture = pubPictureMapper.selectById(id);
-        ThrowUtils.throwIf(pubPicture == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
+        List<PubPicture> pubPictures = pubPictureMapper.selectByIds(ids);
+        ThrowUtils.throwIf(pubPictures == null || pubPictures.isEmpty(), ResultEnum.NOT_FOUND_ERROR, "图片不存在");
         //2、仅本人或管理员可删除
-        ThrowUtils.throwIf(!pubPicture.getUserId().equals(StpUtil.getLoginIdAsLong()) || !StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue()),
-                ResultEnum.NO_AUTH_ERROR);
-        int delete = pubPictureMapper.deleteById(id);
+        for (PubPicture pubPicture : pubPictures) {
+            ThrowUtils.throwIf(!pubPicture.getUserId().equals(StpUtil.getLoginIdAsLong()) || !StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue()),
+                    ResultEnum.NO_AUTH_ERROR);
+        }
+        int delete = pubPictureMapper.deleteByIds(ids);
         ThrowUtils.throwIf(delete <= 0, ResultEnum.OPERATION_ERROR, "图片删除失败");
-
-        return pubPicture.getThumbUrl();
+        return pubPictures.stream().map(PubPicture::getThumbUrl).toList();
     }
 
     @Override

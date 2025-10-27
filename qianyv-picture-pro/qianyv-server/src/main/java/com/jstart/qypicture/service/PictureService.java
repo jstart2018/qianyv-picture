@@ -6,6 +6,8 @@ import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
 
+import java.util.List;
+
 public interface PictureService {
 
     /**
@@ -20,10 +22,10 @@ public interface PictureService {
     /**
      * 删除图片
      *
-     * @param id 图片 id
+     * @param ids 图片 id
      * @return 是否删除成功
      */
-    boolean delete(Long id, Long spaceId);
+    boolean delete(List<Long> ids, Long spaceId);
 
     /**
      * 编辑图片信息
@@ -38,5 +40,6 @@ public interface PictureService {
      * 根据 spaceId 判断查询公共图库或空间图库
      */
     Page<PictureListVO> pageList(PictureQueryListDTO pictureQueryListDTO);
+
 
 }

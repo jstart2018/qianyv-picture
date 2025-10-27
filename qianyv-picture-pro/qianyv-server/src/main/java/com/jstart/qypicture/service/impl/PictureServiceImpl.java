@@ -17,6 +17,8 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 // todo 每次用switch分支判断公共和空间，考虑策略模式优化
 @Service
 @Slf4j
@@ -28,6 +30,13 @@ public class PictureServiceImpl implements PictureService {
     @Resource
     private CosManager cosManager;
 
+    /**
+     * 上传图片
+     *
+     * @param inputSource 输入源（可能是 MultipartFile、URL等）
+     * @param spaceId     空间 id（可选）为null时上传到公共空间
+     * @return
+     */
     @Override
     public PictureUploadVO upload(Object inputSource, Long spaceId) {
 
@@ -41,19 +50,19 @@ public class PictureServiceImpl implements PictureService {
     /**
      * 删除图片
      *
-     * @param id 图片 id
+     * @param ids 图片 id
      * @return 是否删除成功
      */
     @Override
-    public boolean delete(Long id, Long spaceId) {
+    public boolean delete(List<Long> ids, Long spaceId) {
         //1.校验权限
         PicturePlaceEnum manageType = PicturePlaceEnum.getManageType(spaceId);
         //2.从工厂获取策略
         PictureHandler<?> pictureHandler = pictureHandlerFactory.getPictureSpaceHandler(manageType);
         //3.策略模式执行删除
-        String thumbUrl = pictureHandler.delete(id, spaceId);
+        List<String> thumbUrls = pictureHandler.delete(ids, spaceId);
         //4.删除 云服务文件（只删除缩略图）
-        cosManager.deleteObject(thumbUrl);
+        thumbUrls.forEach(thumbUrl -> cosManager.deleteObject(thumbUrl));
         return true;
     }
 
