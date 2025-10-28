@@ -2,13 +2,14 @@ package com.jstart.qypicture.controller;
 
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
-import com.jstart.qypicture.model.dto.BlogCreateDTO;
-import com.jstart.qypicture.model.dto.BlogEditDTO;
-import com.jstart.qypicture.model.dto.BlogListDTO;
+import com.jstart.qypicture.model.dto.*;
 import com.jstart.qypicture.model.entity.Blog;
+import com.jstart.qypicture.model.vo.BlogCommentVO;
+import com.jstart.qypicture.model.vo.BlogLikeOrCollectVO;
 import com.jstart.qypicture.model.vo.BlogListVO;
 import com.jstart.qypicture.result.Result;
 import com.jstart.qypicture.service.BlogService;
@@ -17,20 +18,12 @@ import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/blog")
 public class BlogController {
 
     @Resource
     private BlogService blogService;
-
-    @GetMapping
-    public Result<?> getBlogById(Long id) {
-
-        return Result.success();
-    }
 
     @PostMapping("/create")
     public Result<Long> createBlog(@RequestBody BlogCreateDTO blogCreateDTO) {
@@ -91,6 +84,54 @@ public class BlogController {
         BeanUtils.copyProperties(blog, blogListVO);
 
         return Result.success(blogListVO);
+    }
+
+    @GetMapping("/likes/toggle")
+    public Result<BlogLikeOrCollectVO> likeToggle(@RequestBody BlogLikeOrCollectDTO blogLikeOrCollectDTO) {
+        ThrowUtils.throwIf(blogLikeOrCollectDTO == null, ResultEnum.PARAMS_ERROR, "参数错误");
+
+        Blog blog = blogService.getById(blogLikeOrCollectDTO.getId());
+        ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
+
+        BlogLikeOrCollectVO blogLikeOrCollectVO = new BlogLikeOrCollectVO();
+        blogLikeOrCollectVO.setCount(5L);
+        blogLikeOrCollectVO.setHaveBean(true);
+
+        return Result.success(blogLikeOrCollectVO);
+    }
+
+    @GetMapping("/collections/toggle")
+    public Result<BlogLikeOrCollectVO> collectionsToggle(@RequestBody BlogLikeOrCollectDTO blogLikeOrCollectDTO) {
+        ThrowUtils.throwIf(blogLikeOrCollectDTO == null, ResultEnum.PARAMS_ERROR, "参数错误");
+
+        Blog blog = blogService.getById(blogLikeOrCollectDTO.getId());
+        ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
+
+        BlogLikeOrCollectVO blogLikeOrCollectVO = new BlogLikeOrCollectVO();
+        blogLikeOrCollectVO.setCount(5L);
+        blogLikeOrCollectVO.setHaveBean(true);
+
+        return Result.success(blogLikeOrCollectVO);
+    }
+
+    @GetMapping("/comments")
+    public Result<BlogCommentVO> comments(@RequestBody BlogCommentDTO blogCommentDTO) {
+        ThrowUtils.throwIf(blogCommentDTO == null, ResultEnum.PARAMS_ERROR, "参数错误");
+
+        BlogCommentVO bean = JSONUtil.toBean("{\n" +
+                "  \"id\": 500542521,             \n" +
+                "  \"commentId\": 101010101010,    \n" +
+                "  \"userId\": 101,          \n" +
+                "  \"username\": \"张三\",     \n" +
+                "  \"userAvatar\": null, \n" +
+                "  \"content\": \"这篇文章写得真好！\",   \n" +
+                "  \"createTime\": \"2025-10-28 15:30:00\", \n" +
+                "  \"likeCount\": 0,         \n" +
+                "  \"parentId\": null,       \n" +
+                "  \"parentUsername\": null  \n" +
+                "}", BlogCommentVO.class);
+
+        return Result.success(bean);
     }
 
 }

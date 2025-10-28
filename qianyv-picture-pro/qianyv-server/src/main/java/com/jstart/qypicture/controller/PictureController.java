@@ -14,6 +14,9 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collection;
+import java.util.List;
+
 
 /**
  * 图片接口
@@ -65,7 +68,7 @@ public class PictureController {
      */
     @DeleteMapping("/delete")
     public Result<Boolean> delete(Long id, @RequestParam(required = false) Long spaceId) {
-        boolean delete = pictureService.delete(id, spaceId);
+        boolean delete = pictureService.delete(List.of(id), spaceId);
         return Result.success(delete);
     }
 
