@@ -252,8 +252,6 @@ const avatarStyle = computed(() => {
     <main class="main">
       <RouterView />
     </main>
-
-    <footer class="footer">© 2025 千语壁纸 • All Rights Reserved</footer>
   </div>
 </template>
 
@@ -279,6 +277,7 @@ const avatarStyle = computed(() => {
   flex-direction: column;
   color: var(--text);
   overflow-x: hidden;
+  overflow-y: visible; /* 允许整个app滚动 */
 }
 
 /* 动态渐变背景 */
@@ -770,17 +769,6 @@ const avatarStyle = computed(() => {
   z-index: 10;
   flex: 1;
   width: 100%;
-  padding: 20px;
-}
-
-.footer {
-  position: relative;
-  z-index: 10;
-  padding: 18px 24px;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  font-size: 14px;
+  padding: 0;
 }
 </style>

@@ -50,6 +50,18 @@
   }
 }
 
+html {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox - 隐藏滚动条 */
+  -ms-overflow-style: none; /* IE and Edge - 隐藏滚动条 */
+}
+
+/* Chrome, Safari, Opera - 隐藏滚动条 */
+html::-webkit-scrollbar {
+  display: none;
+}
+
 *,
 *::before,
 *::after {
@@ -87,4 +99,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  scrollbar-width: none; /* Firefox - 隐藏滚动条 */
+  -ms-overflow-style: none; /* IE and Edge - 隐藏滚动条 */
+}
+
+/* Chrome, Safari, Opera - 隐藏滚动条 */
+body::-webkit-scrollbar {
+  display: none;
 }
