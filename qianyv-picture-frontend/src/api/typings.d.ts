@@ -73,7 +73,7 @@ declare namespace API {
     commentCount?: number
     collectCount?: number
     isRecommend?: number
-    pictureList?: string[]
+    pictureVOList?: PictureListVO[]
     user?: BlogAuthorVO
   }
 
@@ -313,8 +313,8 @@ declare namespace API {
   }
 
   type SendCodeDTO = {
-    type?: 'SMS' | 'EMAIL'
-    account?: string
+    email?: string
+    phone?: string
   }
 
   type SpaceUserEditDTO = {
@@ -385,7 +385,7 @@ declare namespace API {
   }
 
   type UserLoginByCodeDTO = {
-    account?: string
+    emailOrPhone?: string
     code?: string
   }
 

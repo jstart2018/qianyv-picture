@@ -1,18 +1,18 @@
 <script setup lang="ts">
-// 社区首页，暂时展示欢迎信息
+// 图片素材页面，暂时展示占位内容
 </script>
 
 <template>
-  <div class="home-view">
-    <div class="welcome-box">
-      <h1>欢迎来到千语壁纸社区</h1>
-      <p>这里是社区首页，更多精彩内容即将推出...</p>
+  <div class="pictures-view">
+    <div class="placeholder-box">
+      <h2>图片素材</h2>
+      <p>精美图片素材即将上线，敬请期待...</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-.home-view {
+.pictures-view {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -20,7 +20,7 @@
   width: 100%;
 }
 
-.welcome-box {
+.placeholder-box {
   text-align: center;
   padding: 40px 60px;
   background: rgba(255, 255, 255, 0.95);
@@ -30,14 +30,14 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.welcome-box h1 {
-  font-size: 36px;
+.placeholder-box h2 {
+  font-size: 32px;
   color: #1aa0c1;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   font-weight: 700;
 }
 
-.welcome-box p {
+.placeholder-box p {
   font-size: 18px;
   color: #2c5282;
 }
