@@ -223,9 +223,9 @@ declare namespace API {
     sortOrder?: string
     id?: number
     blogId?: number
-    introduction?: string
+    searchText?: string
     categoryId?: number
-    tags?: string
+    pictureType?: number
     spaceId?: number
   }
 

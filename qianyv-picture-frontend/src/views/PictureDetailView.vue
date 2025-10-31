@@ -7,7 +7,6 @@ const pictureId = ref<string>('')
 
 onMounted(() => {
   pictureId.value = route.params.id as string
-  console.log('图片ID:', pictureId.value)
   // TODO: 根据图片ID获取图片详情数据
 })
 </script>

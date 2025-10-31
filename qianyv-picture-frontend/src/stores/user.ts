@@ -8,7 +8,7 @@ export const useUserStore = defineStore('user', () => {
   async function fetchUser() {
     try {
       const res = await userApi.getLoginUser()
-      console.log('获取用户信息返回:', res.data) // 添加日志
+      // 调试日志已移除
 
       // 检查返回code是否为0（成功）
       if (res.data?.code === 0 && res.data?.data) {

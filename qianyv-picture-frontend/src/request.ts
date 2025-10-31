@@ -23,6 +23,42 @@ myAxios.interceptors.request.use(
 myAxios.interceptors.response.use(
   function (response) {
     const { data } = response
+
+    // 规范化后端返回的数据：把 data.data 中的数字字符串转换为数字，减少组件中手动 parseInt 的需求
+    const normalizeNumericStrings = (obj: any) => {
+      if (obj === null || obj === undefined) return
+      if (Array.isArray(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+          normalizeNumericStrings(obj[i])
+        }
+      } else if (typeof obj === 'object') {
+        Object.keys(obj).forEach((key) => {
+          const val = obj[key]
+          if (val === null || val === undefined) return
+          if (typeof val === 'string') {
+            // 仅在字符串完全为数字(可带小数)时转换，避免误转其他ID-like字符串
+            if (/^-?\d+(\.\d+)?$/.test(val)) {
+              const num = Number(val)
+              // 仅当转换后为有效数字时才替换
+              if (!Number.isNaN(num)) obj[key] = num
+            }
+          } else if (typeof val === 'object') {
+            normalizeNumericStrings(val)
+          }
+        })
+      }
+    }
+
+    try {
+      if (data && data.data) {
+        normalizeNumericStrings(data.data)
+      }
+    } catch (e) {
+      // 规范化失败不影响主流程，记录一次警告以便排查
+      // eslint-disable-next-line no-console
+      console.warn('response data normalization failed', e)
+    }
+
     // 未登录
     if (data.code === 40100) {
       // 不是获取用户信息的请求，并且用户目前不是已经在用户登录页面，则跳转到登录页面

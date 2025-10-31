@@ -323,7 +323,7 @@ const currentImage = computed(() => uploadedImages.value[currentImageIndex.value
 // 简单的消息提示函数
 const showMessage = (type: 'success' | 'error' | 'loading', text: string) => {
   if (type === 'loading') {
-    console.log(text)
+    // 加载状态提示（当前简单实现为空操作）
   } else {
     alert(text)
   }
@@ -564,8 +564,6 @@ const uploadFile = async (file: File, index: number) => {
       return
     }
 
-    console.log(`正在上传 ${file.name}...`)
-
     // 创建 FormData
     const formData = new FormData()
     formData.append('file', file)
@@ -575,9 +573,7 @@ const uploadFile = async (file: File, index: number) => {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-    })
-
-    // 检查响应数据
+    }) // 检查响应数据
     const result = response.data || response
     if (result && result.data && result.data.id && result.data.thumbUrl) {
       // 更新当前索引的图片信息
@@ -587,7 +583,6 @@ const uploadFile = async (file: File, index: number) => {
         categoryId: uploadedImages.value[index]?.categoryId,
         tags: uploadedImages.value[index]?.tags || [],
       }
-      console.log(`${file.name} 上传成功`)
     } else {
       showMessage('error', `${file.name} 上传失败`)
     }
@@ -633,10 +628,10 @@ const removeTag = (imageIndex: number, tagIndex: number) => {
 // 发布博客
 const handlePublish = async () => {
   if (!canPublish.value || isPublishing.value) return
-
   try {
     isPublishing.value = true
-    console.log('正在发布...') // 验证每张图片是否都选择了分类
+
+    // 验证每张图片是否都选择了分类
     const imagesWithoutCategory = uploadedImages.value.filter(
       (img) => img.thumbUrl && img.id && (!img.categoryId || img.categoryId === ''),
     )

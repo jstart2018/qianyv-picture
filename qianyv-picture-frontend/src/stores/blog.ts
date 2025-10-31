@@ -18,7 +18,7 @@ export const useBlogStore = defineStore('blog', () => {
         ...params,
       })
 
-      console.log('博客列表API返回:', res.data) // 添加日志查看返回数据
+      // 调试日志已移除
 
       // 修改判断条件：code === 0 表示成功
       if (res.data?.code === 0 && res.data?.data) {
@@ -29,7 +29,7 @@ export const useBlogStore = defineStore('blog', () => {
           blogs.value = [...blogs.value, ...(res.data.data.records || [])]
         }
         total.value = res.data.data.total || 0
-        console.log('博客数据加载成功:', blogs.value.length, '条')
+        // 日志已移除
       } else {
         console.warn('后端返回code不为0:', res.data?.code, res.data?.message)
         // 如果code不为0，也尝试使用mock数据
