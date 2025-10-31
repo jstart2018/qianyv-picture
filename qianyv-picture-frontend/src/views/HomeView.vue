@@ -3,10 +3,14 @@ import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useBlogStore } from '@/stores/blog'
 import { useRouter } from 'vue-router'
+import BlogUploadModal from '@/components/BlogUploadModal.vue'
 
 const userStore = useUserStore()
 const blogStore = useBlogStore()
 const router = useRouter()
+
+// 博客上传弹窗
+const showUploadModal = ref(false)
 
 // 右侧切换状态：排行榜 or 聊天框
 const rightPanelMode = ref<'ranking' | 'chat'>('ranking')
@@ -134,7 +138,14 @@ const toggleRightPanel = () => {
 
 // 分享功能
 const handleShare = () => {
-  alert('分享功能开发中...')
+  showUploadModal.value = true
+}
+
+// 博客发布成功回调
+const handlePublishSuccess = async () => {
+  // 刷新博客列表
+  blogStore.current = 1
+  await blogStore.fetchBlogList()
 }
 
 // 获取用户头像显示文本
@@ -408,6 +419,9 @@ onMounted(async () => {
         </div>
       </div>
     </aside>
+
+    <!-- 博客上传弹窗 -->
+    <BlogUploadModal v-model:visible="showUploadModal" @success="handlePublishSuccess" />
   </div>
 </template>
 

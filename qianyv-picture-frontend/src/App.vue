@@ -290,12 +290,12 @@ const avatarStyle = computed(() => {
   z-index: -2;
   background: linear-gradient(
     135deg,
-    #e6e6fa 0%,
-    /* 浅紫色 - Lavender */ #daf0f3 20%,
-    /* 浅青色 - Powder Blue */ #c4f5c4 40%,
-    /* 浅蓝色 - Light Blue */ #f7c1c9 60%,
-    /* 浅粉色 - Light Pink */ #f3c8f3 80%,
-    /* 浅紫色 - Plum */ #bde7f8 100% /* 天空蓝 - Sky Blue */
+    #cbcbf7 0%,
+    #daf0f3 20%,
+    #f58888 40%,
+    #bdf8c6 60%,
+    #dbb2ff 80%,
+    #bde7f8 100% 
   );
   background-size: 400% 400%;
   animation: gradientShift 30s ease infinite;

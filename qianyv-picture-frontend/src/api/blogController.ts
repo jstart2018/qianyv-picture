@@ -16,6 +16,18 @@ export async function getBlogDetail(
   })
 }
 
+/** 此处后端没有提供注释 POST /blog/add */
+export async function addBlog(body: API.BlogCreateDTO, options?: { [key: string]: any }) {
+  return request<API.ResultLong>('/blog/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 GET /blog/collections/toggle */
 export async function collectionsToggle(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -46,18 +58,6 @@ export async function comments(
       blogCommentDTO: undefined,
       ...params['blogCommentDTO'],
     },
-    ...(options || {}),
-  })
-}
-
-/** 此处后端没有提供注释 POST /blog/create */
-export async function createBlog(body: API.BlogCreateDTO, options?: { [key: string]: any }) {
-  return request<API.ResultLong>('/blog/create', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
     ...(options || {}),
   })
 }

@@ -128,10 +128,6 @@ declare namespace API {
     blogLikeOrCollectDTO: BlogLikeOrCollectDTO
   }
 
-  type listAllParams = {
-    picCategoryDTO: PicCategoryDTO
-  }
-
   type OrderItem = {
     column?: string
     asc?: boolean
@@ -196,8 +192,12 @@ declare namespace API {
   type PicCategoryDTO = {
     id?: number
     categoryName?: string
-    sort?: number
     isAsc?: boolean
+  }
+
+  type PicCategoryVO = {
+    id?: number
+    categoryName?: string
   }
 
   type PictureEditDTO = {
@@ -258,9 +258,9 @@ declare namespace API {
     message?: string
   }
 
-  type ResultListString = {
+  type ResultListPicCategoryVO = {
     code?: number
-    data?: string[]
+    data?: PicCategoryVO[]
     message?: string
   }
 
@@ -291,6 +291,12 @@ declare namespace API {
   type ResultPageSpaceUserVO = {
     code?: number
     data?: PageSpaceUserVO
+    message?: string
+  }
+
+  type ResultPicCategoryVO = {
+    code?: number
+    data?: PicCategoryVO
     message?: string
   }
 
