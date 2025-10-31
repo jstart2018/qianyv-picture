@@ -396,8 +396,6 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-
-        <button class="magic-btn" @click="toggleRightPanel">✨ 神奇的按钮</button>
       </div>
 
       <!-- 聊天框模式 -->
@@ -451,11 +449,11 @@ onMounted(async () => {
 }
 
 .user-info-card {
-  /* 尺寸和位置：左边距 10%，卡片宽度 66.7%，右边距 23.3% */
+  /* 尺寸和位置：左边距调整，卡片宽度 66.7% */
   width: 66.7%;
   height: auto; /* 改为自动高度，让内容自然撑开 */
   max-height: 70%; /* 最大高度限制 */
-  margin-left: 5%; /* 左边距 10% */
+  margin-left: 2%; /* 左边距 2%（往左移动） */
   margin-right: 23.3%; /* 右边距 23.3% */
   margin-top: 60px; /* 距离顶部 60px */
 
@@ -693,7 +691,7 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.2); /* 增加透明度，从0.95降低到0.6 */
   backdrop-filter: blur(10px);
   border-radius: 24px;
-  padding: 28px;
+  padding: 20px; /* 从28px减少到20px，让整体更紧凑 */
   border: 2px dashed rgba(138, 180, 248, 0.3);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
@@ -721,26 +719,26 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 8px; /* 从20px减少到12px，减少与标题的间距 */
 }
 
 .author-info {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px; /* 从14px减少到10px，减少头像与文字间距 */
 }
 
 .author-avatar {
-  width: 60px;
-  height: 60px;
+  width: 48px; /* 从60px减少到48px，缩小头像尺寸 */
+  height: 48px; /* 从60px减少到48px */
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 20px; /* 从26px减少到20px，相应减小字体 */
   font-weight: 700;
   color: white;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #52c85c 0%, #cef4f4 100%);
   box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
   transition: all 0.3s ease;
 }
@@ -759,17 +757,17 @@ onMounted(async () => {
 .author-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px; /* 从4px减少到2px，让用户名和标签更紧凑 */
 }
 
 .author-name {
-  font-size: 16px;
+  font-size: 15px; /* 从16px减少到15px，稍微缩小字体 */
   font-weight: 600;
   color: #2d3748;
 }
 
 .author-tag {
-  font-size: 13px;
+  font-size: 12px; /* 从13px减少到12px，稍微缩小字体 */
   color: #a0aec0;
 }
 
@@ -813,38 +811,38 @@ onMounted(async () => {
 
 /* ========== 博客内容区域 ========== */
 .blog-content {
-  margin-bottom: 20px;
+  margin-bottom: 16px; /* 从20px减少到16px */
 }
 
 .blog-title {
-  font-size: 28px;
+  font-size: 20px; /* 从26px减少到22px，进一步缩小标题 */
   font-weight: 700;
   color: #1a202c;
-  margin-bottom: 16px;
+  margin-bottom: 12px; /* 从16px减少到12px，减少标题与内容间距 */
   line-height: 1.4;
 }
 
 .blog-text {
-  font-size: 16px;
+  font-size: 15px; /* 从16px减少到15px，稍微缩小字体 */
   color: #4a5568;
-  line-height: 1.8;
+  line-height: 1.7; /* 从1.8减少到1.7，让行高更紧凑 */
   margin-bottom: 0; /* 去除底部间距，因为图片区域是独立的 */
 }
 
 /* ========== 博客图片区域（独立区域） ========== */
 .blog-images-section {
-  margin-top: 20px; /* 图片区域与文本区域的间距 */
+  margin-top: 16px; /* 图片区域与文本区域的间距 */
 }
 
 .blog-images {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr); /* 固定显示3列 */
+  gap: 12px; /* 减小间距使整体更紧凑 */
 }
 
 .image-item {
   position: relative;
-  border-radius: 12px;
+  border-radius: 10px; /* 减小圆角 */
   overflow: hidden;
   aspect-ratio: 3/4;
   cursor: pointer;
@@ -1177,7 +1175,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 0; /* 移除间距，使用分割线 */
-  margin-bottom: 24px; /* 增加底部间距 */
   flex: 1; /* 占据剩余空间 */
   overflow: hidden; /* 隐藏溢出内容 */
   padding-top: 12px; /* 顶部留出一点间距，避免和书签重叠 */
@@ -1254,28 +1251,6 @@ onMounted(async () => {
 .rank-stats span {
   white-space: nowrap; /* 防止换行 */
   flex-shrink: 0; /* 防止被压缩 */
-}
-
-.magic-btn {
-  width: 100%;
-  padding: 10px 15px; /* 缩小上下内边距，从14px改为10px */
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
-  flex-shrink: 0; /* 按钮不缩小 */
-  margin-top: auto; /* 推到底部 */
-  margin-bottom: 15px; /* 缩小底部间距，从25px改为15px */
-}
-
-.magic-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
 }
 
 /* 聊天框样式 */
