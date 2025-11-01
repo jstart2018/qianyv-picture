@@ -48,7 +48,10 @@ onMounted(() => {
 watch(
   () => router.currentRoute.value.path,
   () => {
-    updateIndicator()
+    // 使用 nextTick 确保 DOM 更新后再计算位置
+    nextTick(() => {
+      updateIndicator()
+    })
   },
 )
 
@@ -147,9 +150,7 @@ const avatarStyle = computed(() => {
         ></div>
 
         <RouterLink to="/" class="nav-item" exact-active-class="active">分享社区</RouterLink>
-        <RouterLink to="/pictures" class="nav-item" exact-active-class="active">
-          图片素材
-        </RouterLink>
+        <RouterLink to="/pictures" class="nav-item" active-class="active"> 图片素材 </RouterLink>
         <RouterLink to="/space" class="nav-item" exact-active-class="active">团队空间</RouterLink>
       </nav>
 

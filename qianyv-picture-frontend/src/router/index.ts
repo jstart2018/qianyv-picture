@@ -18,6 +18,19 @@ const router = createRouter({
       path: '/pictures',
       name: 'pictures',
       component: () => import('../views/PicturesView.vue'),
+      redirect: '/pictures/horizontal',
+      children: [
+        {
+          path: 'horizontal',
+          name: 'picturesHorizontal',
+          component: () => import('../views/HorizontalPicturesView.vue'),
+        },
+        {
+          path: 'vertical',
+          name: 'picturesVertical',
+          component: () => import('../views/VerticalPicturesView.vue'),
+        },
+      ],
     },
     {
       path: '/space',
