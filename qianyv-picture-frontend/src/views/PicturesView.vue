@@ -166,6 +166,28 @@ const parseTags = (tagsStr: string | undefined | null): string[] => {
   }
 }
 
+// 3D 旋转跟随鼠标效果
+const handleMouseMove = (event: MouseEvent) => {
+  const card = event.currentTarget as HTMLElement
+  const rect = card.getBoundingClientRect()
+  // 计算鼠标在卡片内的相对位置（0-1范围）
+  const x = (event.clientX - rect.left) / rect.width
+  const y = (event.clientY - rect.top) / rect.height
+  // 计算旋转角度（反转方向：鼠标在哪里就升上来）- 进一步缩小旋转幅度
+  const rotateY = (0.5 - x) * 12
+  const rotateX = (y - 0.5) * 10
+  // 应用3D变换 - 进一步减小缩放效果
+  card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.005, 1.005, 1.005)`
+  card.style.transition = 'transform 0.05s ease-out' // 从 0.1s 降到 0.05s，加快响应速度
+}
+
+// 鼠标离开时重置
+const handleMouseLeave = (event: MouseEvent) => {
+  const card = event.currentTarget as HTMLElement
+  card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)'
+  card.style.transition = 'transform 0.4s ease-out' // 从 0.5s 降到 0.4s，加快恢复速度
+}
+
 // 初始化
 onMounted(async () => {
   await fetchCategories()
@@ -280,7 +302,13 @@ onMounted(async () => {
       </div>
       <!-- 横屏：固定三列网格布局 -->
       <div v-else class="grid-container">
-        <div v-for="pic in pictures" :key="pic.id" class="grid-card">
+        <div
+          v-for="pic in pictures"
+          :key="pic.id"
+          class="grid-card"
+          @mousemove="handleMouseMove($event)"
+          @mouseleave="handleMouseLeave($event)"
+        >
           <div class="grid-image-wrapper">
             <img :src="pic.thumbUrl" :alt="pic.tags || '图片'" loading="lazy" />
 
@@ -529,9 +557,9 @@ onMounted(async () => {
 /* ========== 图片容器 - 优化动画效果 - 减少边距增大图片 ========== */
 .pictures-container {
   width: 100%;
-  max-width: 1500px; /* 从 1300px 增加到 1500px */
+  max-width: 1600px; /* 从 1500px 增加到 1600px，更宽的容器 */
   margin: 0 auto;
-  padding: 0 20px; /* 从 40px 减少到 20px，左右边距减少 */
+  padding: 0 8px; /* 从 20px 减少到 8px，大幅减少左右边距 */
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); /* 使用Material Design的standard easing */
 }
 
@@ -596,9 +624,11 @@ onMounted(async () => {
 .grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  column-gap: 14px; /* 从 12px 增加到 14px */
-  row-gap: 18px; /* 从 16px 增加到 18px */
+  column-gap: 15px; /* 图片之间的水平间距 */
+  row-gap: 23px; /* 图片之间的垂直间距 */
   justify-items: center;
+  /* 为3D效果提供透视 */
+  perspective: 1200px;
 }
 
 /* 当最后一行只有1-2张图片时，使用居中布局 */
@@ -609,7 +639,7 @@ onMounted(async () => {
 
 .grid-card {
   position: relative;
-  width: 93%;
+  width: 89.95%; /* 精确计算：458.15 / 509.33 ≈ 89.95%，以匹配 458.15×320.5 尺寸 */
   border-radius: 13px;
   overflow: hidden;
   cursor: default; /* 改为默认光标 */
@@ -619,16 +649,33 @@ onMounted(async () => {
   border-top: 2px solid rgba(255, 255, 255, 0.3);
   box-shadow:
     6px 6px 12px rgba(0, 0, 0, 0.35),
-    10px 10px 35px rgba(0, 0, 0, 0.25);
+    10px 10px 35px rgba(0, 0, 0, 0.25); /* 3D 变换相关 */
+  transform-style: preserve-3d;
+  transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1);
+  transform-origin: center 50%; /* 旋转中心向下移动到60%位置，更自然 */
+  transition:
+    transform 0.5s ease-out,
+    box-shadow 0.3s ease;
+  will-change: transform;
 }
 
-/* 图片包装器 - 固定宽高比（调整为更高的比例） */
+/* 悬停时增强阴影效果 */
+.grid-card:hover {
+  box-shadow:
+    8px 8px 20px rgba(0, 0, 0, 0.4),
+    15px 15px 45px rgba(0, 0, 0, 0.3);
+}
+
+/* 图片包装器 - 固定宽高比（精确匹配 458.15×320.5 尺寸） */
 .grid-image-wrapper {
   position: relative;
   width: 100%;
-  padding-bottom: 68%;
+  padding-bottom: 69.94%; /* 320.5 / 458.15 = 0.6994313，精确匹配指定尺寸比例 */
   overflow: hidden;
   background: #f0f0f0;
+  /* 保持3D效果 */
+  transform-style: preserve-3d;
+  transform: translateZ(0);
 }
 
 .grid-image-wrapper img {
@@ -639,6 +686,9 @@ onMounted(async () => {
   height: 100%;
   object-fit: cover; /* 裁切图片以填充容器 */
   display: block;
+  /* 图片也参与3D变换 */
+  transform: translateZ(20px);
+  transition: transform 0.3s ease;
 }
 
 /* ========== 横屏独有：悬停时显示的标签白框（在图片内部，等比缩小） ========== */
@@ -646,7 +696,8 @@ onMounted(async () => {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(0.88);
+  /* 初始状态：从更下方隐藏 */
+  transform: translate(-50%, -20%) scale(0.88) translateY(80px);
   width: 96%;
   max-height: 96%; /* 从 92% 增加到 96% */
   background: rgba(255, 255, 255, 0.5); /* 白色半透明，无模糊 */
@@ -658,22 +709,33 @@ onMounted(async () => {
     0 0 40px rgba(255, 255, 255, 0.3),
     0 8px 24px rgba(138, 180, 248, 0.2),
     inset 0 1px 2px rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  /* 初始状态：隐藏 */
+  border: 2px solid rgba(255, 255, 255, 0.7); /* 初始状态：完全透明隐藏 */
   opacity: 0;
   visibility: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 优化过渡效果：先快后慢，无过冲 */
+  transition:
+    opacity 0.4s ease-out,
+    transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    visibility 0s linear 0.4s;
   z-index: 10;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* 3D效果 - 白框浮在图片上方 */
+  transform-style: preserve-3d;
 }
 
-/* 悬停时白框显示 */
+/* 悬停时白框显示 - 从下往上滑动并淡入 */
 .grid-card:hover .tags-panel {
   opacity: 1;
   visibility: visible;
-  transform: translate(-50%, -50%) scale(0.95); /* 从 0.92 增加到 0.95 */
+  /* 滑动到中心位置 */
+  transform: translate(-50%, -50%) scale(0.95) translateZ(30px);
+  /* 先快后慢的入场效果，无过冲 */
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    visibility 0s linear 0s;
 }
 
 .tags-content {
@@ -930,7 +992,7 @@ onMounted(async () => {
 /* ========== 响应式设计 ========== */
 @media (max-width: 1200px) {
   .pictures-container {
-    padding: 0 15px; /* 中屏幕边距减少 */
+    padding: 0 6px; /* 从 15px 减少到 6px */
   }
 
   .waterfall-container {
@@ -943,8 +1005,8 @@ onMounted(async () => {
   }
   .grid-container {
     grid-template-columns: repeat(2, 1fr);
-    column-gap: 16px; /* 水平间距 */
-    row-gap: 26px; /* 垂直间距 */
+    column-gap: 18px; /* 从 24px 减少到 18px，减小中屏间距 */
+    row-gap: 16px; /* 从 26px 减少到 16px，减小垂直间距 */
   }
 
   .grid-container::after {
@@ -959,7 +1021,7 @@ onMounted(async () => {
 
 @media (max-width: 968px) {
   .pictures-container {
-    padding: 0 12px; /* 小屏幕进一步减少内边距 */
+    padding: 0 4px; /* 从 12px 减少到 4px */
   }
 
   .waterfall-container {
@@ -972,8 +1034,8 @@ onMounted(async () => {
   }
   .grid-container {
     grid-template-columns: repeat(2, 1fr);
-    column-gap: 16px;
-    row-gap: 22px;
+    column-gap: 16px; /* 从 20px 减少到 16px，减小小屏间距 */
+    row-gap: 14px; /* 从 22px 减少到 14px，减小垂直间距 */
   }
 }
 
@@ -983,7 +1045,7 @@ onMounted(async () => {
   }
 
   .pictures-container {
-    padding: 0 10px; /* 移动端最小内边距 */
+    padding: 0 2px; /* 从 10px 减少到 2px，移动端最小边距 */
   }
 
   .filter-container {
