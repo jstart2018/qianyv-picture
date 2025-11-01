@@ -295,7 +295,7 @@ const avatarStyle = computed(() => {
     #f58888 40%,
     #bdf8c6 60%,
     #dbb2ff 80%,
-    #bde7f8 100% 
+    #bde7f8 100%
   );
   background-size: 400% 400%;
   animation: gradientShift 30s ease infinite;
@@ -393,15 +393,15 @@ const avatarStyle = computed(() => {
   background: transparent;
 }
 
-/* Logo容器 - 玻璃态效果 */
+/* Logo容器 - 玻璃态效果 - 放大 */
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
+  gap: 14px;
+  padding: 10px 20px;
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
@@ -414,31 +414,31 @@ const avatarStyle = computed(() => {
 }
 
 .logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   object-fit: cover;
 }
 
 .site-name {
   font-weight: 700;
-  font-size: 18px;
+  font-size: 22px;
   color: var(--primary);
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
-/* 导航容器 - 大长方形圆角背景 */
+/* 导航容器 - 大长方形圆角背景 - 放大 */
 .nav-container {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  padding: 6px 15px;
+  padding: 8px 20px;
   background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(10px);
-  border-radius: 20px;
+  border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.4);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  flex: 0 0 55%;
+  flex: 0 0 58%;
   justify-content: space-evenly;
   margin: 0 auto;
   position: relative;
@@ -448,11 +448,11 @@ const avatarStyle = computed(() => {
 /* 滑动指示器 */
 .nav-indicator {
   position: absolute;
-  top: 6px;
-  height: calc(100% - 12px);
+  top: 8px;
+  height: calc(100% - 16px);
   background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(25px) saturate(150%);
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow:
     0 3px 12px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -462,14 +462,15 @@ const avatarStyle = computed(() => {
 }
 
 .nav-item {
-  padding: 10px 28px;
-  border-radius: 16px;
+  padding: 12px 32px;
+  border-radius: 18px;
   color: #06303a;
   text-decoration: none;
   transition:
     color 0.3s ease,
     transform 0.2s ease;
   font-weight: 500;
+  font-size: 16px;
   position: relative;
   flex: 1;
   text-align: center;
@@ -488,19 +489,19 @@ const avatarStyle = computed(() => {
   font-weight: 600;
 }
 
-/* 右侧功能区域 */
+/* 右侧功能区域 - 放大 */
 .right-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 
-/* 通知铃铛样式 */
+/* 通知铃铛样式 - 放大 */
 .notification-bell {
   position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -519,8 +520,8 @@ const avatarStyle = computed(() => {
 }
 
 .bell-icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   color: var(--primary);
   transition: all 0.3s ease;
 }
@@ -611,16 +612,17 @@ const avatarStyle = computed(() => {
   font-size: 14px;
 }
 
-/* 登录按钮样式 */
+/* 登录按钮样式 - 放大 */
 .login-btn {
-  padding: 10px 20px;
-  border-radius: 16px;
+  padding: 12px 24px;
+  border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.5);
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 500;
+  font-size: 15px;
   color: var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -632,16 +634,18 @@ const avatarStyle = computed(() => {
   box-shadow: 0 4px 12px rgba(26, 160, 193, 0.15);
 }
 
-/* 用户头像样式优化 */
+/* 用户头像样式优化 - 放大 */
 .avatar {
-  width: 57px;
-  height: 57px;
+  width: 52px;
+  height: 52px;
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   cursor: pointer;
+  font-size: 20px;
+  font-weight: 600;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   border: 2px solid rgba(255, 255, 255, 0.5);

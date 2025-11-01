@@ -147,6 +147,25 @@ const handlePictureTypeChange = (type: number) => {
   fetchPictures()
 }
 
+// 解析标签 JSON 数组
+const parseTags = (tagsStr: string | undefined | null): string[] => {
+  if (!tagsStr) return []
+  try {
+    // 尝试解析 JSON 数组
+    const parsed = JSON.parse(tagsStr)
+    if (Array.isArray(parsed)) {
+      return parsed.filter((tag) => typeof tag === 'string' && tag.trim())
+    }
+    return []
+  } catch {
+    // 如果解析失败，尝试按逗号分割
+    return tagsStr
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter((tag) => tag)
+  }
+}
+
 // 初始化
 onMounted(async () => {
   await fetchCategories()
@@ -169,17 +188,17 @@ onMounted(async () => {
             :class="['toggle-btn', { active: pictureType === 0 }]"
             @click="handlePictureTypeChange(0)"
             :aria-pressed="pictureType === 0"
-            title="横屏壁纸"
+            title="横屏风格"
           >
-            横屏壁纸
+            横屏风格
           </button>
           <button
             :class="['toggle-btn', { active: pictureType === 1 }]"
             @click="handlePictureTypeChange(1)"
             :aria-pressed="pictureType === 1"
-            title="竖屏壁纸"
+            title="竖屏风格"
           >
-            竖屏壁纸
+            竖屏风格
           </button>
         </div>
 
@@ -235,9 +254,8 @@ onMounted(async () => {
       <div v-else-if="!loading && pictures.length === 0" class="empty-state">
         <p>暂无图片数据</p>
       </div>
-
-      <!-- 瀑布流布局 - 使用 CSS columns 实现真实 Masonry -->
-      <div v-else class="waterfall-container">
+      <!-- 竖屏：瀑布流布局 - 使用 CSS columns 实现真实 Masonry -->
+      <div v-else-if="pictureType === 1" class="waterfall-container">
         <div
           v-for="pic in pictures"
           :key="pic.id"
@@ -256,6 +274,58 @@ onMounted(async () => {
                 </svg>
                 {{ pic.collectCount || 0 }}
               </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 横屏：固定三列网格布局 -->
+      <div v-else class="grid-container">
+        <div v-for="pic in pictures" :key="pic.id" class="grid-card">
+          <div class="grid-image-wrapper">
+            <img :src="pic.thumbUrl" :alt="pic.tags || '图片'" loading="lazy" />
+
+            <!-- 横屏独有：悬停时显示的标签白框 -->
+            <div class="tags-panel" v-if="parseTags(pic.tags).length > 0">
+              <div class="tags-content">
+                <!-- 标签列表 -->
+                <div class="tags-list">
+                  <span
+                    v-for="(tag, index) in parseTags(pic.tags)"
+                    :key="index"
+                    class="tag-item"
+                    :style="{ animationDelay: `${index * 0.05}s` }"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+                <!-- 底部操作栏 -->
+                <div class="tags-footer">
+                  <button class="goto-btn" @click.stop="openPictureDetail(pic.id)">
+                    <svg
+                      class="plane-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M22 2L11 13"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M22 2L15 22L11 13L2 9L22 2Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    前往
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -288,25 +358,25 @@ onMounted(async () => {
   background: transparent;
 }
 
-/* ========== 筛选栏 ========== */
+/* ========== 筛选栏 - 放大 ========== */
 .filter-bar {
   width: 100%;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   display: flex;
   justify-content: center;
 }
 
 .filter-container {
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
   display: flex;
-  gap: 24px;
-  padding: 20px 24px;
+  gap: 28px;
+  padding: 24px 32px;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 2px dashed rgba(223, 231, 245, 0.5);
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   align-items: center;
   flex-wrap: wrap;
@@ -315,32 +385,32 @@ onMounted(async () => {
 .filter-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .search-item {
   flex: 1;
-  min-width: 300px;
+  min-width: 320px;
 }
 
 .filter-label {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: #2d3748;
   white-space: nowrap;
 }
 
 .category-select {
-  padding: 10px 16px;
+  padding: 11px 18px;
   border: 1px solid rgba(138, 180, 248, 0.3);
-  border-radius: 10px;
+  border-radius: 11px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(5px);
-  font-size: 14px;
+  font-size: 15px;
   color: #4a5568;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 150px;
+  min-width: 170px;
 }
 
 .category-select:hover {
@@ -356,12 +426,12 @@ onMounted(async () => {
 
 .search-input {
   flex: 1;
-  padding: 10px 16px;
+  padding: 11px 18px;
   border: 1px solid rgba(138, 180, 248, 0.3);
-  border-radius: 10px;
+  border-radius: 11px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(5px);
-  font-size: 14px;
+  font-size: 15px;
   color: #4a5568;
   transition: all 0.3s ease;
 }
@@ -378,12 +448,12 @@ onMounted(async () => {
 }
 
 .search-btn {
-  padding: 10px;
-  width: 42px;
-  height: 42px;
+  padding: 11px;
+  width: 46px;
+  height: 46px;
   background: linear-gradient(135deg, #d6e9cf 0%, #3cb3d4 100%);
   border: none;
-  border-radius: 10px;
+  border-radius: 11px;
   color: white;
   cursor: pointer;
   display: flex;
@@ -393,8 +463,8 @@ onMounted(async () => {
 }
 
 .search-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .search-btn:hover {
@@ -402,26 +472,26 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-/* 新增：图片方向切换按钮 - 滑块效果 */
+/* 新增：图片方向切换按钮 - 滑块效果 - 放大 */
 .picture-type-toggle {
   position: relative;
   display: flex;
   gap: 0; /* 移除间距，让按钮紧挨在一起 */
-  padding: 4px;
+  padding: 5px;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid rgba(138, 180, 248, 0.2);
 }
 
 /* 滑块背景 */
 .toggle-slider {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
+  top: 5px;
+  bottom: 5px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 248, 255, 0.95) 100%);
-  border-radius: 10px;
+  border-radius: 12px;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow:
     0 2px 8px rgba(138, 180, 248, 0.15),
@@ -432,15 +502,15 @@ onMounted(async () => {
 .toggle-btn {
   position: relative;
   z-index: 1;
-  padding: 8px 20px;
+  padding: 10px 24px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent; /* 默认透明背景 */
-  font-size: 14px;
+  font-size: 15px;
   color: #4a5568;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 110px;
+  min-width: 120px;
   text-align: center;
   font-weight: 500;
 }
@@ -456,11 +526,12 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* ========== 图片容器 - 优化动画效果 ========== */
+/* ========== 图片容器 - 优化动画效果 - 减少边距增大图片 ========== */
 .pictures-container {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1500px; /* 从 1300px 增加到 1500px */
   margin: 0 auto;
+  padding: 0 20px; /* 从 40px 减少到 20px，左右边距减少 */
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); /* 使用Material Design的standard easing */
 }
 
@@ -493,35 +564,243 @@ onMounted(async () => {
   }
 }
 
-/* ========== 瀑布流布局 - 使用 CSS columns 实现真实 Masonry ========== */
+/* ========== 瀑布流布局（竖屏）- 使用 CSS columns 实现真实 Masonry ========== */
 .waterfall-container {
   column-count: 4;
-  column-gap: 20px; /* 列间距增加到 20px，更宽松 */
+  column-gap: 22px; /* 从 20px 增加到 22px */
 }
 
 .picture-card {
   position: relative;
   break-inside: avoid; /* 防止图片被分割到两列 */
-  margin-bottom: 20px; /* 行间距增加到 20px，与列间距一致 */
-  border-radius: 12px;
+  margin-bottom: 22px; /* 从 20px 增加到 22px，与列间距一致 */
+  border-radius: 13px;
   overflow: hidden;
   cursor: pointer;
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
   background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.picture-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  /* 左边和上边的白框 + 右下方向阴影 */
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    6px 6px 12px rgba(0, 0, 0, 0.4),
+    10px 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .picture-card img {
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* ========== 固定网格布局（横屏）- 每行3张，大小相同 ========== */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 14px; /* 从 12px 增加到 14px */
+  row-gap: 18px; /* 从 16px 增加到 18px */
+  justify-items: center;
+}
+
+/* 当最后一行只有1-2张图片时，使用居中布局 */
+.grid-container::after {
+  content: '';
+  grid-column: span 3;
+}
+
+.grid-card {
+  position: relative;
+  width: 93%;
+  border-radius: 13px;
+  overflow: hidden;
+  cursor: default; /* 改为默认光标 */
+  background: rgba(255, 255, 255, 0.9);
+  /* 左边和上边的白框 + 右下方向阴影 */
+  border-left: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    6px 6px 12px rgba(0, 0, 0, 0.35),
+    10px 10px 35px rgba(0, 0, 0, 0.25);
+}
+
+/* 图片包装器 - 固定宽高比（调整为更高的比例） */
+.grid-image-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 68%;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.grid-image-wrapper img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 裁切图片以填充容器 */
+  display: block;
+}
+
+/* ========== 横屏独有：悬停时显示的标签白框（在图片内部，等比缩小） ========== */
+.tags-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.88);
+  width: 96%;
+  max-height: 96%; /* 从 92% 增加到 96% */
+  background: rgba(255, 255, 255, 0.5); /* 白色半透明，无模糊 */
+  border-radius: 45px; /* 从 18px 增加到 28px，圆角加大 */
+  padding: 24px;
+  /* 泛光效果：减弱阴影强度 */
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.5),
+    0 0 40px rgba(255, 255, 255, 0.3),
+    0 8px 24px rgba(138, 180, 248, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  /* 初始状态：隐藏 */
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 悬停时白框显示 */
+.grid-card:hover .tags-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(0.95); /* 从 0.92 增加到 0.95 */
+}
+
+.tags-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.tags-list {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+  align-content: flex-start;
+  justify-content: space-evenly; /* 添加均匀分布 */
+  overflow-y: auto;
+  padding: 4px;
+  /* 自定义滚动条 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(138, 180, 248, 0.3) transparent;
+}
+
+.tags-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.tags-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tags-list::-webkit-scrollbar-thumb {
+  background: rgba(138, 180, 248, 0.3);
+  border-radius: 2px;
+}
+
+.tag-item {
+  display: inline-block;
+  padding: 10px 22px; /* 从 8px 18px 增加到 10px 22px */
+  background: rgba(255, 255, 255, 0.85); /* 更白的背景 */
+  color: #000000; /* 纯黑色字体 */
+  font-size: 16px; /* 从 14px 增加到 16px */
+  font-weight: 600;
+  border-radius: 30px; /* 从 24px 增加到 30px，更大的椭圆 */
+  border: 1.5px solid rgba(49, 48, 48, 0.5); /* 浅灰色边框 */
+  white-space: nowrap;
+  /* 只过渡变换和阴影，不过渡背景 */
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); /* 更柔和的阴影 */
+  /* 标签淡入动画 */
+  animation: tagPopIn 0.4s ease forwards;
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* 标签弹出动画 */
+@keyframes tagPopIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tag-item:hover {
+  /* 保持背景颜色不变，只添加缩放和阴影效果 */
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* 底部操作栏 */
+.tags-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 12px;
+  margin-top: auto;
+}
+
+.goto-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 48px; /* 从 32px 增加到 48px，加长水平长度 */
+  background: rgba(240, 240, 240, 0.9); /* 灰白背景 */
+  color: #000000; /* 纯黑色字体 */
+  border: 2px solid rgba(255, 255, 255, 0.95); /* 白色边框 */
+  border-radius: 24px; /* 更大的圆角 */
+  font-size: 18px; /* 从 16px 增加到 18px，加大"前往"文字 */
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(100, 100, 100, 0.35); /* 灰色阴影 */
+  letter-spacing: 0.5px;
+}
+
+.plane-icon {
+  width: 20px;
+  height: 20px;
+  color: #000000; /* 黑色纸飞机 */
+  flex-shrink: 0;
+  animation: planeFloat 2s ease-in-out infinite;
+  transform: translateY(2px); /* 纸飞机向下移动2px */
+}
+
+/* 纸飞机浮动动画 */
+@keyframes planeFloat {
+  0%,
+  100% {
+    transform: translateY(3px) rotate(-5deg); /* 基础位置 */
+  }
+  50% {
+    transform: translateY(0px) rotate(-5deg); /* 向上浮动2px */
+  }
+}
+
+.goto-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(100, 100, 100, 0.45); /* 悬停时加深阴影 */
+  background: rgba(245, 245, 245, 0.95); /* 悬停时稍微变白 */
+}
+
+.goto-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(100, 100, 100, 0.3);
 }
 
 .picture-overlay {
@@ -532,15 +811,11 @@ onMounted(async () => {
   bottom: 0;
   background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
   opacity: 0;
-  transition: opacity 0.3s ease;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   padding: 16px;
-}
-
-.picture-card:hover .picture-overlay {
-  opacity: 1;
+  pointer-events: none; /* 禁用交互 */
 }
 
 .picture-tags {
@@ -654,13 +929,26 @@ onMounted(async () => {
 
 /* ========== 响应式设计 ========== */
 @media (max-width: 1200px) {
+  .pictures-container {
+    padding: 0 15px; /* 中屏幕边距减少 */
+  }
+
   .waterfall-container {
     column-count: 3;
-    column-gap: 16px;
+    column-gap: 18px;
   }
 
   .picture-card {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
+  }
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 16px; /* 水平间距 */
+    row-gap: 26px; /* 垂直间距 */
+  }
+
+  .grid-container::after {
+    grid-column: span 2;
   }
 
   /* 优化切换动画在中等屏幕上的表现 */
@@ -670,13 +958,22 @@ onMounted(async () => {
 }
 
 @media (max-width: 968px) {
+  .pictures-container {
+    padding: 0 12px; /* 小屏幕进一步减少内边距 */
+  }
+
   .waterfall-container {
     column-count: 2;
-    column-gap: 14px;
+    column-gap: 16px;
   }
 
   .picture-card {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+  }
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 16px;
+    row-gap: 22px;
   }
 }
 
@@ -685,9 +982,14 @@ onMounted(async () => {
     padding: 16px;
   }
 
+  .pictures-container {
+    padding: 0 10px; /* 移动端最小内边距 */
+  }
+
   .filter-container {
     flex-direction: column;
     align-items: stretch;
+    padding: 20px 24px;
   }
 
   .search-item {
@@ -702,6 +1004,16 @@ onMounted(async () => {
   .picture-card {
     margin-bottom: 12px;
   }
+
+  .grid-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .grid-container::after {
+    grid-column: span 1;
+  }
+
   /* 小屏幕上简化动画 */
   .pictures-container.animate {
     transform: scale(0.995);
@@ -709,13 +1021,13 @@ onMounted(async () => {
 
   /* 优化切换按钮在小屏幕上的显示 */
   .picture-type-toggle {
-    padding: 3px;
+    padding: 4px;
   }
 
   .toggle-btn {
-    min-width: 90px;
-    font-size: 13px;
-    padding: 6px 16px;
+    min-width: 100px;
+    font-size: 14px;
+    padding: 8px 18px;
   }
 }
 </style>

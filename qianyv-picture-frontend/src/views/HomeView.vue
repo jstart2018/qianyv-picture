@@ -432,12 +432,12 @@ onMounted(async () => {
   padding-bottom: 40px;
 }
 
-/* ========== 左侧用户信息区域 ========== */
+/* ========== 左侧用户信息区域 - 放大 ========== */
 .left-panel {
   position: fixed;
   left: 0;
   top: 60px;
-  width: 33.33%;
+  width: 36%;
   height: calc(100vh - 60px); /* 只减去导航栏高度 */
   overflow: hidden;
   background: transparent;
@@ -449,12 +449,12 @@ onMounted(async () => {
 }
 
 .user-info-card {
-  /* 尺寸和位置：左边距调整，卡片宽度 66.7% */
-  width: 66.7%;
+  /* 尺寸和位置：左边距调整，卡片宽度增大 */
+  width: 72%;
   height: auto; /* 改为自动高度，让内容自然撑开 */
-  max-height: 70%; /* 最大高度限制 */
-  margin-left: 2%; /* 左边距 2%（往左移动） */
-  margin-right: 23.3%; /* 右边距 23.3% */
+  max-height: 75%; /* 最大高度限制 */
+  margin-left: 3%; /* 左边距 3% */
+  margin-right: 20%; /* 右边距 20% */
   margin-top: 60px; /* 距离顶部 60px */
 
   /* 外观样式 */
@@ -462,14 +462,14 @@ onMounted(async () => {
   backdrop-filter: blur(8px); /* 进一步减少模糊度，让背景渐变更清晰 */
   -webkit-backdrop-filter: blur(8px);
   border: 2px dashed rgba(223, 231, 245, 0.5); /* 稍微加深边框，增强对比 */
-  border-radius: 20px; /* 适当圆角 */
+  border-radius: 22px; /* 适当圆角 */
 
   /* 内容布局 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start; /* 改为顶部对齐，避免压缩 */
-  padding: 32px 24px; /* 适当的内边距 */
+  padding: 36px 28px; /* 适当的内边距 */
 
   /* 阴影效果 */
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
@@ -487,18 +487,18 @@ onMounted(async () => {
 }
 
 .user-avatar-large {
-  width: 96px;
-  height: 96px; /* 固定高度，确保不会被压扁 */
-  min-height: 96px; /* 最小高度保护 */
+  width: 110px;
+  height: 110px; /* 固定高度，确保不会被压扁 */
+  min-height: 110px; /* 最小高度保护 */
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  font-size: 44px;
   font-weight: 700;
   color: white;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  margin-bottom: 16px; /* 适当的底部间距 */
+  margin-bottom: 18px; /* 适当的底部间距 */
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
   border: 3px solid rgba(255, 255, 255, 0.9);
   transition: all 0.3s ease;
@@ -640,10 +640,10 @@ onMounted(async () => {
   transform: translateX(3px) translateY(-3px); /* 悬停时飞起效果 */
 }
 
-/* ========== 中部博客列表 ========== */
+/* ========== 中部博客列表 - 调整左边距 ========== */
 .center-panel {
   position: absolute; /* 使用绝对定位 */
-  left: 25%; /* 左侧留出 25% 给左侧面板 */
+  left: 28%; /* 左侧留出 28% 给左侧面板（从25%增加） */
   right: 22%; /* 右侧留出 22% 给右侧面板 */
   top: 0;
   min-height: 100vh; /* 使用最小高度，允许内容超出视口 */
