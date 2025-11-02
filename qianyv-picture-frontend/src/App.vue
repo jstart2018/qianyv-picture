@@ -291,15 +291,11 @@ const avatarStyle = computed(() => {
   z-index: -2;
   background: linear-gradient(
     135deg,
-    #cbcbf7 0%,
-    #daf0f3 20%,
-    #f58888 40%,
-    #bdf8c6 60%,
-    #dbb2ff 80%,
-    #bde7f8 100%
+    #cce2d0 60%,
+    #c8d7dd 100%
   );
   background-size: 400% 400%;
-  animation: gradientShift 30s ease infinite;
+  animation: gradientShift 60s ease infinite; /* 减慢渐变速率：从 30s 增加到 60s */
 }
 
 @keyframes gradientShift {

@@ -25,6 +25,7 @@ myAxios.interceptors.response.use(
     const { data } = response
 
     // 规范化后端返回的数据：把 data.data 中的数字字符串转换为数字，减少组件中手动 parseInt 的需求
+    // 注意：ID 字段保持字符串类型，避免大数精度丢失（如 1976271616420237313）
     const normalizeNumericStrings = (obj: any) => {
       if (obj === null || obj === undefined) return
       if (Array.isArray(obj)) {
@@ -35,12 +36,19 @@ myAxios.interceptors.response.use(
         Object.keys(obj).forEach((key) => {
           const val = obj[key]
           if (val === null || val === undefined) return
-          if (typeof val === 'string') {
-            // 仅在字符串完全为数字(可带小数)时转换，避免误转其他ID-like字符串
+
+          // 跳过所有 ID 相关字段，保持字符串类型避免精度丢失
+          const isIdField = key.toLowerCase().includes('id')
+
+          if (typeof val === 'string' && !isIdField) {
+            // 仅在字符串完全为数字(可带小数)时转换，避免误转其他字符串
             if (/^-?\d+(\.\d+)?$/.test(val)) {
               const num = Number(val)
-              // 仅当转换后为有效数字时才替换
-              if (!Number.isNaN(num)) obj[key] = num
+              // 仅当转换后为有效数字且在安全范围内时才替换
+              if (!Number.isNaN(num) && Number.isSafeInteger(num)) {
+                obj[key] = num
+              }
+              // 超出安全整数范围的保持字符串，避免精度丢失
             }
           } else if (typeof val === 'object') {
             normalizeNumericStrings(val)

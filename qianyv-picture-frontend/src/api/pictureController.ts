@@ -2,6 +2,53 @@
 /* eslint-disable */
 import request from '@/request'
 
+/** 此处后端没有提供注释 GET /picture/${param0} */
+export async function getOneById(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getOneByIdParams,
+  options?: { [key: string]: any }
+) {
+  const { id: param0, ...queryParams } = params
+  return request<API.ResultPictureVO>(`/picture/${param0}`, {
+    method: 'GET',
+    params: {
+      ...queryParams,
+    },
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /picture/${param0}/${param1} */
+export async function collectToggle(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.collectToggleParams,
+  options?: { [key: string]: any }
+) {
+  const { id: param0, collect: param1, ...queryParams } = params
+  return request<API.Result>(`/picture/${param0}/${param1}`, {
+    method: 'POST',
+    params: {
+      ...queryParams,
+    },
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 GET /picture/collect/check */
+export async function checkCollect(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.checkCollectParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultInteger>('/picture/collect/check', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 DELETE /picture/delete */
 export async function delete2(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -13,6 +60,21 @@ export async function delete2(
     params: {
       ...params,
     },
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /picture/download */
+export async function pictureDownload(
+  body: API.PictureDownLoadDTO,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultString>('/picture/download', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
     ...(options || {}),
   })
 }

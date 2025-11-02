@@ -154,14 +154,18 @@ const getUserAvatarText = (nickname?: string) => {
   return nickname.charAt(0).toUpperCase()
 }
 
-// 打开图片详情页（在新标签页中打开）
-const openPictureDetail = (pictureId: number | undefined) => {
-  if (!pictureId) return
+// 打开图片详情页（在新标签页中打开）- 根据宽高比判断跳转到横屏或竖屏详情页
+const openPictureDetail = (picture: any) => {
+  if (!picture || !picture.id) return
+
+  // 根据 picScale 判断图片方向
+  // picScale >= 1 为横屏，< 1 为竖屏
+  const isHorizontal = picture.picScale === undefined || picture.picScale >= 1
 
   // 在新标签页中打开图片详情页
   const routeUrl = router.resolve({
-    name: 'pictureDetail',
-    params: { id: pictureId },
+    name: isHorizontal ? 'horizontalPictureDetail' : 'verticalPictureDetail',
+    params: { id: picture.id },
   })
   window.open(routeUrl.href, '_blank')
 }
@@ -302,7 +306,7 @@ onMounted(async () => {
                 v-for="pic in blog.pictureVOList"
                 :key="pic.id"
                 class="image-item"
-                @click="openPictureDetail(pic.id)"
+                @click="openPictureDetail(pic)"
               >
                 <img :src="pic.thumbUrl" :alt="pic.tags" />
                 <div class="image-overlay">

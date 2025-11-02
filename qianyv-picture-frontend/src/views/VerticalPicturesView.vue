@@ -68,12 +68,17 @@ const loadMore = () => {
   fetchPictures(true)
 }
 
-// 打开图片详情
-const openPictureDetail = (pictureId: number | string | undefined) => {
-  if (!pictureId) return
+// 打开图片详情 - 根据宽高比判断跳转到横屏或竖屏详情页
+const openPictureDetail = (picture: any) => {
+  if (!picture || !picture.id) return
+
+  // 根据 picScale 判断图片方向
+  // picScale >= 1 为横屏，< 1 为竖屏
+  const isHorizontal = picture.picScale === undefined || picture.picScale >= 1
+
   const routeUrl = router.resolve({
-    name: 'pictureDetail',
-    params: { id: pictureId },
+    name: isHorizontal ? 'horizontalPictureDetail' : 'verticalPictureDetail',
+    params: { id: picture.id },
   })
   window.open(routeUrl.href, '_blank')
 }
@@ -127,7 +132,7 @@ onMounted(() => {
 
         <!-- 底部"前往"按钮 -->
         <div class="picture-footer">
-          <button class="picture-goto-btn" @click="openPictureDetail(pic.id)">
+          <button class="picture-goto-btn" @click="openPictureDetail(pic)">
             <svg
               class="picture-plane-icon"
               viewBox="0 0 24 24"

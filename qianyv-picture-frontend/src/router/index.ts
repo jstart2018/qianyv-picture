@@ -43,9 +43,14 @@ const router = createRouter({
       component: () => import('../views/UserDetailView.vue'),
     },
     {
-      path: '/picture/:id',
-      name: 'pictureDetail',
-      component: () => import('../views/PictureDetailView.vue'),
+      path: '/pictures/horizontal/:id',
+      name: 'horizontalPictureDetail',
+      component: () => import('../views/HorizontalPictureDetailView.vue'),
+    },
+    {
+      path: '/pictures/vertical/:id',
+      name: 'verticalPictureDetail',
+      component: () => import('../views/VerticalPictureDetailView.vue'),
     },
   ],
 })

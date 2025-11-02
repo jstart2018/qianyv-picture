@@ -81,8 +81,17 @@ declare namespace API {
     userId: number
   }
 
+  type checkCollectParams = {
+    id: number
+  }
+
   type collectionsToggleParams = {
     blogLikeOrCollectDTO: BlogLikeOrCollectDTO
+  }
+
+  type collectToggleParams = {
+    id: number
+    collect: number
   }
 
   type commentsParams = {
@@ -113,6 +122,11 @@ declare namespace API {
 
   type getByIdParams = {
     id: number
+  }
+
+  type getOneByIdParams = {
+    id: number
+    spaceId?: number
   }
 
   type getSpaceInfoParams = {
@@ -200,6 +214,15 @@ declare namespace API {
     categoryName?: string
   }
 
+  type PictureDownLoadDTO = {
+    current?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
+    id?: number
+    spaceId?: number
+  }
+
   type PictureEditDTO = {
     id?: number
     blogId?: number
@@ -213,6 +236,8 @@ declare namespace API {
     id?: number
     thumbUrl?: string
     tags?: string
+    picScale?: number
+    introduction?: string
     collectCount?: number
   }
 
@@ -232,6 +257,30 @@ declare namespace API {
   type PictureUploadVO = {
     id?: number
     thumbUrl?: string
+  }
+
+  type PictureVO = {
+    id?: number
+    userId?: number
+    thumbUrl?: string
+    introduction?: string
+    categoryId?: number
+    tags?: string
+    picSize?: number
+    picWidth?: number
+    picHeight?: number
+    picScale?: number
+    picFormat?: string
+    createTime?: string
+    collectCount?: number
+    downLoadCount?: number
+    userInfoVO?: UserInfoVO
+  }
+
+  type Result = {
+    code?: number
+    data?: Record<string, any>
+    message?: string
   }
 
   type ResultBlogCommentVO = {
@@ -255,6 +304,12 @@ declare namespace API {
   type ResultBoolean = {
     code?: number
     data?: boolean
+    message?: string
+  }
+
+  type ResultInteger = {
+    code?: number
+    data?: number
     message?: string
   }
 
@@ -306,15 +361,21 @@ declare namespace API {
     message?: string
   }
 
+  type ResultPictureVO = {
+    code?: number
+    data?: PictureVO
+    message?: string
+  }
+
   type ResultString = {
     code?: number
     data?: string
     message?: string
   }
 
-  type ResultUserVO = {
+  type ResultUserInfoVO = {
     code?: number
-    data?: UserVO
+    data?: UserInfoVO
     message?: string
   }
 
@@ -390,6 +451,17 @@ declare namespace API {
     introduction?: string
   }
 
+  type UserInfoVO = {
+    id?: number
+    nickname?: string
+    avatar?: string
+    tag?: string
+    introduction?: string
+    shareCount?: number
+    likeCount?: number
+    downloadCount?: number
+  }
+
   type UserLoginByCodeDTO = {
     emailOrPhone?: string
     code?: string
@@ -409,23 +481,6 @@ declare namespace API {
     email?: string
     phone?: string
     nickname?: string
-    role?: number
-    status?: number
-    gender?: number
-    tag?: string
-    introduction?: string
-    createTime?: string
-    updateTime?: string
-    lastLoginTime?: string
-    deleteTime?: string
-  }
-
-  type UserVO = {
-    id?: number
-    email?: string
-    phone?: string
-    nickname?: string
-    avatar?: string
     role?: number
     status?: number
     gender?: number

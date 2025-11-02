@@ -9,7 +9,7 @@ export async function getById(
   options?: { [key: string]: any }
 ) {
   const { id: param0, ...queryParams } = params
-  return request<API.ResultUserVO>(`/user/${param0}`, {
+  return request<API.ResultUserInfoVO>(`/user/${param0}`, {
     method: 'GET',
     params: { ...queryParams },
     ...(options || {}),
@@ -123,7 +123,7 @@ export async function loginWithPassword(
 
 /** 此处后端没有提供注释 GET /user/loginUser */
 export async function getLoginUser(options?: { [key: string]: any }) {
-  return request<API.ResultUserVO>('/user/loginUser', {
+  return request<API.ResultUserInfoVO>('/user/loginUser', {
     method: 'GET',
     ...(options || {}),
   })
