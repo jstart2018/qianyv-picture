@@ -27,9 +27,7 @@ export async function collectToggle(
   const { id: param0, collect: param1, ...queryParams } = params
   return request<API.Result>(`/picture/${param0}/${param1}`, {
     method: 'POST',
-    params: {
-      ...queryParams,
-    },
+    params: { ...queryParams },
     ...(options || {}),
   })
 }

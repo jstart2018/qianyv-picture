@@ -136,34 +136,33 @@ const handleDownload = async () => {
 const handleCollect = async () => {
   if (collecting.value) return
 
+  // Optimistically update the UI state for immediate feedback
+  isCollected.value = !isCollected.value
+
   collecting.value = true
   try {
-    // 使用正确的API接口切换收藏状态
-    // collect参数：1表示收藏，0表示取消收藏
-    // 注意：当前状态是已收藏，则执行取消收藏（传0）；反之执行收藏（传1）
-    const collectAction = isCollected.value ? 0 : 1
-
-    // 保持 ID 为字符串，避免精度丢失
+    const collectAction = isCollected.value ? 1 : 0
     const res = await collectToggle({
       id: pictureId.value,
       collect: collectAction,
     } as any)
 
-    if (res.data.code === 0) {
-      // 切换成功后更新本地状态
+    if (res.data.code !== 0) {
+      // Revert the optimistic update if the API call fails
       isCollected.value = !isCollected.value
-
-      // 更新收藏数量
+      alert(res.data.message || '操作失败')
+    } else {
+      // Update the collect count only if the API call succeeds
       if (picture.value) {
         picture.value.collectCount =
           (picture.value.collectCount || 0) + (isCollected.value ? 1 : -1)
       }
-    } else {
-      alert(res.data.message || '操作失败')
     }
   } catch (err) {
     console.error('收藏操作失败:', err)
     alert('操作失败，请稍后重试')
+    // Revert the optimistic update in case of an error
+    isCollected.value = !isCollected.value
   } finally {
     collecting.value = false
   }
@@ -563,7 +562,7 @@ onMounted(() => {
   left: 100px;
   top: 640px; /* Moved 100px upward */
   width: 12000px;
-  background: transparent; 
+  background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border-radius: 0;

@@ -723,7 +723,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px; /* 从20px减少到12px，减少与标题的间距 */
+  margin-bottom: 20px; /* 增加与标题的间距 */
 }
 
 .author-info {
@@ -819,10 +819,10 @@ onMounted(async () => {
 }
 
 .blog-title {
-  font-size: 20px; /* 从26px减少到22px，进一步缩小标题 */
+  font-size: 26px; /* 增大标题字体 */
   font-weight: 700;
   color: #1a202c;
-  margin-bottom: 12px; /* 从16px减少到12px，减少标题与内容间距 */
+  margin-bottom: 14px; /* 标题与内容的间距 */
   line-height: 1.4;
 }
 
@@ -850,11 +850,13 @@ onMounted(async () => {
   overflow: hidden;
   aspect-ratio: 3/4;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* 添加阴影效果 */
 }
 
 .image-item:hover {
   transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); /* 悬停时增强阴影 */
 }
 
 .image-item img {

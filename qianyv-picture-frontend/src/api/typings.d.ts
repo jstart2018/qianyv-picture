@@ -85,6 +85,10 @@ declare namespace API {
     id: number
   }
 
+  type checkHasSpaceParams = {
+    userId: number
+  }
+
   type collectionsToggleParams = {
     blogLikeOrCollectDTO: BlogLikeOrCollectDTO
   }
@@ -130,6 +134,7 @@ declare namespace API {
   }
 
   type getSpaceInfoParams = {
+    userId: number
     spaceId: number
   }
 
@@ -219,7 +224,7 @@ declare namespace API {
     pageSize?: number
     sortField?: string
     sortOrder?: string
-    id?: number
+    pictureId?: number
     spaceId?: number
   }
 
@@ -367,6 +372,12 @@ declare namespace API {
     message?: string
   }
 
+  type ResultSpaceVO = {
+    code?: number
+    data?: SpaceVO
+    message?: string
+  }
+
   type ResultString = {
     code?: number
     data?: string
@@ -409,6 +420,20 @@ declare namespace API {
     spaceRole?: string
     createTime?: string
     updateTime?: string
+  }
+
+  type SpaceVO = {
+    id?: number
+    spaceName?: string
+    spaceLevel?: number
+    maxSize?: number
+    maxCount?: number
+    totalSize?: number
+    totalCount?: number
+    userId?: number
+    createTime?: string
+    editTime?: string
+    userInfoVO?: UserInfoVO
   }
 
   type upgradeSpaceParams = {

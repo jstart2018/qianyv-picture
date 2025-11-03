@@ -2,6 +2,21 @@
 /* eslint-disable */
 import request from '@/request'
 
+/** 此处后端没有提供注释 GET /space/checkHas */
+export async function checkHasSpace(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.checkHasSpaceParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultLong>('/space/checkHas', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 GET /space/create */
 export async function createSpace(options?: { [key: string]: any }) {
   return request<API.ResultLong>('/space/create', {
@@ -43,7 +58,7 @@ export async function getSpaceInfo(
   params: API.getSpaceInfoParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.ResultObject>('/space/get', {
+  return request<API.ResultSpaceVO>('/space/get', {
     method: 'GET',
     params: {
       ...params,

@@ -40,8 +40,13 @@ onMounted(() => {
   // 生成泡泡
   generateBubbles()
 
-  // 初始化指示器位置
-  updateIndicator()
+  // 初始化指示器位置 - 延迟执行确保路由和 DOM 都准备好了
+  nextTick(() => {
+    // 再次使用 nextTick 确保 RouterLink 的 active 类已经应用
+    nextTick(() => {
+      updateIndicator()
+    })
+  })
 })
 
 // 监听路由变化，更新指示器位置
@@ -54,6 +59,13 @@ watch(
     })
   },
 )
+
+// 监听路由准备好的状态，确保首次加载时指示器正确显示
+router.isReady().then(() => {
+  nextTick(() => {
+    updateIndicator()
+  })
+})
 
 // 生成泡泡
 function generateBubbles() {
@@ -272,13 +284,12 @@ const avatarStyle = computed(() => {
 
 #app {
   position: relative;
-  min-height: 100vh;
+  height: 100vh; /* 固定高度为视口高度 */
   width: 100%;
   display: flex;
   flex-direction: column;
   color: var(--text);
-  overflow-x: hidden;
-  overflow-y: visible; /* 允许整个app滚动 */
+  overflow: hidden; /* 禁止app本身滚动，让main内部滚动 */
 }
 
 /* 动态渐变背景 */
@@ -289,11 +300,7 @@ const avatarStyle = computed(() => {
   width: 100%;
   height: 100%;
   z-index: -2;
-  background: linear-gradient(
-    135deg,
-    #cce2d0 60%,
-    #c8d7dd 100%
-  );
+  background: linear-gradient(135deg, #b0cddd 0%, #97c2a6 100%);
   background-size: 400% 400%;
   animation: gradientShift 60s ease infinite; /* 减慢渐变速率：从 30s 增加到 60s */
 }
@@ -771,5 +778,36 @@ const avatarStyle = computed(() => {
   flex: 1;
   width: 100%;
   padding: 0;
+  overflow-y: auto; /* 允许垂直滚动 */
+  overflow-x: hidden; /* 禁止水平滚动 */
+}
+
+/* 美化主滚动条 */
+.main::-webkit-scrollbar {
+  width: 12px;
+}
+
+.main::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin: 4px;
+}
+
+.main::-webkit-scrollbar-thumb {
+  background: rgba(138, 180, 248, 0.4);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.3s ease;
+}
+
+.main::-webkit-scrollbar-thumb:hover {
+  background: rgba(138, 180, 248, 0.6);
+  background-clip: padding-box;
+}
+
+.main::-webkit-scrollbar-thumb:active {
+  background: rgba(138, 180, 248, 0.8);
+  background-clip: padding-box;
 }
 </style>
