@@ -25,11 +25,6 @@ public class PicCategoryDTO {
     private String categoryName;
 
     /**
-     * 排序权重（数字越大越靠前）
-     */
-    private Integer sort;
-
-    /**
      * 是否升序，用于查询
      */
     private Boolean isAsc;

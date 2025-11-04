@@ -1,18 +1,14 @@
 package com.jstart.qypicture.model.vo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.Date;
 import java.util.List;
 
 /**
  * @TableName blog
  */
 @Data
-public class BlogListVO {
+public class BlogsVO {
     /**
      * 文章ID
      */
@@ -61,6 +57,11 @@ public class BlogListVO {
     /**
      * 图片url集合
      */
-    private List<String> pictureList;
+    private List<PictureListVO> pictureVOList;
+
+    /**
+     * 博客作者
+     */
+    private BlogAuthorVO user;
 
 }

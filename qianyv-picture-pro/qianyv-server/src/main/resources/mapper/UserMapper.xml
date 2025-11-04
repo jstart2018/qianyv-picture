@@ -29,4 +29,9 @@
         tag,introduction,create_time,
         update_time,last_login_time,delete_time
     </sql>
+
+    <select id="getUserInfo" resultType="com.jstart.qypicture.model.vo.UserInfoVO">
+        select * from user
+    </select>
+
 </mapper>

@@ -6,7 +6,7 @@ import com.jstart.qypicture.auth.SystemRoleEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.model.dto.*;
-import com.jstart.qypicture.model.vo.UserVO;
+import com.jstart.qypicture.model.vo.UserInfoVO;
 import com.jstart.qypicture.result.Result;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -30,7 +30,7 @@ public class UserController {
     // 发送验证码
     @PostMapping("/code")
     public Result<String> sendCode(@RequestBody SendCodeDTO sendCodeDTO) {
-        ThrowUtils.throwIf(sendCodeDTO == null || sendCodeDTO.getAccount() == null || sendCodeDTO.getType() == null,
+        ThrowUtils.throwIf(sendCodeDTO == null,
                 ResultEnum.PARAMS_ERROR, "参数不能为空");
         userService.sendCode(sendCodeDTO);
         return Result.success("验证码发送成功");
@@ -39,7 +39,7 @@ public class UserController {
     // 验证码登录
     @PostMapping("/login/code")
     public Result<String> loginWithCode(@RequestBody UserLoginByCodeDTO userLoginByCodeDTO) {
-        ThrowUtils.throwIf(userLoginByCodeDTO == null || userLoginByCodeDTO.getAccount() == null || userLoginByCodeDTO.getCode() == null,
+        ThrowUtils.throwIf(userLoginByCodeDTO == null || userLoginByCodeDTO.getEmailOrPhone() == null || userLoginByCodeDTO.getCode() == null,
                 ResultEnum.PARAMS_ERROR, "参数不能为空");
 
         userService.loginOrRegister(userLoginByCodeDTO);
@@ -59,11 +59,11 @@ public class UserController {
 
     // 获取当前登录用户
     @GetMapping("/loginUser")
-    public Result<UserVO> getLoginUser() {
+    public Result<UserInfoVO> getLoginUser() {
         Long loginId = StpUtil.getLoginIdAsLong();
         User user = userService.getById(loginId);
         ThrowUtils.throwIf(user == null, ResultEnum.NOT_FOUND_ERROR, "用户不存在");
-        return Result.success(userService.getUserVO(user));
+        return Result.success(userService.getUserInfoVO(user));
     }
 
     // 注销
@@ -76,10 +76,10 @@ public class UserController {
 
     // 根据ID获取用户
     @GetMapping("/{id}")
-    public Result<UserVO> getById(@PathVariable Long id) {
+    public Result<UserInfoVO> getById(@PathVariable Long id) {
         User user = userService.getById(id);
         ThrowUtils.throwIf(user == null, ResultEnum.NOT_FOUND_ERROR, "用户不存在");
-        return Result.success(userService.getUserVO(user));
+        return Result.success(userService.getUserInfoVO(user));
     }
 
     // 用户编辑
@@ -117,7 +117,7 @@ public class UserController {
         BeanUtils.copyProperties(userQueryDTO, user);
         QueryWrapper<User> queryWrapper = userService.getQueryWrapper(user);
         Page<User> pageResult = userService.page(new Page<>(current, pageSize), queryWrapper);
-        Page<UserVO> pageVoResult = new Page<>(current, pageSize, pageResult.getTotal());
+        Page<UserInfoVO> pageVoResult = new Page<>(current, pageSize, pageResult.getTotal());
         pageVoResult.setRecords(userService.getUserVOList(pageResult.getRecords()));
         return pageResult;
     }

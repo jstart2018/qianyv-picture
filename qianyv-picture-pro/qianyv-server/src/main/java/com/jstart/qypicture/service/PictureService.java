@@ -1,10 +1,12 @@
 package com.jstart.qypicture.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
+import com.jstart.qypicture.model.vo.PictureVO;
 
 import java.util.List;
 
@@ -41,5 +43,20 @@ public interface PictureService {
      */
     Page<PictureListVO> pageList(PictureQueryListDTO pictureQueryListDTO);
 
+    /**
+     * 根据图片id获取图片
+     * @param id
+     * @param spaceId
+     * @return
+     */
+    PictureVO getOneById(Long id, Long spaceId);
 
+    /**
+     * 下载图片
+     * @param pictureDownLoadDTO
+     * @return
+     */
+    String downLoad(PictureDownLoadDTO pictureDownLoadDTO);
+
+    void collectToggle(Long id, Boolean collect);
 }

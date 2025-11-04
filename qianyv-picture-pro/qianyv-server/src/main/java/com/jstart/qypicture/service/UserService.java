@@ -6,7 +6,7 @@ import com.jstart.qypicture.model.dto.UserLoginByPasswordDTO;
 import com.jstart.qypicture.model.dto.SendCodeDTO;
 import com.jstart.qypicture.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.jstart.qypicture.model.vo.UserVO;
+import com.jstart.qypicture.model.vo.UserInfoVO;
 
 import java.util.List;
 
@@ -34,7 +34,7 @@ public interface UserService extends IService<User> {
 
     public QueryWrapper<User> getQueryWrapper(User user);
 
-    UserVO getUserVO(User user);
+    UserInfoVO getUserInfoVO(User user);
 
-    List<UserVO> getUserVOList(List<User> userList);
+    List<UserInfoVO> getUserVOList(List<User> userList);
 }

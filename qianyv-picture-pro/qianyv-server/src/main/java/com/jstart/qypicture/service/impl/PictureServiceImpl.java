@@ -5,12 +5,16 @@ import com.jstart.qypicture.enums.PicturePlaceEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.handler.picture.PictureHandler;
 import com.jstart.qypicture.handler.picture.PictureHandlerFactory;
-import com.jstart.qypicture.mapper.PubPictureMapper;
+import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
+import com.jstart.qypicture.model.entity.User;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
+import com.jstart.qypicture.model.vo.PictureVO;
+import com.jstart.qypicture.model.vo.UserInfoVO;
 import com.jstart.qypicture.service.PictureService;
+import com.jstart.qypicture.service.UserService;
 import com.jstart.qypicture.utils.COSUtil.CosManager;
 import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
@@ -28,9 +32,10 @@ public class PictureServiceImpl implements PictureService {
     @Resource
     @Lazy
     private PictureHandlerFactory pictureHandlerFactory;
-
     @Resource
     private CosManager cosManager;
+    @Resource
+    private UserService userService;
 
     /**
      * 上传图片
@@ -99,6 +104,36 @@ public class PictureServiceImpl implements PictureService {
         PictureHandler<?> pictureSpaceHandler = pictureHandlerFactory.getPictureSpaceHandler(manageType);
         //策略模式执行查询
         return pictureSpaceHandler.pageList(pictureQueryListDTO);
+    }
+
+    @Override
+    public PictureVO getOneById(Long id, Long spaceId) {
+
+        PicturePlaceEnum manageType = PicturePlaceEnum.getManageType(spaceId);
+        //从工厂获取策略
+        PictureHandler<?> pictureSpaceHandler = pictureHandlerFactory.getPictureSpaceHandler(manageType);
+        //策略模式执行查询
+        PictureVO pictureVO = pictureSpaceHandler.getOneById(id, spaceId);
+        UserInfoVO userInfoVO = userService.getUserInfoVO(userService.getById(pictureVO.getUserId()));
+        pictureVO.setUserInfoVO(userInfoVO);
+
+        return pictureVO;
+
+    }
+
+    @Override
+    public String downLoad(PictureDownLoadDTO pictureDownLoadDTO) {
+
+        PicturePlaceEnum manageType = PicturePlaceEnum.getManageType(pictureDownLoadDTO.getSpaceId());
+        //从工厂获取策略
+        PictureHandler<?> pictureSpaceHandler = pictureHandlerFactory.getPictureSpaceHandler(manageType);
+        //策略模式执行下载
+        return pictureSpaceHandler.downLoad(pictureDownLoadDTO);
+    }
+
+    @Override
+    public void collectToggle(Long id, Boolean collect) {
+
     }
 
 }

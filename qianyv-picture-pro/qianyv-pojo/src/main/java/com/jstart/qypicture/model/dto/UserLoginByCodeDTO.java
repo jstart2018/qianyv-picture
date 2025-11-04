@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class UserLoginByCodeDTO {
 
-    private String account;
+    private String emailOrPhone;
 
     private String code;
 }

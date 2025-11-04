@@ -4,6 +4,7 @@ package com.jstart.qypicture.controller;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.model.dto.PicCategoryDTO;
 import com.jstart.qypicture.model.entity.PicCategory;
+import com.jstart.qypicture.model.vo.PicCategoryVO;
 import com.jstart.qypicture.result.Result;
 import com.jstart.qypicture.service.PicCategoryService;
 import com.jstart.qypicture.utils.ThrowUtils;
@@ -24,7 +25,7 @@ public class PicCategoryController {
      * 添加图片分类
      */
     @PostMapping("add")
-    public Result<String> add(@RequestBody PicCategoryDTO picCategoryDTO) {
+    public Result<PicCategoryVO> add(@RequestBody PicCategoryDTO picCategoryDTO) {
 
         boolean exists = picCategoryService.lambdaQuery()
                 .eq(picCategoryDTO.getCategoryName() != null, PicCategory::getCategoryName, picCategoryDTO.getCategoryName())
@@ -37,7 +38,10 @@ public class PicCategoryController {
         boolean save = picCategoryService.save(pc);
         ThrowUtils.throwIf(!save, ResultEnum.OPERATION_ERROR, "添加失败");
 
-        return Result.success(pc.getCategoryName());
+        PicCategoryVO picCategoryVO = new PicCategoryVO();
+        BeanUtils.copyProperties(pc, picCategoryVO);
+
+        return Result.success(picCategoryVO);
     }
 
     /**
@@ -62,16 +66,18 @@ public class PicCategoryController {
     /**
      * 获取所有图片分类
      */
-    @GetMapping
-    public Result<List<String>> listAll(@RequestBody PicCategoryDTO picCategoryDTO) {
+    @GetMapping("listAll")
+    public Result<List<PicCategoryVO>> listAll() {
         List<PicCategory> list = picCategoryService.lambdaQuery()
-                .orderBy(picCategoryDTO.getSort() != null, picCategoryDTO.getIsAsc(), PicCategory::getSort)
-                .select(PicCategory::getCategoryName)
+                .select(PicCategory::getId,PicCategory::getCategoryName)
                 .list();
+        List<PicCategoryVO> picCategoryVOList = list.stream().map(picCategory -> {
+            PicCategoryVO picCategoryVO = new PicCategoryVO();
+            BeanUtils.copyProperties(picCategory, picCategoryVO);
+            return picCategoryVO;
+        }).toList();
 
-        List<String> categoryNameList = list.stream().map(PicCategory::getCategoryName).toList();
-
-        return Result.success(categoryNameList);
+        return Result.success(picCategoryVOList);
     }
 
 

@@ -11,12 +11,11 @@ import com.jstart.qypicture.enums.SpaceLevelEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.mapper.SpaceMapper;
 import com.jstart.qypicture.model.dto.SpaceQueryDTO;
-import com.jstart.qypicture.model.dto.SpaceUpgradeDTO;
 import com.jstart.qypicture.model.entity.Space;
 import com.jstart.qypicture.model.entity.SpaceUser;
 import com.jstart.qypicture.model.entity.User;
 import com.jstart.qypicture.model.vo.SpaceVO;
-import com.jstart.qypicture.model.vo.UserVO;
+import com.jstart.qypicture.model.vo.UserInfoVO;
 import com.jstart.qypicture.service.SpaceService;
 import com.jstart.qypicture.service.SpaceUserService;
 import com.jstart.qypicture.service.UserService;
@@ -24,10 +23,13 @@ import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,17 +47,18 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     @Resource
     private UserService userService;
-
     @Resource
     @Lazy
     private SpaceUserService spaceUserService;
-
     //编程式事务管理器
     @Resource
     private TransactionTemplate transactionTemplate;
+    @Resource
+    private SpaceMapper spaceMapper;
 
     /**
      * 创建空间
+     *
      * @return
      */
     @Override
@@ -107,12 +110,13 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     /**
      * 更换空间名称
-     * @param id 空间id
+     *
+     * @param id        空间id
      * @param spaceName 新名称
      * @return 是否成功
      */
     @Override
-    public boolean editSpace(Long id,String spaceName) {
+    public boolean editSpace(Long id, String spaceName) {
         ThrowUtils.throwIf(id == null || StringUtils.isBlank(spaceName), ResultEnum.PARAMS_ERROR);
         return lambdaUpdate()
                 .set(Space::getSpaceName, spaceName)
@@ -123,8 +127,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     /**
      * 空间升级
+     *
      * @param spaceId 空间id
-     * @param level 升级后的等级
+     * @param level   升级后的等级
      * @return 是否成功
      */
     @Override
@@ -166,6 +171,19 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         }
     }
 
+
+    @Override
+    public List<SpaceVO> getUserSpaceInfoList(Long spaceId, Long userId, HashSet<Integer> spaceRole) {
+        List<SpaceVO> userSpaceList = spaceMapper.getUserSpaceList(spaceId, userId, spaceRole);
+        for (SpaceVO spaceVO : userSpaceList) {
+            //获取成员数量
+            spaceVO.setMemberCount(spaceUserService.memberCountInSpace(spaceVO.getId(),null));
+        }
+
+        return userSpaceList;
+
+    }
+
     @Override
     public QueryWrapper<Space> getQueryWrapper(SpaceQueryDTO spaceQueryDTO) {
         QueryWrapper<Space> queryWrapper = new QueryWrapper<>();
@@ -190,20 +208,6 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         return queryWrapper;
     }
 
-    @Override
-    public SpaceVO getSpaceVO(Space space) {
-        // 对象转封装类
-        SpaceVO spaceVO = SpaceVO.objToVO(space);
-        // 关联查询用户信息
-        Long userId = spaceVO.getUserId();
-        if (userId != null && userId > 0) {
-            User user = userService.getById(userId);
-            UserVO userVO = new UserVO();
-            BeanUtils.copyProperties(user, userVO);
-            spaceVO.setUserVO(userVO);
-        }
-        return spaceVO;
-    }
 
     /**
      * 根据空间等级填充空间容量，也可自定义容量

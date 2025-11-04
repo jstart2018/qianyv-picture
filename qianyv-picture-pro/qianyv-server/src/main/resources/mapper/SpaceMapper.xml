@@ -5,17 +5,17 @@
 <mapper namespace="com.jstart.qypicture.mapper.SpaceMapper">
 
     <resultMap id="BaseResultMap" type="com.jstart.qypicture.model.entity.Space">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="userId" column="user_id" jdbcType="BIGINT"/>
-            <result property="spaceName" column="space_name" jdbcType="VARCHAR"/>
-            <result property="spaceLevel" column="space_level" jdbcType="INTEGER"/>
-            <result property="maxSize" column="max_size" jdbcType="BIGINT"/>
-            <result property="maxCount" column="max_count" jdbcType="BIGINT"/>
-            <result property="totalSize" column="total_size" jdbcType="BIGINT"/>
-            <result property="totalCount" column="total_count" jdbcType="BIGINT"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
-            <result property="deleteTime" column="delete_time" jdbcType="TIMESTAMP"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="spaceName" column="space_name" jdbcType="VARCHAR"/>
+        <result property="spaceLevel" column="space_level" jdbcType="INTEGER"/>
+        <result property="maxSize" column="max_size" jdbcType="BIGINT"/>
+        <result property="maxCount" column="max_count" jdbcType="BIGINT"/>
+        <result property="totalSize" column="total_size" jdbcType="BIGINT"/>
+        <result property="totalCount" column="total_count" jdbcType="BIGINT"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="deleteTime" column="delete_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -24,4 +24,32 @@
         total_size,total_count,
         create_time,update_time,delete_time
     </sql>
+
+    <select id="getUserSpaceList" resultType="com.jstart.qypicture.model.vo.SpaceVO">
+        SELECT
+        s.*,
+        su.space_role AS role
+        FROM
+        space s
+        INNER JOIN
+        space_user su
+        ON s.id = su.space_id
+        <where>
+
+            s.delete_time IS NULL
+            <if test="loginIdAsLong != null">
+                AND su.user_id = #{loginIdAsLong}
+            </if>
+            <if test="spaceId != null">
+                AND s.id = #{spaceId}
+            </if>
+            <if test="spaceRole != null and spaceRole.size() > 0">
+                AND space_role IN
+                <foreach collection="spaceRole" item="roleId" open="(" close=")" separator=",">
+                    #{roleId}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
 </mapper>

@@ -8,11 +8,13 @@ import com.jstart.qypicture.enums.PicturePlaceEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.mapper.PubPictureMapper;
 import com.jstart.qypicture.model.UploadPictureResult;
+import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.entity.PubPicture;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
+import com.jstart.qypicture.model.vo.PictureVO;
 import com.jstart.qypicture.service.BlogService;
 import com.jstart.qypicture.service.PicCategoryService;
 import com.jstart.qypicture.template.uploadFileTemplate.FilePictureUpload;
@@ -125,13 +127,31 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
         PubPicture query = new PubPicture();
         BeanUtils.copyProperties(pictureQueryListDTO, query);
         QueryWrapper<PubPicture> qw = getQueryWrapper(query);
+        if (StringUtils.isNotBlank(pictureQueryListDTO.getSearchText())) {
+            qw.like("tags", pictureQueryListDTO.getSearchText())
+                    .or()
+                    .like("introduction", pictureQueryListDTO.getSearchText());
+        }
+        Integer pictureType = pictureQueryListDTO.getPictureType();
+        if (pictureType != null) {
+            if (pictureType.equals(0)) {
+                // 横屏壁纸
+                qw.ge("pic_scale", 1);
+            } else if (pictureType.equals(1)) {
+                // 竖屏壁纸
+                qw.lt("pic_scale", 1);
+            }
+        }
+
         Page<PubPicture> page = pubPictureMapper.selectPage(new Page<>(current, pageSize), qw);
         List<PictureListVO> voList = page.getRecords().stream().map(p -> {
             PictureListVO vo = new PictureListVO();
             vo.setId(p.getId());
             vo.setThumbUrl(p.getThumbUrl());
             vo.setTags(p.getTags());
+            vo.setPicScale(p.getPicScale());
             vo.setCollectCount(p.getCollectCount());
+            vo.setIntroduction(p.getIntroduction());
             return vo;
         }).collect(Collectors.toList());
         Page<PictureListVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
@@ -182,5 +202,19 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
         qw.ge(updateTime != null, "update_time", updateTime);
 
         return qw;
+    }
+
+    @Override
+    public PictureVO getOneById(Long id, Long spaceId) {
+        PubPicture pubPicture = pubPictureMapper.selectById(id);
+        ThrowUtils.throwIf(pubPicture == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
+        PictureVO pictureVO = new PictureVO();
+        BeanUtils.copyProperties(pubPicture, pictureVO);
+        return pictureVO;
+    }
+
+    @Override
+    public String downLoad(PictureDownLoadDTO pictureDownLoadDTO) {
+        return pubPictureMapper.selectById(pictureDownLoadDTO.getPictureId()).getUrl();
     }
 }

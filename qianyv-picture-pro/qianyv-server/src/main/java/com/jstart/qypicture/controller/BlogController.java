@@ -10,7 +10,7 @@ import com.jstart.qypicture.model.dto.*;
 import com.jstart.qypicture.model.entity.Blog;
 import com.jstart.qypicture.model.vo.BlogCommentVO;
 import com.jstart.qypicture.model.vo.BlogLikeOrCollectVO;
-import com.jstart.qypicture.model.vo.BlogListVO;
+import com.jstart.qypicture.model.vo.BlogsVO;
 import com.jstart.qypicture.result.Result;
 import com.jstart.qypicture.service.BlogService;
 import com.jstart.qypicture.utils.ThrowUtils;
@@ -25,8 +25,8 @@ public class BlogController {
     @Resource
     private BlogService blogService;
 
-    @PostMapping("/create")
-    public Result<Long> createBlog(@RequestBody BlogCreateDTO blogCreateDTO) {
+    @PostMapping("/add")
+    public Result<Long> addBlog(@RequestBody BlogCreateDTO blogCreateDTO) {
         ThrowUtils.throwIf(blogCreateDTO == null, ResultEnum.PARAMS_ERROR, "参数错误");
         Long blogId = blogService.createBlog(blogCreateDTO);
         return Result.success(blogId);
@@ -65,25 +65,25 @@ public class BlogController {
     }
 
     @PostMapping("/list")
-    public Result<Page<BlogListVO>> blogList(@RequestBody BlogListDTO blogListDTO) {
+    public Result<Page<BlogsVO>> blogList(@RequestBody BlogListDTO blogListDTO) {
         ThrowUtils.throwIf(blogListDTO == null, ResultEnum.PARAMS_ERROR, "请求参数为空");
 
-        Page<BlogListVO> blogListVOPage = blogService.selectList(blogListDTO);
+        Page<BlogsVO> blogListVOPage = blogService.selectList(blogListDTO);
 
         return Result.success(blogListVOPage);
     }
 
     @GetMapping("/{id}")
-    public Result<BlogListVO> getBlogDetail(@PathVariable Long id) {
+    public Result<BlogsVO> getBlogDetail(@PathVariable Long id) {
         ThrowUtils.throwIf(id == null, ResultEnum.PARAMS_ERROR, "参数错误");
 
         Blog blog = blogService.getById(id);
         ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
 
-        BlogListVO blogListVO = new BlogListVO();
-        BeanUtils.copyProperties(blog, blogListVO);
+        BlogsVO blogsVO = new BlogsVO();
+        BeanUtils.copyProperties(blog, blogsVO);
 
-        return Result.success(blogListVO);
+        return Result.success(blogsVO);
     }
 
     @GetMapping("/likes/toggle")

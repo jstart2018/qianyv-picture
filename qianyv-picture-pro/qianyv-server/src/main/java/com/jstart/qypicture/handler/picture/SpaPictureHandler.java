@@ -9,12 +9,14 @@ import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.mapper.SpaPictureMapper;
 import com.jstart.qypicture.model.UploadPictureResult;
+import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.entity.SpaPicture;
 import com.jstart.qypicture.model.entity.Space;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
+import com.jstart.qypicture.model.vo.PictureVO;
 import com.jstart.qypicture.service.SpaceService;
 import com.jstart.qypicture.template.uploadFileTemplate.PictureUploadTemplate;
 import com.jstart.qypicture.utils.ThrowUtils;
@@ -152,6 +154,9 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
         BeanUtils.copyProperties(pictureQueryListDTO, query);
         query.setSpaceId(pictureQueryListDTO.getSpaceId());
         QueryWrapper<SpaPicture> qw = getQueryWrapper(query);
+        qw.like("tags", pictureQueryListDTO.getSearchText())
+                .or()
+                .like("introduction", pictureQueryListDTO.getSearchText());
         Page<SpaPicture> page = spaPictureMapper.selectPage(new Page<>(current, pageSize), qw);
         List<PictureListVO> voList = page.getRecords().stream().map(p -> {
             PictureListVO vo = new PictureListVO();
@@ -207,6 +212,16 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
         qw.ge(deleteTime != null, "delete_time", deleteTime);
 
         return qw;
+    }
+
+    @Override
+    public PictureVO getOneById(Long id, Long spaceId) {
+        return null;
+    }
+
+    @Override
+    public String downLoad(PictureDownLoadDTO pictureDownLoadDTO) {
+        return "";
     }
 
     //校验空间属性、成员权限

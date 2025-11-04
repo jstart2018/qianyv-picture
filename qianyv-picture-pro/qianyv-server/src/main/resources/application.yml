@@ -17,6 +17,7 @@ spring:
       port: 6379
       host: localhost
       database: 2
+      password: 123456
   mail:
     host: ${email.host}
     username: ${email.username}
@@ -32,6 +33,7 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true # 开启驼峰命名
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       logic-delete-field: delete_time # 开启逻辑删除

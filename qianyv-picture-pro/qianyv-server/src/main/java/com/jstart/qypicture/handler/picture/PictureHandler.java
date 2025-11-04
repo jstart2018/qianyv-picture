@@ -3,10 +3,12 @@ package com.jstart.qypicture.handler.picture;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.enums.PicturePlaceEnum;
+import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
+import com.jstart.qypicture.model.vo.PictureVO;
 
 import java.util.List;
 
@@ -54,5 +56,9 @@ public interface PictureHandler<T> {
      * @return 查询包装器
      */
     QueryWrapper<T> getQueryWrapper(Object picture);
+
+    PictureVO getOneById(Long id, Long spaceId);
+
+    String downLoad(PictureDownLoadDTO pictureDownLoadDTO);
 
 }

@@ -31,6 +31,16 @@ public class PictureListVO {
     private String tags;
 
     /**
+     * 宽高比
+     */
+    private Double picScale;
+
+    /**
+     * 简介
+     */
+    private String introduction;
+
+    /**
      * 收藏数量
      */
     private Long collectCount;

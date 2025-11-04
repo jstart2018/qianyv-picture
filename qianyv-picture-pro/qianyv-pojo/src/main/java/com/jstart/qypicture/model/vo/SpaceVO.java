@@ -29,7 +29,7 @@ public class SpaceVO implements Serializable {
     private String spaceName;
 
     /**
-     * 空间级别：0-普通版 1-专业版 2-旗舰版
+     * 空间级别：0-普通版 1-专业版 2-企业版 3-旗舰版
      */
     private Integer spaceLevel;
 
@@ -59,24 +59,14 @@ public class SpaceVO implements Serializable {
     private Long userId;
 
     /**
-     * 创建时间
+     * 成员角色
      */
-    private LocalDateTime createTime;
+    private Integer role;
 
     /**
-     * 编辑时间
+     * 成员数量
      */
-    private LocalDateTime editTime;
-
-    /**
-     * 创建的用户
-     */
-    private UserVO userVO;
-
-    /**
-     * 权限列表
-     */
-    private List<String> permissionList = new ArrayList<>();
+    private Long memberCount;
 
 
     public static Space VOToObj(SpaceVO spaceVO) {

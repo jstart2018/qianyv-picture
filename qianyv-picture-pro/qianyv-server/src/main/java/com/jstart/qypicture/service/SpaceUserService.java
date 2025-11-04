@@ -2,6 +2,7 @@ package com.jstart.qypicture.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.jstart.qypicture.auth.SpaceRoleEnum;
 import com.jstart.qypicture.model.dto.SpaceUserAddDTO;
 import com.jstart.qypicture.model.dto.SpaceUserEditDTO;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -10,6 +11,7 @@ import com.jstart.qypicture.model.entity.SpaceUser;
 import com.jstart.qypicture.model.vo.SpaceUserVO;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author 28435
@@ -22,6 +24,8 @@ public interface SpaceUserService extends IService<SpaceUser> {
      * 添加空间成员关系数据
      */
     long addSpaceUser(SpaceUserAddDTO spaceUserAddDTO);
+
+    Long memberCountInSpace(Long spaceId, Set<Integer> roleSet);
 
     /**
      * 踢出成员
@@ -48,4 +52,5 @@ public interface SpaceUserService extends IService<SpaceUser> {
      */
     List<SpaceUserVO> getSpaceUserVOList(List<SpaceUser> spaceUserList);
 
+    SpaceUser getUserRoleInSpace(long loginIdAsLong, Long spaceId);
 }

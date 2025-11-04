@@ -16,6 +16,11 @@ import java.util.Date;
 public class PicCategoryVO {
 
     /**
+     * 分类id
+     */
+    private Long id;
+
+    /**
      * 分类名称（如“魅力/迷人”“自然/风景”）
      */
     private String categoryName;

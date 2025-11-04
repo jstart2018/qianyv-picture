@@ -2,10 +2,12 @@ package com.jstart.qypicture.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jstart.qypicture.model.dto.SpaceQueryDTO;
-import com.jstart.qypicture.model.dto.SpaceUpgradeDTO;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jstart.qypicture.model.entity.Space;
 import com.jstart.qypicture.model.vo.SpaceVO;
+
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * @author 28435
@@ -20,37 +22,39 @@ public interface SpaceService extends IService<Space> {
      */
     long createSpace();
 
-
     /**
      * 更改空间名称
      */
-    boolean editSpace(Long id,String spaceName);
+    boolean editSpace(Long id, String spaceName);
 
     /**
      * 空间升级
      */
     boolean upgradeSpace(Long spaceId, Integer level);
 
-
     /**
      * 校验图片空间数据，更新时使用
      */
-    public void validSpace(Space space, boolean add);
+    void validSpace(Space space, boolean add);
+
+    /**
+     * 获取用户所有的空间列表，可只看拥有某个角色的空间
+     *
+     * @param spaceRole 角色集合
+     * @return 空间列表
+     */
+    List<SpaceVO> getUserSpaceInfoList(Long spaceId, Long userId,  HashSet<Integer> spaceRole);
 
     /**
      * 构建Space的查询条件
      */
     QueryWrapper<Space> getQueryWrapper(SpaceQueryDTO spaceQueryRequest);
 
-    /**
-     * 获取空间vo
-     */
-    SpaceVO getSpaceVO(Space space);
-
 
     /**
      * 根据空间级别填充空间容量
      */
     void fillSpaceBySpaceLevel(Space space);
+
 
 }

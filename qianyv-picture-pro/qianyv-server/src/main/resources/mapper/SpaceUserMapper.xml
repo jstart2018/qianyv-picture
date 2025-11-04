@@ -17,4 +17,23 @@
         id,space_id,user_id,
         space_role,create_time,update_time
     </sql>
+    
+    <select id="getSpaceMemberCount" resultType="java.lang.Long">
+        select
+            count(*)
+        from
+            space_user
+        <where>
+            space_id = #{spaceId}
+        <if test="roleSet != null and roleSet.size() > 0">
+            AND space_role IN
+            <foreach collection="spaceRole" item="roleId" open="(" close=")" separator=",">
+                #{roleId}
+            </foreach>
+        </if>
+        </where>
+    
+    </select>
+
+
 </mapper>

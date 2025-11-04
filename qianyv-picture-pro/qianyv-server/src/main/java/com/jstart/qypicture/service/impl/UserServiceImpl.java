@@ -13,7 +13,7 @@ import com.jstart.qypicture.model.dto.UserLoginByCodeDTO;
 import com.jstart.qypicture.model.dto.UserLoginByPasswordDTO;
 import com.jstart.qypicture.model.dto.SendCodeDTO;
 import com.jstart.qypicture.model.entity.User;
-import com.jstart.qypicture.model.vo.UserVO;
+import com.jstart.qypicture.model.vo.UserInfoVO;
 import com.jstart.qypicture.service.UserService;
 import com.jstart.qypicture.mapper.UserMapper;
 import com.jstart.qypicture.utils.ThrowUtils;
@@ -21,6 +21,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -43,13 +44,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private UserMapper userMapper;
 
 
     @Override
     public void sendCode(SendCodeDTO sendCodeDTO) {
         SendCodeTemplate sendCodeTemplate;
 
-        String account = sendCodeDTO.getAccount();
+        String account = StringUtils.isNotBlank(sendCodeDTO.getPhone()) ? sendCodeDTO.getPhone() : sendCodeDTO.getEmail();
         //1. 判断账号类型(邮箱或手机号)
         if (account.contains("@")) {
             sendCodeTemplate = sendEmail;
@@ -64,7 +67,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public void loginOrRegister(UserLoginByCodeDTO userLoginByCodeDTO) {
         //1. 获取验证码
         Object codeFromRedis = redisTemplate.opsForValue()
-                .get(UserConstant.USER_LOGIN_CODE_KEY + userLoginByCodeDTO.getAccount());
+                .get(UserConstant.USER_LOGIN_CODE_KEY + userLoginByCodeDTO.getEmailOrPhone());
 
         // 2. 校验验证码
         if (codeFromRedis == null) {
@@ -77,17 +80,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         //3. 查询用户是否存在
         User user = new User();
-        if (userLoginByCodeDTO.getAccount().contains("@")) {
-            user.setEmail(userLoginByCodeDTO.getAccount());
+        if (userLoginByCodeDTO.getEmailOrPhone().contains("@")) {
+            user.setEmail(userLoginByCodeDTO.getEmailOrPhone());
         } else {
-            user.setPhone(userLoginByCodeDTO.getAccount());
+            user.setPhone(userLoginByCodeDTO.getEmailOrPhone());
         }
         //4. 不存在则注册
         if(this.count(getQueryWrapper(user)) == 0){
             user.setNickname("千语" + ((int) ((Math.random() * 9 + 1) * 100000)));
+            user.setPassword(userLoginByCodeDTO.getEmailOrPhone());//初始化密码和账号一致
             try {
                 this.saveOrUpdate(user);
             }catch (Exception e){
+                log.error("用户注册失败, 用户信息: {}, 错误信息: {}", user.toString(), e.getMessage());
                 ThrowUtils.throwIf(true, ResultEnum.SYSTEM_ERROR, "注册失败，请稍后重试");
             }
         }
@@ -96,7 +101,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         StpUtil.login(user.getId());
 
         //6. 删除验证码
-        redisTemplate.delete(UserConstant.USER_LOGIN_CODE_KEY + userLoginByCodeDTO.getAccount());
+        redisTemplate.delete(UserConstant.USER_LOGIN_CODE_KEY + userLoginByCodeDTO.getEmailOrPhone());
         log.info("用户登录成功, 用户id: {}", user.getId());
 
     }
@@ -141,16 +146,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return qw;
     }
 
+    /**
+     * 获取用户详情，包括分享数、获点赞数等信息
+     * @param user
+     * @return
+     */
     @Override
-    public UserVO getUserVO(User user) {
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user,userVO);
-        return userVO;
+    public UserInfoVO getUserInfoVO(User user) {
+
+        //todo 查询用户的分享数、获点赞数等信息
+        //UserInfoVO userInfoVO = userMapper.getUserInfo(user.getId());
+        UserInfoVO userInfoVO = new UserInfoVO();
+        BeanUtils.copyProperties(user, userInfoVO);
+        return userInfoVO;
     }
 
     @Override
-    public List<UserVO> getUserVOList(List<User> userList) {
-        return userList.stream().map(this::getUserVO).toList();
+    public List<UserInfoVO> getUserVOList(List<User> userList) {
+        return userList.stream().map(this::getUserInfoVO).toList();
     }
 
 

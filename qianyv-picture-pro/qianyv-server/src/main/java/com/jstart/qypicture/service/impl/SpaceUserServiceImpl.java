@@ -74,6 +74,12 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         return spaceUser.getId();
     }
 
+    @Override
+    public Long memberCountInSpace(Long spaceId, Set<Integer> roleSet) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(spaceId), ResultEnum.PARAMS_ERROR);
+        return this.getBaseMapper().getSpaceMemberCount(spaceId, roleSet);
+    }
+
     /**
      * 移除空间成员 todo: 空间权限：仅空间管理员
      * @param spaceId 空间 id
@@ -186,6 +192,14 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         // 对象列表 => 封装对象列表
 
         return spaceUserList.stream().map(SpaceUserVO::objToVo).collect(Collectors.toList());
+    }
+
+    @Override
+    public SpaceUser getUserRoleInSpace(long loginIdAsLong, Long spaceId) {
+        SpaceUser spaceUserInfo = this.lambdaQuery().eq(SpaceUser::getUserId, loginIdAsLong)
+                .eq(SpaceUser::getSpaceId, spaceId)
+                .one();
+        return spaceUserInfo;
     }
 
 

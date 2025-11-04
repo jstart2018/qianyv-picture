@@ -6,7 +6,7 @@ import com.jstart.qypicture.model.dto.BlogCreateDTO;
 import com.jstart.qypicture.model.dto.BlogListDTO;
 import com.jstart.qypicture.model.entity.Blog;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.jstart.qypicture.model.vo.BlogListVO;
+import com.jstart.qypicture.model.vo.BlogsVO;
 
 import java.util.List;
 
@@ -21,9 +21,7 @@ public interface BlogService extends IService<Blog> {
 
     void delBlog(Long id);
 
-    Page<BlogListVO> selectList(BlogListDTO blogListDTO);
-
-    List<BlogListVO> getBlogVOList(List<Blog> blogList);
+    Page<BlogsVO> selectList(BlogListDTO blogListDTO);
 
     QueryWrapper<Blog> getQueryWrapper(BlogListDTO blogListDTO);
 }

@@ -8,15 +8,14 @@ import lombok.Data;
 @Data
 public class SendCodeDTO {
 
-    private enum Type {
-        //短信
-        SMS,
-        //邮箱
-        EMAIL
-    }
+    /**
+     * 邮箱
+     */
+    private String email;
 
-    private Type type;
-
-    private String account; // 或用 email 和 phone 两个字段
+    /**
+     * 手机号
+     */
+    private String phone;
 
 }

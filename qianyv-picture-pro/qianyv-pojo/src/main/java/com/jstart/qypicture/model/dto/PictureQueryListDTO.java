@@ -3,6 +3,8 @@ package com.jstart.qypicture.model.dto;
 import com.jstart.qypicture.model.PageRequest;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 图片查询请求
  */
@@ -19,9 +21,9 @@ public class PictureQueryListDTO extends PageRequest {
     private Long blogId;
 
     /**
-     * 简介
+     * 搜索文本
      */
-    private String introduction;
+    private String searchText;
 
     /**
      * 分类id
@@ -29,9 +31,9 @@ public class PictureQueryListDTO extends PageRequest {
     private Long categoryId;
 
     /**
-     * 标签（JSON 数组）
+     * 图片类型，横屏/竖屏
      */
-    private String tags;
+    private Integer pictureType;
 
     /**
      * 空间id，非必须

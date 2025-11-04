@@ -12,18 +12,26 @@ import com.jstart.qypicture.model.dto.BlogListDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.entity.Blog;
 import com.jstart.qypicture.model.entity.PubPicture;
-import com.jstart.qypicture.model.vo.BlogListVO;
+import com.jstart.qypicture.model.entity.User;
+import com.jstart.qypicture.model.vo.BlogAuthorVO;
+import com.jstart.qypicture.model.vo.BlogsVO;
+import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.service.BlogService;
 import com.jstart.qypicture.mapper.BlogMapper;
 import com.jstart.qypicture.service.PictureService;
+import com.jstart.qypicture.service.UserService;
 import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author 28435
@@ -39,6 +47,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
     private PictureService pictureService;
     @Resource
     private PubPictureMapper pubPictureMapper;
+    @Resource
+    private UserService userservice;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -90,35 +100,18 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
     }
 
     @Override
-    public Page<BlogListVO> selectList(BlogListDTO blogListDTO) {
+    public Page<BlogsVO> selectList(BlogListDTO blogListDTO) {
         QueryWrapper<Blog> queryWrapper = getQueryWrapper(blogListDTO);
 
-        Page<Blog> blogPage  = new Page<>(blogListDTO.getCurrent(),blogListDTO.getPageSize());
+        Page<Blog> blogPage = new Page<>(blogListDTO.getCurrent(), blogListDTO.getPageSize());
         blogPage = this.page(blogPage, queryWrapper);
 
-        Page<BlogListVO>  blogListVOPage = new Page<>(blogPage.getCurrent(),blogPage.getSize(),blogPage.getTotal());
+
+        Page<BlogsVO> blogListVOPage = new Page<>(blogPage.getCurrent(), blogPage.getSize(), blogPage.getTotal());
+
         blogListVOPage.setRecords(this.getBlogVOList(blogPage.getRecords()));
 
         return blogListVOPage;
-    }
-
-    @Override
-    public List<BlogListVO> getBlogVOList(List<Blog> blogList) {
-        List<BlogListVO> blogListVOList = blogList.stream().map(blog -> {
-            Long id = blog.getId();
-            List<String> pictureIds = pubPictureMapper.selectList(
-                            new QueryWrapper<PubPicture>().eq("blog_id", id))
-                    .stream()
-                    .map(PubPicture::getThumbUrl)
-                    .toList();
-            BlogListVO blogListVO = new BlogListVO();
-            BeanUtils.copyProperties(blog, blogListVO);
-            blogListVO.setPictureList(pictureIds);
-
-            return blogListVO;
-        }).toList();
-
-        return blogListVOList;
     }
 
     @Override
@@ -135,18 +128,66 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
 
         QueryWrapper<Blog> qw = new QueryWrapper<>();
 
-        qw.eq(id !=null,"id",id);
-        qw.eq(userId !=null,"userId",id);
-        qw.like(searchText !=null,"title",searchText);
-        qw.like(searchText !=null,"content",searchText);
-        qw.eq(isRecommend !=null,"is_recommend",isRecommend);
-        qw.eq(reviewStatus !=null,"review_status",reviewStatus);
-        qw.eq(reviewMessage !=null,"review_message",reviewMessage);
-        qw.eq(reviewerId !=null,"reviewer_id",reviewerId);
-        qw.orderBy(upToDate !=null,!upToDate,"update_time");
-        qw.orderBy(sort !=null,true,"sort");
+        qw.eq(id != null, "id", id);
+        qw.eq(userId != null, "userId", id);
+        qw.like(searchText != null, "title", searchText);
+        qw.like(searchText != null, "content", searchText);
+        qw.eq(isRecommend != null, "is_recommend", isRecommend);
+        qw.eq(reviewStatus != null, "review_status", reviewStatus);
+        qw.eq(reviewMessage != null, "review_message", reviewMessage);
+        qw.eq(reviewerId != null, "reviewer_id", reviewerId);
+        qw.orderBy(upToDate != null, BooleanUtils.isFalse(upToDate), "update_time");
+        qw.orderBy(sort != null, true, "sort");
 
         return qw;
+    }
+
+    private List<BlogsVO> getBlogVOList(List<Blog> blogList) {
+        List<BlogsVO> blogsVOList = blogList.stream().map(blog -> {
+            Long id = blog.getId();
+            //查询博客携带的图片
+            List<PictureListVO> pictureVOList = pubPictureMapper.selectList(
+                            new QueryWrapper<PubPicture>().eq("blog_id", id))
+                    .stream()
+                    .map(pubPicture -> {
+                        PictureListVO pictureListVO = new PictureListVO();
+                        BeanUtils.copyProperties(pubPicture, pictureListVO);
+                        return pictureListVO;
+                    })
+                    .toList();
+            BlogsVO blogsVO = new BlogsVO();
+            BeanUtils.copyProperties(blog, blogsVO);
+            blogsVO.setPictureVOList(pictureVOList);
+            return blogsVO;
+        }).toList();
+
+
+
+        //获取博客作者信息
+        List<BlogsVO> b = blogList.stream().map(blog -> {
+            BlogsVO blogsVO = new BlogsVO();
+            BeanUtils.copyProperties(blog, blogsVO);
+            return blogsVO;
+        }).collect(Collectors.toList());
+        //提取作者id
+        Set<Long> blogAuthors = b.stream().map(BlogsVO::getUserId).collect(Collectors.toSet());
+        //去数据库查用户
+        List<User> users = userservice.listByIds(blogAuthors);
+        //将user塞进blogsVOList里的user属性
+        Map<Long, User> userMap = users
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+        //blogsVOList填充user
+        blogsVOList.forEach(blogsVO -> {
+            User user = userMap.get(blogsVO.getUserId());
+            if (user != null) {
+                BlogAuthorVO blogAuthorVO = new BlogAuthorVO();
+                BeanUtils.copyProperties(user, blogAuthorVO);
+                blogsVO.setUser(blogAuthorVO);
+            }
+        });
+
+        return blogsVOList;
     }
 }
 
