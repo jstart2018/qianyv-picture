@@ -1,4 +1,8 @@
 declare namespace API {
+  type addCategoryParams = {
+    categoryName: string
+  }
+
   type BlogAuthorVO = {
     id?: number
     nickname?: string
@@ -134,8 +138,11 @@ declare namespace API {
   }
 
   type getSpaceInfoParams = {
-    userId: number
     spaceId: number
+  }
+
+  type getUserSpaceListParams = {
+    spaceRole: number[]
   }
 
   type kickOutMemberParams = {
@@ -324,6 +331,12 @@ declare namespace API {
     message?: string
   }
 
+  type ResultListSpaceVO = {
+    code?: number
+    data?: SpaceVO[]
+    message?: string
+  }
+
   type ResultLong = {
     code?: number
     data?: number
@@ -431,9 +444,8 @@ declare namespace API {
     totalSize?: number
     totalCount?: number
     userId?: number
-    createTime?: string
-    editTime?: string
-    userInfoVO?: UserInfoVO
+    role?: number
+    memberCount?: number
   }
 
   type upgradeSpaceParams = {

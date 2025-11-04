@@ -2,6 +2,29 @@
 /* eslint-disable */
 import request from '@/request'
 
+/** 此处后端没有提供注释 GET /space/add */
+export async function addSpace(options?: { [key: string]: any }) {
+  return request<API.ResultLong>('/space/add', {
+    method: 'GET',
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 GET /space/addCategory */
+export async function addCategory(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.addCategoryParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultLong>('/space/addCategory', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 GET /space/checkHas */
 export async function checkHasSpace(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -13,14 +36,6 @@ export async function checkHasSpace(
     params: {
       ...params,
     },
-    ...(options || {}),
-  })
-}
-
-/** 此处后端没有提供注释 GET /space/create */
-export async function createSpace(options?: { [key: string]: any }) {
-  return request<API.ResultLong>('/space/create', {
-    method: 'GET',
     ...(options || {}),
   })
 }
@@ -52,13 +67,28 @@ export async function editUserRole(body: API.SpaceUserEditDTO, options?: { [key:
   })
 }
 
-/** 此处后端没有提供注释 GET /space/get */
+/** 此处后端没有提供注释 GET /space/getSpaceInfo */
 export async function getSpaceInfo(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getSpaceInfoParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.ResultSpaceVO>('/space/get', {
+  return request<API.ResultSpaceVO>('/space/getSpaceInfo', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 GET /space/getUserSpaceList */
+export async function getUserSpaceList(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getUserSpaceListParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultListSpaceVO>('/space/getUserSpaceList', {
     method: 'GET',
     params: {
       ...params,
