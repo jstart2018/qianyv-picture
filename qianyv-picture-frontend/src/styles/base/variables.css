@@ -1,0 +1,132 @@
+/**
+ * 全局 CSS 变量定义
+ * 用于统一管理项目中的颜色、间距、圆角、阴影等样式值
+ */
+
+:root {
+  /* ========== 颜色系统 ========== */
+
+  /* 主题色 */
+  --color-primary: #1aa0c1;
+  --color-primary-light: #7bd3d8;
+  --color-primary-dark: #1890a8;
+  --color-secondary: #667eea;
+  --color-secondary-light: #8ab4f8;
+
+  /* 状态色 */
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+
+  /* 文字颜色 */
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-tertiary: #718096;
+  --text-quaternary: #a0aec0;
+  --text-white: #ffffff;
+  --text-light: rgba(255, 255, 255, 0.9);
+
+  /* 背景色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7fafc;
+  --bg-tertiary: #edf2f7;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: rgba(255, 255, 255, 0.98);
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+  --bg-overlay-light: rgba(0, 0, 0, 0.3);
+  --bg-glass: rgba(255, 255, 255, 0.15);
+  --bg-glass-hover: rgba(255, 255, 255, 0.25);
+
+  /* 边框颜色 */
+  --border-light: rgba(223, 231, 245, 0.5);
+  --border-primary: rgba(138, 180, 248, 0.6);
+  --border-secondary: #e2e8f0;
+  --border-dashed: rgba(223, 231, 245, 0.5);
+
+  /* ========== 间距系统 ========== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* ========== 圆角系统 ========== */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+
+  /* ========== 阴影系统 ========== */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.2);
+  --shadow-primary: 0 6px 16px rgba(26, 160, 193, 0.4);
+  --shadow-secondary: 0 12px 48px rgba(138, 180, 248, 0.15);
+
+  /* ========== 过渡效果 ========== */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  --transition-all: all 0.3s ease;
+
+  /* ========== 字体系统 ========== */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ========== Z-index 层级 ========== */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+
+  /* ========== 布局相关 ========== */
+  --container-max-width: 1200px;
+  --sidebar-width: 300px;
+  --header-height: 64px;
+
+  /* ========== 滤镜效果 ========== */
+  --blur-sm: blur(4px);
+  --blur-md: blur(8px);
+  --blur-lg: blur(10px);
+  --blur-xl: blur(16px);
+
+  /* ========== 渐变色 ========== */
+  --gradient-primary: linear-gradient(135deg, #1aa0c1 0%, #7bd3d8 100%);
+  --gradient-secondary: linear-gradient(135deg, #667eea 0%, #8ab4f8 100%);
+  --gradient-warm: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  --gradient-cool: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+}
+
+/* ========== 暗色模式支持（预留） ========== */
+/* 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-primary: #f7fafc;
+    --text-secondary: #e2e8f0;
+    --bg-primary: #1a202c;
+    --bg-card: rgba(45, 55, 72, 0.95);
+  }
+}
+*/

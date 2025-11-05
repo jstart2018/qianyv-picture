@@ -35,7 +35,7 @@ const router = createRouter({
     {
       path: '/space',
       name: 'space',
-      component: () => import('../views/SpaceView.vue'),
+      component: () => import('../views/SpaceView/index.vue'),
     },
     {
       path: '/user/:id',

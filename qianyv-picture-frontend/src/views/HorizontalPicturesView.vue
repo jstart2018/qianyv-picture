@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, inject, watch, computed } from 'vue'
+import { ref, onMounted, inject, watch } from 'vue'
 import { list as getPictureList } from '../api/pictureController'
 import { useRouter } from 'vue-router'
+import { parseTags } from '@/utils/parse'
+import { usePagination } from '@/composables'
 
 const router = useRouter()
 
@@ -15,34 +17,9 @@ const searchTrigger = inject<import('vue').Ref<number> | null>('searchTrigger', 
 
 // 图片列表
 const pictures = ref<any[]>([])
-// 加载状态
-const loading = ref(false)
-// 分页参数
-const current = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
 
-// 是否还有更多数据
-const hasMore = computed(() => {
-  return pictures.value.length < total.value
-})
-
-// 解析标签 JSON 数组
-const parseTags = (tagsStr: string | undefined | null): string[] => {
-  if (!tagsStr) return []
-  try {
-    const parsed = JSON.parse(tagsStr)
-    if (Array.isArray(parsed)) {
-      return parsed.filter((tag) => typeof tag === 'string' && tag.trim())
-    }
-    return []
-  } catch {
-    return tagsStr
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter((tag) => tag)
-  }
-}
+// 使用分页组合式函数
+const { current, pageSize, total, loading, hasMore } = usePagination({ pageSize: 20 })
 
 // 3D 旋转跟随鼠标效果
 const handleMouseMove = (event: MouseEvent) => {

@@ -1,177 +1,34 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getOneById, checkCollect, collectToggle } from '../api/pictureController'
+import { parseTags } from '@/utils/parse'
+import { formatFileSize, formatDate } from '@/utils/format'
+import { usePictureDetail } from '@/composables'
 
 const route = useRoute()
-const pictureId = ref<string>('')
-const picture = ref<any>(null)
-const loading = ref(false)
-const error = ref<string>('')
-const downloading = ref(false)
-const collecting = ref(false)
-const isCollected = ref(false)
+const pictureId = computed(() => route.params.id as string)
 
-// 解析标签数据
-const parseTags = (tagsData: string | null | undefined): string[] => {
-  if (!tagsData) return []
+// 使用图片详情组合式函数
+const {
+  picture,
+  loading,
+  error,
+  downloading,
+  isCollected,
+  collecting,
+  fetchPictureDetail,
+  handleDownload,
+  handleCollect,
+} = usePictureDetail({
+  pictureId,
+  autoLoad: false, // 手动加载，因为需要在 onMounted 中处理
+})
 
-  try {
-    // 如果是 JSON 数组字符串，解析它
-    if (typeof tagsData === 'string' && tagsData.startsWith('[')) {
-      return JSON.parse(tagsData)
-    }
-    // 如果已经是数组，直接返回
-    if (Array.isArray(tagsData)) {
-      return tagsData
-    }
-    // 如果是逗号分隔的字符串
-    if (typeof tagsData === 'string') {
-      return tagsData
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter((tag) => tag)
-    }
-    return []
-  } catch (err) {
-    console.error('解析标签失败:', err)
-    return []
-  }
-}
-
-// 获取图片详情
-const fetchPictureDetail = async () => {
-  loading.value = true
-  error.value = ''
-
-  try {
-    // ID 保持字符串类型传递，避免精度丢失
-    const res = await getOneById({ id: pictureId.value } as any)
-
-    if (res.data.code === 0 && res.data.data) {
-      picture.value = res.data.data
-      // 获取图片后检查收藏状态
-      await checkCollectStatus()
-    } else {
-      error.value = res.data.message || '获取图片详情失败'
-    }
-  } catch (err) {
-    console.error('获取图片详情失败:', err)
-    error.value = '网络错误，请稍后重试'
-  } finally {
-    loading.value = false
-  }
-}
-
-// 格式化文件大小
-const formatFileSize = (bytes: number): string => {
-  if (!bytes) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
-}
-
-// 格式化日期
-const formatDate = (dateString: string): string => {
-  if (!dateString) return '未知'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
-}
-
-// 检查收藏状态
-const checkCollectStatus = async () => {
-  try {
-    // 使用正确的API接口检查收藏状态
-    // 保持 ID 为字符串，避免精度丢失
-    const res = await checkCollect({ id: pictureId.value } as any)
-
-    if (res.data.code === 0 && res.data.data !== undefined) {
-      // data 返回的是数字：1表示已收藏，0表示未收藏
-      isCollected.value = res.data.data === 1
-    }
-  } catch (err) {
-    console.error('检查收藏状态失败:', err)
-  }
-}
-
-// 处理下载
-const handleDownload = async () => {
-  if (downloading.value) return
-
-  downloading.value = true
-  try {
-    // 发送下载请求获取图片URL
-    const res = await fetch('/api/picture/download', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pictureId: pictureId.value }),
-    })
-    const data = await res.json()
-
-    if (data.code === 0 && data.data) {
-      // 获取到图片URL后直接下载
-      const link = document.createElement('a')
-      link.href = data.data
-      link.download = picture.value.picName || 'image'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    } else {
-      alert(data.message || '下载失败')
-    }
-  } catch (err) {
-    console.error('下载失败:', err)
-    alert('下载失败，请稍后重试')
-  } finally {
-    downloading.value = false
-  }
-}
-
-// 处理收藏/取消收藏
-const handleCollect = async () => {
-  if (collecting.value) return
-
-  collecting.value = true
-  try {
-    // 使用正确的API接口切换收藏状态
-    // collect参数：1表示收藏，0表示取消收藏
-    // 注意：当前状态是已收藏，则执行取消收藏（传0）；反之执行收藏（传1）
-    const collectAction = isCollected.value ? 0 : 1
-
-    // 保持 ID 为字符串，避免精度丢失
-    const res = await collectToggle({
-      id: pictureId.value,
-      collect: collectAction,
-    } as any)
-
-    if (res.data.code === 0) {
-      // 切换成功后更新本地状态
-      isCollected.value = !isCollected.value
-
-      // 更新收藏数量
-      if (picture.value) {
-        picture.value.collectCount =
-          (picture.value.collectCount || 0) + (isCollected.value ? 1 : -1)
-      }
-    } else {
-      alert(res.data.message || '操作失败')
-    }
-  } catch (err) {
-    console.error('收藏操作失败:', err)
-    alert('操作失败，请稍后重试')
-  } finally {
-    collecting.value = false
-  }
-}
-
+// 组件挂载时获取图片详情
 onMounted(() => {
-  pictureId.value = route.params.id as string
-  fetchPictureDetail()
+  if (pictureId.value) {
+    fetchPictureDetail()
+  }
 })
 </script>
 
@@ -563,7 +420,7 @@ onMounted(() => {
   left: 100px;
   top: 640px; /* Moved 100px upward */
   width: 12000px;
-  background: transparent; 
+  background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border-radius: 0;
