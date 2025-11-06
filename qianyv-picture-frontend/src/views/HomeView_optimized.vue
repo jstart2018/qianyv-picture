@@ -246,21 +246,14 @@ onMounted(async () => {
 
 /* ========== 中部博客列表区域 ========== */
 .center-panel {
-  position: absolute;
-  left: 28%;
-  right: 22%;
-  top: 0;
-  min-height: 100vh;
-  overflow: visible;
-  padding: 0;
-  z-index: 1;
-}
-
-.blog-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
+  flex: 1;
+  margin: 0 auto;
+  max-width: 950px;
+  width: 58%;
+  padding: var(--spacing-xl) var(--spacing-md);
+  position: relative;
+  left: 36%;
+  z-index: 10;
 }
 
 .loading-state,
@@ -269,9 +262,8 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
+  padding: var(--spacing-xl) 0;
   color: var(--text-tertiary);
-  margin: var(--spacing-lg);
 }
 
 .loading-spinner {
@@ -287,6 +279,11 @@ onMounted(async () => {
   to {
     transform: rotate(360deg);
   }
+}
+
+.blog-list {
+  display: flex;
+  flex-direction: column;
 }
 
 /* 加载更多 */
@@ -342,14 +339,10 @@ onMounted(async () => {
   top: 60px;
   width: 25%;
   height: calc(100vh - 60px);
-  overflow: hidden;
+  overflow-y: auto;
   background: transparent;
   z-index: 15;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 0;
-  pointer-events: auto;
+  padding: var(--spacing-xl) var(--spacing-lg);
 }
 
 .panel-toggle-btn {
@@ -375,68 +368,37 @@ onMounted(async () => {
 
 .ranking-card,
 .chat-card {
-  width: 85%;
-  margin: 0 auto;
-  height: 93%;
-  max-height: 93%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 2px dashed rgba(223, 231, 245, 0.5);
-  border-radius: 20px;
-  padding: 53px 5px 10px;
-  box-shadow: none;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: auto;
-  position: relative;
-}
-
-.ranking-card:hover,
-.chat-card:hover {
-  border-color: rgba(138, 180, 248, 0.6);
-  box-shadow: none;
-  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: var(--blur-lg);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-xl);
+  border: 2px solid rgba(138, 180, 248, 0.3);
+  margin-top: 60px;
 }
 
 /* 排行榜 */
 .ranking-bookmark {
-  position: absolute;
-  top: 20px;
-  left: 0;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #2c5282;
-  padding: 3px 20px 3px 16px;
-  border-radius: 0 12px 12px 0;
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px rgba(255, 255, 255, 0.8);
-  box-shadow:
-    0 0 15px rgba(255, 255, 255, 0.6),
-    0 0 30px rgba(255, 255, 255, 0.4),
-    inset 0 0 20px rgba(255, 255, 255, 0.2);
-  z-index: 10;
-  letter-spacing: 0.5px;
+  background: var(--gradient-primary);
+  color: white;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin: calc(var(--spacing-xl) * -1) calc(var(--spacing-xl) * -1) var(--spacing-lg);
+  text-align: center;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  box-shadow: var(--shadow-sm);
+  position: relative;
 }
 
 .bookmark-text {
-  display: block;
-  text-align: center;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
 }
 
 .ranking-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  flex: 1;
-  overflow: hidden;
-  padding-top: 12px;
 }
 
 /* 聊天框 */

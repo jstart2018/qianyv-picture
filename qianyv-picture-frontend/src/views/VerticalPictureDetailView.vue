@@ -325,37 +325,49 @@ onMounted(() => {
 /* 图片展示区域 */
 .picture-display-section {
   flex-shrink: 0; /* 防止图片被压缩 */
+  margin-left: 200px; /* 向左移动图片 */
+  margin-top: -20px;
 }
 
 /* 图片及装饰元素的父容器 */
 .picture-wrapper {
   position: relative;
-  transform: translate(225px, -38px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 0;
 }
 
-/* 图片展示区域 */
+/* 图片展示区域 - 手机屏幕比例 */
 .picture-container {
-  width: 843.02px;
-  height: 558.22px;
-  margin: 40px -299px; /* 上40px 右auto 下0 左0 - 向下和向左移动 */
+  width: 311px;
+  height: 662px;
+  margin: 0 auto;
   position: relative;
+  border-radius: 36px; /* 手机屏幕的圆角 */
+  overflow: hidden;
+  box-shadow:
+    0 0 0 8px #1a1a1a,
+    /* 手机边框 */ 0 20px 60px rgba(0, 0, 0, 0.4),
+    /* 阴影 */ 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
-/* 半透明白框 + 纯白边界线 */
+/* 手机屏幕顶部刘海 */
 .picture-container::before {
   content: '';
   position: absolute;
-  top: -8px;
-  left: -8px;
-  right: -8px;
-  bottom: -8px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 2px solid #ffffff;
-  border-radius: 32px 32px 0 0; /* 只有上方圆角，下方直角 */
-  z-index: 0;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 28px;
+  background: #000;
+  border-radius: 0 0 18px 18px;
+  z-index: 10;
+  pointer-events: none;
 }
 
-/* 图片层 */
+/* 柔和内阴影层 */
 .picture-container::after {
   content: '';
   position: absolute;
@@ -363,11 +375,9 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  border-radius: 28px 28px 0 0; /* 只有上方圆角，下方直角 */
-  box-shadow:
-    0 0 0 1px rgba(26, 160, 193, 0.08),
-    0 10px 40px rgba(26, 160, 193, 0.12);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.08);
   pointer-events: none;
+  border-radius: 36px;
   z-index: 2;
 }
 
@@ -377,48 +387,27 @@ onMounted(() => {
   object-fit: cover;
   object-position: center;
   display: block;
-  border-radius: 28px 28px 0 0; /* 只有上方圆角，下方直角 */
+  border-radius: 36px;
   position: relative;
   z-index: 1;
-  background: #fff;
+  background: #000;
 }
 
-/* 灰色平台托盘 */
+/* 隐藏平台托盘 - 手机屏幕风格不需要 */
 .platform-base {
-  position: absolute;
-  bottom: -11px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1100px;
-  height: 10px;
-  background: linear-gradient(180deg, #ffffff 0%, #aaa8a8 20%, #777777 80%, #000000 100%);
-  border-radius: 0 0 6px 6px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: none;
 }
 
-/* 黑色小梯形 */
+/* 隐藏黑色梯形 - 手机屏幕风格不需要 */
 .black-trapezoid {
-  position: absolute;
-  top: 558px; /* 距离容器顶部的距离 - 可微调 */
-  left: 371px; /* 距离容器左侧的距离 - 可微调 */
-  width: 100px; /* 梯形顶部宽度 - 可微调 */
-  height: 6px; /* 梯形高度（非常扁平）- 可微调 */
-  background: linear-gradient(180deg, #222121 0%, #222121 100%);
-  clip-path: polygon(
-    0% 0%,
-    /* 左上角 - 完全展开 */ 100% 0%,
-    /* 右上角 - 完全展开 */ 92% 100%,
-    /* 右下角 - 向内收缩8% */ 8% 100% /* 左下角 - 向内收缩8% */
-  );
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  z-index: 3;
+  display: none;
 }
 
 /* ========== 标签区域 ========== */
 .tags-section {
   position: absolute;
   left: 100px;
-  top: 640px; /* Moved 100px upward */
+  top: 730px; /* 向下移动：从 640px 增加到 730px */
   width: 12000px;
   background: transparent;
   backdrop-filter: none;
@@ -532,8 +521,8 @@ onMounted(() => {
   flex: 0 0 auto; /* 不拉伸，固定宽度 */
   width: 478px; /* 增加宽度：从 calc(100% / 3 - 13.33px) ≈ 280px 增加到 380px */
   min-width: 320px; /* 最小宽度防止过窄 */
-  margin-left: 650px; /* 向左移动：从 700px 减少到 650px */
-  margin-top: 30px; /* 向下移动：新增 30px 上边距 */
+  margin-left: 400px; /* 向左移动：从 650px 减少到 400px */
+  margin-top: 60px; /* 向下移动：从 30px 增加到 60px */
 }
 
 .info-card {
@@ -1060,52 +1049,46 @@ onMounted(() => {
   }
 }
 
-/* 响应式调整 */
+/* 响应式调整 - 保持手机屏幕比例 (约1:2.13) */
 @media (max-width: 1280px) {
   .picture-container {
-    width: 840px;
-    height: 560px;
-    margin: 40px auto 0 0;
+    width: 280px;
+    height: 596px;
   }
 }
 
 @media (max-width: 1080px) {
   .picture-container {
-    width: 720px;
-    height: 480px;
-    margin: 40px auto 0 0;
+    width: 260px;
+    height: 554px;
   }
 }
 
 @media (max-width: 980px) {
   .picture-container {
-    width: 660px;
-    height: 440px;
-    margin: 40px auto 0 0;
+    width: 240px;
+    height: 511px;
   }
 }
 
 @media (max-width: 800px) {
   .picture-container {
-    width: 540px;
-    height: 360px;
-    margin: 40px auto 0 0;
+    width: 220px;
+    height: 468px;
   }
 }
 
 @media (max-width: 640px) {
   .picture-container {
-    width: 420px;
-    height: 280px;
-    margin: 40px auto 0 0;
+    width: 200px;
+    height: 426px;
   }
 }
 
 @media (max-width: 520px) {
   .picture-container {
-    width: 100%;
-    height: 260px;
-    margin: 40px 20px 0 0; /* 小屏幕右侧留20px边距 */
+    width: 180px;
+    height: 383px;
   }
 
   .detail-content {

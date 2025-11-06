@@ -144,7 +144,7 @@ const handleSelectSpace = (space: any) => {
     <!-- 上传图片弹窗 -->
     <ImageUploader
       :show="showUploadModal"
-      :space-id="currentSpace?.id"
+      :space-id="currentSpace?.id ?? null"
       @close="closeUploadModal"
       @uploaded="handleUploadComplete"
     />

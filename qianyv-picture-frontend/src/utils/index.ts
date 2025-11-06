@@ -11,3 +11,6 @@ export * from './parse'
 
 // 验证工具
 export * from './validate'
+
+// 用户工具
+export * from './user'
