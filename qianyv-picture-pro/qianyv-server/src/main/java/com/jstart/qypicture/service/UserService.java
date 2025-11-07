@@ -37,4 +37,17 @@ public interface UserService extends IService<User> {
     UserInfoVO getUserInfoVO(User user);
 
     List<UserInfoVO> getUserVOList(List<User> userList);
+
+    /**
+     * 关注/取关 切换
+     * @param userId
+     */
+    void followToggle(Long userId);
+
+    /**
+     * 查看是否关注了该用户
+     * @param userId
+     * @return
+     */
+    Boolean checkFollow(Long userId);
 }

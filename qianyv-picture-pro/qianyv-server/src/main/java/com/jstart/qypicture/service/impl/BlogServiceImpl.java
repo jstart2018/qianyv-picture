@@ -4,6 +4,8 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jstart.qypicture.constant.RedisKey;
+import com.jstart.qypicture.enums.CollectionEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.mapper.PubPictureMapper;
@@ -11,13 +13,16 @@ import com.jstart.qypicture.model.dto.BlogCreateDTO;
 import com.jstart.qypicture.model.dto.BlogListDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.entity.Blog;
+import com.jstart.qypicture.model.entity.Collection;
 import com.jstart.qypicture.model.entity.PubPicture;
 import com.jstart.qypicture.model.entity.User;
 import com.jstart.qypicture.model.vo.BlogAuthorVO;
 import com.jstart.qypicture.model.vo.BlogsVO;
 import com.jstart.qypicture.model.vo.PictureListVO;
+import com.jstart.qypicture.result.Result;
 import com.jstart.qypicture.service.BlogService;
 import com.jstart.qypicture.mapper.BlogMapper;
+import com.jstart.qypicture.service.CollectionService;
 import com.jstart.qypicture.service.PictureService;
 import com.jstart.qypicture.service.UserService;
 import com.jstart.qypicture.utils.ThrowUtils;
@@ -25,12 +30,15 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +57,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
     private PubPictureMapper pubPictureMapper;
     @Resource
     private UserService userservice;
+    @Resource
+    private CollectionService collectionService;
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+
+
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -142,6 +157,50 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
         return qw;
     }
 
+    /**
+     * 博客收藏
+     *
+     * @param id
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void blogCollect(Long id) {
+
+        Blog blog = this.getById(id);
+        ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
+
+        long loginUserId = StpUtil.getLoginIdAsLong();
+
+        collectionService.collectionToggle(loginUserId, id, CollectionEnum.BLOG);
+
+    }
+
+    @Override
+    public void blogLike(Long id) {
+        long loginUserId = StpUtil.getLoginIdAsLong();
+        Blog blog = this.getById(id);
+
+        Boolean isMember = redisTemplate.opsForSet()
+                .isMember(RedisKey.BLOG_LIKE_KEY + id, loginUserId);
+
+        if (BooleanUtils.isTrue(isMember)) {
+            //已点赞，取消点赞
+            boolean addResult = this.lambdaUpdate().set(Blog::getLikeCount, blog.getLikeCount() - 1)
+                    .eq(Blog::getId, id)
+                    .update();
+            if (addResult)
+                redisTemplate.opsForSet().remove(RedisKey.BLOG_LIKE_KEY + id, loginUserId);
+        } else {
+            //未点赞，点赞
+            boolean removeResult = this.lambdaUpdate().set(Blog::getLikeCount, blog.getLikeCount() + 1)
+                    .eq(Blog::getId, id)
+                    .update();
+            if (removeResult)
+                redisTemplate.opsForSet().add(RedisKey.BLOG_LIKE_KEY + id, loginUserId);
+        }
+
+    }
+
     private List<BlogsVO> getBlogVOList(List<Blog> blogList) {
         List<BlogsVO> blogsVOList = blogList.stream().map(blog -> {
             Long id = blog.getId();
@@ -160,7 +219,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
             blogsVO.setPictureVOList(pictureVOList);
             return blogsVO;
         }).toList();
-
 
 
         //获取博客作者信息

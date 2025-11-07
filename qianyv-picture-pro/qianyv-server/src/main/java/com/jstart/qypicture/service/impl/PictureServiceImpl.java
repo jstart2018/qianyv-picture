@@ -1,18 +1,23 @@
 package com.jstart.qypicture.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.jstart.qypicture.enums.CollectionEnum;
 import com.jstart.qypicture.enums.PicturePlaceEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.handler.picture.PictureHandler;
 import com.jstart.qypicture.handler.picture.PictureHandlerFactory;
+import com.jstart.qypicture.mapper.PubPictureMapper;
 import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
+import com.jstart.qypicture.model.entity.PubPicture;
 import com.jstart.qypicture.model.entity.User;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
 import com.jstart.qypicture.model.vo.PictureVO;
 import com.jstart.qypicture.model.vo.UserInfoVO;
+import com.jstart.qypicture.service.CollectionService;
 import com.jstart.qypicture.service.PictureService;
 import com.jstart.qypicture.service.UserService;
 import com.jstart.qypicture.utils.COSUtil.CosManager;
@@ -36,6 +41,10 @@ public class PictureServiceImpl implements PictureService {
     private CosManager cosManager;
     @Resource
     private UserService userService;
+    @Resource
+    private PubPictureMapper pubPictureMapper;
+    @Resource
+    private CollectionService collectionService;
 
     /**
      * 上传图片
@@ -132,7 +141,11 @@ public class PictureServiceImpl implements PictureService {
     }
 
     @Override
-    public void collectToggle(Long id, Boolean collect) {
+    public void collectToggle(Long id) {
+        PubPicture pubPicture = pubPictureMapper.selectById(id);
+        ThrowUtils.throwIf(pubPicture == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
+
+        collectionService.collectionToggle(StpUtil.getLoginIdAsLong(),id, CollectionEnum.PICTURE);
 
     }
 

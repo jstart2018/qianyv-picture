@@ -5,6 +5,10 @@ server:
 
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB  # 上传文件大小限制
+      max-request-size: 10MB # 上传请求大小限制
   profiles:
     active: local
   datasource:

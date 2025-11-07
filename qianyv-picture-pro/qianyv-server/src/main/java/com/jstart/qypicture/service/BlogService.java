@@ -24,4 +24,16 @@ public interface BlogService extends IService<Blog> {
     Page<BlogsVO> selectList(BlogListDTO blogListDTO);
 
     QueryWrapper<Blog> getQueryWrapper(BlogListDTO blogListDTO);
+
+    /**
+     * 收藏切换
+     * @param id
+     */
+    void blogCollect(Long id);
+
+    /**
+     * 点赞切换
+     * @param id
+     */
+    void blogLike(Long id);
 }

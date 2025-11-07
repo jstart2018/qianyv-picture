@@ -9,8 +9,8 @@ import lombok.Data;
 public class BlogLikeOrCollectDTO {
 
     /**
-     * 博客id
+     * id
      */
-    private Long id;
+    private Long blogId;
 
 }

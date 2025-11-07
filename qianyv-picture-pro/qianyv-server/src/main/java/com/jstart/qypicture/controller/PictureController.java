@@ -1,11 +1,15 @@
 package com.jstart.qypicture.controller;
 
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.jstart.qypicture.constant.RedisKey;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
+import com.jstart.qypicture.model.entity.Blog;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
 import com.jstart.qypicture.model.vo.PictureVO;
@@ -13,6 +17,7 @@ import com.jstart.qypicture.result.Result;
 import com.jstart.qypicture.service.PictureService;
 import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,9 +36,8 @@ public class PictureController {
 
     @Resource
     private PictureService pictureService;
-
-    //临时测试变量
-    Integer isCollect = 0;
+    @Resource
+    private RedisTemplate redisTemplate;
 
     /**
      * 上传本地图片
@@ -139,26 +143,29 @@ public class PictureController {
     /**
      * 图片收藏/取消收藏
      * @param id 图片 id
-     * @param collect 是否收藏
      * @return 是否操作成功
      */
-    @PostMapping("/{id}/{collect}")
-    public Result collectToggle(@PathVariable("id") Long id, @PathVariable("collect") Integer collect) {
-        ThrowUtils.throwIf(id == null || collect == null, ResultEnum.PARAMS_ERROR);
-        ThrowUtils.throwIf(collect.equals(isCollect),ResultEnum.OPERATION_ERROR,"请勿重复操作");
-        //pictureService.collectToggle(id, !(collect==0));
-        isCollect = collect;
+    @PostMapping("/{id}")
+    public Result collectToggle(@PathVariable("id") Long id) {
+        ThrowUtils.throwIf(id == null , ResultEnum.PARAMS_ERROR);
+        pictureService.collectToggle(id);
         return Result.success();
     }
 
     /**
      * 查看用户是否收藏该图片
      */
-    @GetMapping("/collect/check")
-    public Result<Integer> checkCollect(@RequestParam Long id) {
-        ThrowUtils.throwIf(id == null, ResultEnum.PARAMS_ERROR);
-        //TODO 实现查看用户是否收藏该图片功能
-        return Result.success(isCollect);
+    @GetMapping("/checkCollect")
+    public Result<Boolean> checkCollect(@RequestParam Long id) {
+        ThrowUtils.throwIf(id == null, ResultEnum.PARAMS_ERROR, "参数错误");
+        PictureVO pictureVO = pictureService.getOneById(id, null);
+        ThrowUtils.throwIf(pictureVO == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
+        try {
+            Boolean isMember = redisTemplate.opsForSet().isMember(RedisKey.PICTURE_COLLECTION_KEY + id, StpUtil.getLoginIdAsLong());
+            return Result.success(isMember);
+        } catch (NotLoginException e) {
+            return Result.success(Boolean.FALSE);
+        }
     }
 
 

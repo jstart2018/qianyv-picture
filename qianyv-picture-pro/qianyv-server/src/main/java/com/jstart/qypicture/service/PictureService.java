@@ -58,5 +58,5 @@ public interface PictureService {
      */
     String downLoad(PictureDownLoadDTO pictureDownLoadDTO);
 
-    void collectToggle(Long id, Boolean collect);
+    void collectToggle(Long id);
 }

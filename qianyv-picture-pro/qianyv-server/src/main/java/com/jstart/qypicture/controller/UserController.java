@@ -10,6 +10,7 @@ import com.jstart.qypicture.model.vo.UserInfoVO;
 import com.jstart.qypicture.result.Result;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.jstart.qypicture.service.FollowService;
 import com.jstart.qypicture.service.UserService;
 import com.jstart.qypicture.model.entity.User;
 import com.jstart.qypicture.utils.ThrowUtils;
@@ -25,6 +26,8 @@ public class UserController {
 
     @Resource
     private UserService userService;
+    @Resource
+    private FollowService followService;
 
 
     // 发送验证码
@@ -159,6 +162,25 @@ public class UserController {
             throw new BusinessException(ResultEnum.SYSTEM_ERROR, "创建失败，账号可能已存在");
         }
         return Result.success("创建成功");
+    }
+
+    @PostMapping("/followToggle")
+    public Result<?> followToggle(@RequestParam Long userId) {
+        ThrowUtils.throwIf(userId == null, ResultEnum.PARAMS_ERROR, "参数不能为空");
+        userService.followToggle(userId);
+        return Result.success();
+    }
+
+    /**
+     * 查看是否关注该用户
+     * @param userId
+     * @return
+     */
+    @PostMapping("/checkFollow")
+    public Result<Boolean> checkFollow(@RequestParam Long userId) {
+        ThrowUtils.throwIf(userId == null, ResultEnum.PARAMS_ERROR, "参数不能为空");
+        Boolean result = userService.checkFollow(userId);
+        return Result.success(result);
     }
 
 

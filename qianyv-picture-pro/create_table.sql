@@ -196,3 +196,56 @@ CREATE TABLE `blog`
     FULLTEXT KEY `idx_title_content` (`title`, `content`) COMMENT '标题+内容全文检索'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='博客表';
+
+-- 9、评论表
+drop table if exists comment;
+create table comment
+(
+    id            bigint auto_increment primary key,
+    content       varchar(64)                        not null comment '评论内容',
+    blog_id       bigint                             not null comment '关联博客 id',
+    user_id       bigint                             not null comment '评论用户 id',
+    parent_id     bigint                             null comment '父评论 id，null 表示一级评论',
+    reply_user_id bigint                             null comment '回复的用户id',
+    like_count    bigint   default 0                 not null comment '点赞数',
+    create_time   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time   datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    delete_user   bigint   DEFAULT null COMMENT '删除人id',
+    delete_time   datetime DEFAULT null COMMENT '逻辑删除：null-正常, 非null-删除时间',
+    -- 索引设计
+    index idx_blogId (blog_id),            -- 提升按博客查询评论的性能
+    index idx_userId (user_id),            -- 提升按用户查询评论的性能
+    index idx_parentId (parent_id),        -- 提升按父评论查询子评论的性能
+    index idx_replyUserId (reply_user_id), -- 提升按父评论查询子评论的性能
+    index idx_deleteUser (delete_user)     -- 提升按删除人查询评论的性能
+) comment '评论表' collate = utf8mb4_unicode_ci;
+
+-- 10、收藏表
+drop table if exists collection;
+create table collection
+(
+    id           bigint auto_increment primary key,
+    user_id      bigint                             not null comment '用户 id',
+    target_id    bigint                             not null comment '收藏目标 id',
+    content_type tinyint                            not null comment '内容类型：0-图片; 1-博客',
+    create_time  datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    UNIQUE KEY uk_userId_pictureId (user_id, target_id, content_type), -- 确保用户对同一图片只能收藏一次
+    INDEX idx_userId (user_id),                                        -- 提升按用户查询收藏的性能
+    INDEX idx_pictureId (target_id)                                    -- 提升按图片查询收藏的性能
+) comment '收藏表' collate = utf8mb4_unicode_ci;
+
+-- 11、关注表
+drop table if exists follow;
+create table follow
+(
+    id             bigint auto_increment primary key,
+    user_id        bigint                             not null comment '用户 id',
+    follow_user_id bigint                             not null comment '被关注用户 id',
+    create_time    datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    UNIQUE KEY uk_userId_followId (user_id, follow_user_id), -- 确保用户对同一用户只能关注一次
+    INDEX idx_userId (user_id),                              -- 提升按用户查询关注的性能
+    INDEX idx_followId (follow_user_id)                      -- 提升按被关注用户查询关注的性能
+) comment '关注表' collate = utf8mb4_unicode_ci;;
+
+
+

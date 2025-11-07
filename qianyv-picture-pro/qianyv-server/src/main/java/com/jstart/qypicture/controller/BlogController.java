@@ -1,21 +1,21 @@
 package com.jstart.qypicture.controller;
 
 
+import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.jstart.qypicture.constant.RedisKey;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.model.dto.*;
 import com.jstart.qypicture.model.entity.Blog;
-import com.jstart.qypicture.model.vo.BlogCommentVO;
-import com.jstart.qypicture.model.vo.BlogLikeOrCollectVO;
 import com.jstart.qypicture.model.vo.BlogsVO;
 import com.jstart.qypicture.result.Result;
 import com.jstart.qypicture.service.BlogService;
 import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +24,9 @@ public class BlogController {
 
     @Resource
     private BlogService blogService;
+    @Resource
+    private RedisTemplate redisTemplate;
+
 
     @PostMapping("/add")
     public Result<Long> addBlog(@RequestBody BlogCreateDTO blogCreateDTO) {
@@ -73,6 +76,12 @@ public class BlogController {
         return Result.success(blogListVOPage);
     }
 
+    /**
+     * 获取博客详情
+     *
+     * @param id
+     * @return
+     */
     @GetMapping("/{id}")
     public Result<BlogsVO> getBlogDetail(@PathVariable Long id) {
         ThrowUtils.throwIf(id == null, ResultEnum.PARAMS_ERROR, "参数错误");
@@ -86,52 +95,61 @@ public class BlogController {
         return Result.success(blogsVO);
     }
 
-    @GetMapping("/likes/toggle")
-    public Result<BlogLikeOrCollectVO> likeToggle(@RequestBody BlogLikeOrCollectDTO blogLikeOrCollectDTO) {
+    /**
+     * 博客收藏切换
+     *
+     * @param blogLikeOrCollectDTO
+     * @return
+     */
+    @PostMapping("/blogCollect")
+    public Result<?> collectToggle(@RequestBody BlogLikeOrCollectDTO blogLikeOrCollectDTO) {
         ThrowUtils.throwIf(blogLikeOrCollectDTO == null, ResultEnum.PARAMS_ERROR, "参数错误");
 
-        Blog blog = blogService.getById(blogLikeOrCollectDTO.getId());
-        ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
+        blogService.blogCollect(blogLikeOrCollectDTO.getBlogId());
 
-        BlogLikeOrCollectVO blogLikeOrCollectVO = new BlogLikeOrCollectVO();
-        blogLikeOrCollectVO.setCount(5L);
-        blogLikeOrCollectVO.setHaveBean(true);
-
-        return Result.success(blogLikeOrCollectVO);
+        return Result.success();
     }
 
-    @GetMapping("/collections/toggle")
-    public Result<BlogLikeOrCollectVO> collectionsToggle(@RequestBody BlogLikeOrCollectDTO blogLikeOrCollectDTO) {
+    /**
+     * 博客点赞切换
+     *
+     * @param blogLikeOrCollectDTO
+     * @return
+     */
+    @PostMapping("/blogLikes")
+    public Result<?> likesToggle(@RequestBody BlogLikeOrCollectDTO blogLikeOrCollectDTO) {
         ThrowUtils.throwIf(blogLikeOrCollectDTO == null, ResultEnum.PARAMS_ERROR, "参数错误");
 
-        Blog blog = blogService.getById(blogLikeOrCollectDTO.getId());
+        blogService.blogLike(blogLikeOrCollectDTO.getBlogId());
+
+        return Result.success();
+    }
+
+    @GetMapping("/checkLike")
+    public Result<Boolean> checkBlogLike(@RequestParam Long blogId) {
+        ThrowUtils.throwIf(blogId == null, ResultEnum.PARAMS_ERROR, "参数错误");
+        Blog blog = blogService.getById(blogId);
         ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
-
-        BlogLikeOrCollectVO blogLikeOrCollectVO = new BlogLikeOrCollectVO();
-        blogLikeOrCollectVO.setCount(5L);
-        blogLikeOrCollectVO.setHaveBean(true);
-
-        return Result.success(blogLikeOrCollectVO);
+        try {
+            Boolean isMember = redisTemplate.opsForSet().isMember(RedisKey.BLOG_LIKE_KEY + blogId, StpUtil.getLoginIdAsLong());
+            return Result.success(isMember);
+        } catch (NotLoginException e) {
+            return Result.success(Boolean.FALSE);
+        }
     }
 
-    @GetMapping("/comments")
-    public Result<BlogCommentVO> comments(@RequestBody BlogCommentDTO blogCommentDTO) {
-        ThrowUtils.throwIf(blogCommentDTO == null, ResultEnum.PARAMS_ERROR, "参数错误");
-
-        BlogCommentVO bean = JSONUtil.toBean("{\n" +
-                "  \"id\": 500542521,             \n" +
-                "  \"commentId\": 101010101010,    \n" +
-                "  \"userId\": 101,          \n" +
-                "  \"username\": \"张三\",     \n" +
-                "  \"userAvatar\": null, \n" +
-                "  \"content\": \"这篇文章写得真好！\",   \n" +
-                "  \"createTime\": \"2025-10-28 15:30:00\", \n" +
-                "  \"likeCount\": 0,         \n" +
-                "  \"parentId\": null,       \n" +
-                "  \"parentUsername\": null  \n" +
-                "}", BlogCommentVO.class);
-
-        return Result.success(bean);
+    @GetMapping("/checkCollect")
+    public Result<Boolean> checkCollect(@RequestParam Long blogId) {
+        ThrowUtils.throwIf(blogId == null, ResultEnum.PARAMS_ERROR, "参数错误");
+        Blog blog = blogService.getById(blogId);
+        ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
+        try {
+            Boolean isMember = redisTemplate.opsForSet().isMember(RedisKey.BLOG_COLLECTION_KEY + blogId, StpUtil.getLoginIdAsLong());
+            return Result.success(isMember);
+        } catch (NotLoginException e) {
+            return Result.success(Boolean.FALSE);
+        }
     }
+
 
 }
