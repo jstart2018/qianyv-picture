@@ -97,7 +97,6 @@ const openPictureDetail = (picture: API.PictureListVO) => {
         >
           <img :src="pic.thumbUrl" :alt="pic.tags" />
           <div class="image-overlay">
-            <span class="image-tags">{{ pic.tags }}</span>
             <div class="image-zoom">
               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -282,27 +281,28 @@ const openPictureDetail = (picture: API.PictureListVO) => {
 
 /* 博客图片区域 */
 .blog-images-section {
-  margin-top: var(--spacing-md);
+  margin-top: 16px;
 }
 
 .blog-images {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
+  gap: 12px;
 }
 
 .image-item {
   position: relative;
   border-radius: 10px;
   overflow: hidden;
+  aspect-ratio: 3/4;
   cursor: pointer;
-  aspect-ratio: 1;
-  transition: var(--transition-all);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .image-item:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
 .image-item img {
@@ -313,76 +313,81 @@ const openPictureDetail = (picture: API.PictureListVO) => {
 
 .image-overlay {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-  padding: var(--spacing-md);
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   opacity: 0;
-  transition: var(--transition-base);
+  transition: opacity 0.3s ease;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
 .image-item:hover .image-overlay {
   opacity: 1;
 }
 
-.image-tags {
-  color: white;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-}
-
 .image-zoom {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  color: white;
-  font-size: var(--font-size-sm);
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .image-zoom svg {
-  width: 18px;
-  height: 18px;
-  stroke: white;
-  fill: none;
+  width: 15px;
+  height: 15px;
+  stroke: rgba(255, 255, 255, 0.6);
   stroke-width: 2;
+  fill: none;
+}
+
+.image-zoom span {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* 评论区 */
 .blog-footer {
-  margin-top: var(--spacing-lg);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid rgba(138, 180, 248, 0.2);
+  padding-top: 16px;
+  margin-top: 0;
 }
 
 .comment-toggle {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  background: transparent;
-  border: none;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(138, 180, 248, 0.08);
+  border: 1px solid rgba(138, 180, 248, 0.2);
+  border-radius: 12px;
   cursor: pointer;
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  transition: var(--transition-base);
+  transition: all 0.3s ease;
+  font-size: 14px;
+  color: #4a5568;
 }
 
 .comment-toggle:hover {
-  background: rgba(138, 180, 248, 0.1);
+  background: rgba(138, 180, 248, 0.15);
+  border-color: rgba(138, 180, 248, 0.4);
 }
 
 .comment-icon {
-  font-size: var(--font-size-base);
+  font-size: 16px;
 }
 
 .toggle-arrow {
   margin-left: auto;
-  transition: var(--transition-base);
+  transition: transform 0.3s ease;
+  font-size: 12px;
 }
 
 .toggle-arrow.expanded {
@@ -390,56 +395,61 @@ const openPictureDetail = (picture: API.PictureListVO) => {
 }
 
 .comment-section {
-  margin-top: var(--spacing-md);
-  padding-top: var(--spacing-md);
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(138, 180, 248, 0.15);
 }
 
 .comment-input {
   display: flex;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .comment-input input {
   flex: 1;
-  padding: 10px var(--spacing-md);
+  padding: 10px 16px;
   border: 1px solid rgba(138, 180, 248, 0.3);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   background: white;
-  font-size: var(--font-size-sm);
-  transition: var(--transition-base);
+  font-size: 14px;
+  transition: all 0.3s ease;
 }
 
 .comment-input input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .send-btn {
-  padding: 10px var(--spacing-lg);
-  background: var(--color-primary);
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   cursor: pointer;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  transition: var(--transition-base);
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .send-btn:hover {
-  background: #1890a0;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .comment-list {
-  padding: var(--spacing-md);
+  padding: 16px;
+  background: rgba(247, 250, 252, 0.5);
+  border-radius: 8px;
 }
 
 .comment-empty {
   text-align: center;
-  color: var(--text-tertiary);
-  font-size: var(--font-size-sm);
+  color: #a0aec0;
+  font-size: 14px;
+  padding: 20px;
 }
 </style>

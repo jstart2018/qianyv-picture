@@ -10,34 +10,14 @@
 .left-panel {
   position: fixed;
   left: 0;
-  top: 96.5px; /* 从导航栏下方开始，增加一点偏移 */
+  top: 0; /* 改为 0，紧贴视口顶部 */
   width: 28%;
-  height: calc(100vh - 96.5px); /* 高度为视口减去导航栏高度 */
+  height: 100vh; /* 改为占满整个视口高度 */
   overflow-y: auto;
   overflow-x: hidden;
   background: transparent;
   z-index: 10; /* 低于导航栏的 z-index: 100 */
-  padding: 24px 12px;
-}
-
-/* 左侧滚动条样式 */
-.left-panel::-webkit-scrollbar {
-  width: 6px;
-}
-
-.left-panel::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-.left-panel::-webkit-scrollbar-thumb {
-  background: rgba(138, 180, 248, 0.3);
-  border-radius: 3px;
-  transition: background 0.3s ease;
-}
-
-.left-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(138, 180, 248, 0.5);
+  padding: 96px 12px 24px 12px; /* 调整顶部内边距，为导航栏留出空间 */
 }
 
 .space-list-card {
@@ -447,26 +427,6 @@
   overflow-x: hidden;
 }
 
-/* 右侧滚动条样式 */
-.right-panel::-webkit-scrollbar {
-  width: 8px;
-}
-
-.right-panel::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-
-.right-panel::-webkit-scrollbar-thumb {
-  background: rgba(138, 180, 248, 0.3);
-  border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-.right-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(138, 180, 248, 0.5);
-}
-
 .space-detail {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
@@ -800,25 +760,6 @@
     rgba(59, 130, 246, 0.05) 0%,
     rgba(37, 99, 235, 0.03) 100%
   ); /* 淡蓝色渐变背景 */
-}
-
-.modal-body::-webkit-scrollbar {
-  width: 8px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.12); /* 蓝色滚动条轨道 */
-  border-radius: 4px;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.5); /* 蓝色滚动条滑块 */
-  border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-.modal-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.7); /* hover时更深的蓝色 */
 }
 
 .empty-members {

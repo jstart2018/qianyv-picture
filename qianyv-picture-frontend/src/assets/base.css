@@ -51,15 +51,44 @@
 }
 
 html {
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none; /* Firefox - 隐藏滚动条 */
-  -ms-overflow-style: none; /* IE and Edge - 隐藏滚动条 */
+  overflow-y: auto; /* 启用垂直滚动 */
+  overflow-x: hidden; /* 禁止水平滚动 */
 }
 
-/* Chrome, Safari, Opera - 隐藏滚动条 */
-html::-webkit-scrollbar {
-  display: none;
+/* 自定义滚动条样式 */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 16px !important;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: transparent !important; /* 完全透明 */
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: #ffffff !important;
+  border-radius: 8px !important;
+}
+
+/* Firefox 滚动条样式 */
+html {
+  scrollbar-width: auto !important;
+  scrollbar-color: #bbf5f2f7 transparent !important; /* 滑块颜色 轨道颜色(透明) */
+}
+
+body {
+  scrollbar-width: auto !important;
+  scrollbar-color: #bbf5f2f7 transparent !important; /* 滑块颜色 轨道颜色(透明) */
+}
+
+* {
+  scrollbar-width: auto !important;
+  scrollbar-color: #bbf5f2f7 transparent !important; /* 滑块颜色 轨道颜色(透明) */
 }
 
 *,
@@ -98,12 +127,5 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-  scrollbar-width: none; /* Firefox - 隐藏滚动条 */
-  -ms-overflow-style: none; /* IE and Edge - 隐藏滚动条 */
-}
-
-/* Chrome, Safari, Opera - 隐藏滚动条 */
-body::-webkit-scrollbar {
-  display: none;
+  overflow-x: hidden; /* 禁止水平滚动 */
 }

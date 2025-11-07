@@ -205,37 +205,6 @@
   text-transform: capitalize;
 }
 
-/* ========== 滚动条样式 ========== */
-.scrollbar-custom::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.scrollbar-custom::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: var(--radius-sm);
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb {
-  background: rgba(26, 160, 193, 0.3);
-  border-radius: var(--radius-sm);
-  transition: background 0.3s ease;
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb:hover {
-  background: rgba(26, 160, 193, 0.5);
-}
-
-/* 隐藏滚动条 */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
 /* ========== 溢出处理 ========== */
 .overflow-hidden {
   overflow: hidden;

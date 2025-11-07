@@ -239,15 +239,6 @@ if (typeof window !== 'undefined') {
   backdrop-filter: blur(10px);
 }
 
-.thumbnail-list::-webkit-scrollbar {
-  height: 4px;
-}
-
-.thumbnail-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-}
-
 .thumbnail-item {
   flex-shrink: 0;
   width: 80px;

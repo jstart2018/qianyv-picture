@@ -79,11 +79,11 @@ const handleShare = () => {
 
 <style scoped>
 .user-stats-card {
-  width: 72%;
+  width: 95%;
   height: auto;
-  max-height: 75%;
-  margin-left: 3%;
-  margin-right: 20%;
+  max-height: 80%;
+  margin-left: 8%;
+  margin-right: 7%;
   margin-top: 60px;
 
   /* 半透明背景效果，匹配原始样式 */
@@ -97,7 +97,7 @@ const handleShare = () => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 36px 28px;
+  padding: 40px 32px;
 
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -112,20 +112,20 @@ const handleShare = () => {
 }
 
 .user-avatar-large {
-  width: 110px;
-  height: 110px;
-  min-height: 110px;
+  width: 140px;
+  height: 140px;
+  min-height: 140px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 44px;
+  font-size: 56px;
   font-weight: 700;
   color: white;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-  border: 3px solid rgba(255, 255, 255, 0.9);
+  border: 4px solid rgba(255, 255, 255, 0.9);
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
@@ -147,20 +147,20 @@ const handleShare = () => {
 }
 
 .user-nickname {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   color: #2c5282;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   text-align: center;
 }
 
 .user-intro {
-  font-size: 13px;
+  font-size: 15px;
   color: #4a5568;
   text-align: center;
-  margin-bottom: 16px;
-  line-height: 1.5;
+  margin-bottom: 20px;
+  line-height: 1.6;
   max-width: 90%;
 }
 
@@ -169,54 +169,54 @@ const handleShare = () => {
   justify-content: space-around;
   align-items: center;
   width: 100%;
-  padding: 16px 0;
+  padding: 20px 0;
   background: rgba(138, 180, 248, 0.08);
-  border-radius: 12px;
-  gap: 12px;
-  margin-bottom: 16px;
+  border-radius: 14px;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
 }
 
 .stat-value {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
   color: #667eea;
   line-height: 1;
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 14px;
   color: #718096;
   white-space: nowrap;
 }
 
 .stat-divider {
   width: 1px;
-  height: 36px;
+  height: 44px;
   background: rgba(138, 180, 248, 0.2);
 }
 
 .share-btn {
   width: 100%;
-  padding: 12px 28px;
+  padding: 14px 32px;
   background: rgba(138, 180, 248, 0.1);
   color: #2d3748;
   border: 2px solid rgba(255, 255, 255, 0.7);
-  border-radius: 16px;
-  font-size: 15px;
+  border-radius: 18px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -255,8 +255,8 @@ const handleShare = () => {
 }
 
 .plane-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   transition: transform 0.3s ease;
   position: relative;
   z-index: 1;

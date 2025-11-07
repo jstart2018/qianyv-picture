@@ -21,23 +21,41 @@ const pictures = ref<any[]>([])
 // 使用分页组合式函数
 const { current, pageSize, total, loading, hasMore } = usePagination({ pageSize: 20 })
 
-// 3D 旋转跟随鼠标效果
+// 3D 旋转跟随鼠标效果 - 优化版
 const handleMouseMove = (event: MouseEvent) => {
   const card = event.currentTarget as HTMLElement
   const rect = card.getBoundingClientRect()
-  const x = (event.clientX - rect.left) / rect.width
-  const y = (event.clientY - rect.top) / rect.height
-  const rotateY = (0.5 - x) * 12
-  const rotateX = (y - 0.5) * 10
-  card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.005, 1.005, 1.005)`
-  card.style.transition = 'transform 0.05s ease-out'
+
+  // 计算鼠标相对于卡片中心的位置（-0.5 到 0.5）
+  const x = (event.clientX - rect.left) / rect.width - 0.5
+  const y = (event.clientY - rect.top) / rect.height - 0.5
+
+  // 调整旋转幅度，更明显的三维效果
+  // 左右旋转：鼠标在左边时卡片向右倾，鼠标在右边时卡片向左倾
+  const rotateY = -x * 16 // 最大 ±8度
+  // 上下旋转：鼠标在上方时卡片向下倾，鼠标在下方时卡片向上倾
+  const rotateX = y * 30 // 最大 ±6度
+
+  // 动态阴影：根据旋转角度调整阴影位置，增强3D效果
+  const shadowX = Math.round(-rotateY * 1.2) + 6 // 基础偏移6px
+  const shadowY = Math.round(rotateX * 1.2) + 6 // 基础偏移6px
+
+  // 应用变换，使用很大的 perspective 避免透视拉长，不使用 scale 避免放大
+  card.style.transform = `perspective(3000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
+  card.style.boxShadow = `
+    ${shadowX}px ${shadowY}px 12px rgba(0, 0, 0, 0.35),
+    ${shadowX * 1.5}px ${shadowY * 1.5}px 35px rgba(0, 0, 0, 0.25)
+  `
+  card.style.transition = 'transform 0.03s linear, box-shadow 0.03s linear'
 }
 
-// 鼠标离开时重置
+// 鼠标离开时平滑重置
 const handleMouseLeave = (event: MouseEvent) => {
   const card = event.currentTarget as HTMLElement
-  card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)'
-  card.style.transition = 'transform 0.4s ease-out'
+  card.style.transform = 'perspective(3000px) rotateX(0deg) rotateY(0deg)'
+  card.style.boxShadow = '6px 6px 12px rgba(0, 0, 0, 0.35), 10px 10px 35px rgba(0, 0, 0, 0.25)'
+  card.style.transition =
+    'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease-out'
 }
 
 // 获取图片列表
@@ -212,9 +230,9 @@ onMounted(() => {
 <style scoped>
 .horizontal-pictures-view {
   width: 100%;
-  max-width: 1600px;
+  max-width: 1700px; /* 控制容器宽度 */
   margin: 0 auto;
-  padding: 0 8px;
+  padding: 0 2.5px; /* 减少边距，更靠近边缘 */
   animation: slideInFromLeft 0.4s ease-out forwards;
 }
 
@@ -256,11 +274,11 @@ onMounted(() => {
 .grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  column-gap: 15px;
+  column-gap: 58px; /* 增加水平间距：从15px增加到28px */
   row-gap: 23px;
   justify-items: center;
-  /* 为3D效果提供透视 */
-  perspective: 1200px;
+  /* 为3D效果提供透视 - 使用很大的透视距离避免拉长变形 */
+  perspective: 3500px;
 }
 
 /* 当最后一行只有1-2张图片时，使用居中布局 */
@@ -271,7 +289,7 @@ onMounted(() => {
 
 .grid-card {
   position: relative;
-  width: 89.95%;
+  width: 98%; /* 图片尺寸 */
   border-radius: 13px;
   overflow: hidden;
   cursor: default;
@@ -282,14 +300,16 @@ onMounted(() => {
   box-shadow:
     6px 6px 12px rgba(0, 0, 0, 0.35),
     10px 10px 35px rgba(0, 0, 0, 0.25);
-  /* 3D 变换相关 */
+  /* 3D 变换相关 - 优化版：纯粹的空间旋转 */
   transform-style: preserve-3d;
-  transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1);
-  transform-origin: center 50%;
+  transform: perspective(3000px) rotateX(0deg) rotateY(0deg);
+  transform-origin: center center;
   transition:
-    transform 0.5s ease-out,
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.3s ease;
   will-change: transform;
+  /* 为子元素启用 3D 变换 */
+  backface-visibility: hidden;
 }
 
 /* 悬停时增强阴影效果 */
@@ -336,12 +356,8 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.5); /* 白色半透明，无模糊 */
   border-radius: 45px;
   padding: 24px;
-  /* 泛光效果：减弱阴影强度 */
-  box-shadow:
-    0 0 20px rgba(255, 255, 255, 0.5),
-    0 0 40px rgba(255, 255, 255, 0.3),
-    0 8px 24px rgba(138, 180, 248, 0.2),
-    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  /* 移除阴影效果 */
+  box-shadow: none;
   border: 2px solid rgba(255, 255, 255, 0.7);
   /* 初始状态：完全透明隐藏 */
   opacity: 0;
@@ -389,39 +405,24 @@ onMounted(() => {
   justify-content: space-evenly;
   overflow-y: auto;
   padding: 4px;
-  /* 自定义滚动条 */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(138, 180, 248, 0.3) transparent;
-}
-
-.tags-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.tags-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.tags-list::-webkit-scrollbar-thumb {
-  background: rgba(138, 180, 248, 0.3);
-  border-radius: 2px;
 }
 
 .tag-item {
   display: inline-block;
   padding: 10px 22px;
-  background: rgba(255, 255, 255, 0.85); /* 更白的背景 */
-  color: #000000; /* 纯黑色字体 */
+  background: rgba(0, 0, 0, 0.2); /* 透明背景 */
+  color: #2f2e2e; /* 白色字体（透明背景下更清晰） */
   font-size: 16px;
   font-weight: 600;
-  border-radius: 30px;
-  border: 1.5px solid rgba(49, 48, 48, 0.5); /* 浅灰色边框 */
+  border-radius: 50%; /* 椭圆形 */
+  border: 2px solid rgba(0, 0, 0, 0.4); /* 白色边框 */
   white-space: nowrap;
   /* 只过渡变换和阴影，不过渡背景 */
   transition:
     transform 0.3s ease,
-    box-shadow 0.3s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); /* 更柔和的阴影 */
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* 增强阴影以突出透明背景 */
   /* 标签淡入动画 */
   animation: tagPopIn 0.4s ease forwards;
   opacity: 0;
@@ -437,9 +438,10 @@ onMounted(() => {
 }
 
 .tag-item:hover {
-  /* 保持背景颜色不变，只添加缩放和阴影效果 */
+  /* 保持透明背景，添加缩放、阴影和边框发光效果 */
   transform: scale(1.05);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 1); /* 悬停时边框变亮 */
 }
 
 /* 底部操作栏 */
@@ -581,12 +583,12 @@ onMounted(() => {
 /* ========== 响应式设计 ========== */
 @media (max-width: 1200px) {
   .horizontal-pictures-view {
-    padding: 0 6px;
+    padding: 0 2.5px; /* 减少边距 */
   }
 
   .grid-container {
     grid-template-columns: repeat(2, 1fr);
-    column-gap: 18px;
+    column-gap: 24px; /* 中等屏幕也增加水平间距 */
     row-gap: 16px;
   }
 
@@ -597,19 +599,19 @@ onMounted(() => {
 
 @media (max-width: 968px) {
   .horizontal-pictures-view {
-    padding: 0 4px;
+    padding: 0 2.5px; /* 减少边距 */
   }
 
   .grid-container {
     grid-template-columns: repeat(2, 1fr);
-    column-gap: 16px;
+    column-gap: 20px; /* 小屏幕也增加水平间距 */
     row-gap: 14px;
   }
 }
 
 @media (max-width: 768px) {
   .horizontal-pictures-view {
-    padding: 0 2px;
+    padding: 0 1px; /* 小屏幕也减少边距 */
   }
 
   .grid-container {

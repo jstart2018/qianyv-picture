@@ -1303,11 +1303,6 @@ onMounted(() => {
   opacity: 0;
 }
 
-/* 隐藏滚动条但保留滚动功能 */
-.modal-container::-webkit-scrollbar {
-  display: none; /* 隐藏滚动条 */
-}
-
 .modal-container {
   -ms-overflow-style: none; /* IE和Edge */
   scrollbar-width: none; /* Firefox */

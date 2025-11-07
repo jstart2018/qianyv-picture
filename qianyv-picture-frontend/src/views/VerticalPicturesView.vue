@@ -179,25 +179,27 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* ========== 容器样式 ========== */
 .vertical-pictures-view {
   width: 100%;
-  max-width: 1600px;
+  max-width: 1800px; /* 设置最大宽度，确保有足够空间容纳4列 */
   margin: 0 auto;
-  padding: 0 8px;
+  padding: 0 0 0 0; /* 优化左右边距 */
   animation: slideInFromLeft 0.4s ease-out forwards;
 }
 
 @keyframes slideInFromLeft {
   0% {
     opacity: 0;
-    transform: translateX(-40px) scale(1);
+    transform: translateX(-40px);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0);
   }
 }
 
+/* ========== 加载和空状态 ========== */
 .loading-state,
 .empty-state {
   text-align: center;
@@ -221,16 +223,29 @@ onMounted(() => {
   }
 }
 
-/* ========== 瀑布流布局（竖屏）========== */
+/* ========== 瀑布流容器（4列布局）========== */
 .waterfall-container {
-  column-count: 4;
-  column-gap: 22px;
+  column-count: 4; /* 4列布局 */
+  column-gap: 16px;
+  column-fill: balance;
 }
 
+/* ========== 图片卡片 ========== */
 .picture-card {
   position: relative;
+  display: block; /* block布局更适合多列 */
+  width: 100%; /* 占满列宽 */
+  margin: 0 0 16px 0; /* 只保留底部间距 */
+  padding: 0 4%; /* 左右各留4%空白 */
   break-inside: avoid;
-  margin-bottom: 22px;
+  box-sizing: border-box;
+}
+
+/* ========== 图片容器和图片 ========== */
+.picture-image-wrapper {
+  position: relative;
+  width: 100%;
+  line-height: 0;
   border-radius: 13px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.9);
@@ -239,27 +254,15 @@ onMounted(() => {
   box-shadow:
     6px 6px 12px rgba(0, 0, 0, 0.35),
     10px 10px 35px rgba(0, 0, 0, 0.25);
-  transition:
-    transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    box-shadow 0.3s ease;
-  transform: scale(1);
-  transform-origin: center center;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* 悬停时整个卡片放大 */
-.picture-card:hover {
+.picture-card:hover .picture-image-wrapper {
   transform: scale(1.05);
   box-shadow:
     8px 8px 20px rgba(0, 0, 0, 0.4),
     15px 15px 45px rgba(0, 0, 0, 0.3);
   z-index: 10;
-}
-
-/* 图片包装器 */
-.picture-image-wrapper {
-  position: relative;
-  overflow: hidden;
-  background: #f0f0f0;
 }
 
 .picture-image-wrapper img {
@@ -268,7 +271,7 @@ onMounted(() => {
   display: block;
 }
 
-/* 底部按钮区域 */
+/* ========== 图片悬停按钮 ========== */
 .picture-footer {
   position: absolute;
   bottom: 0;
@@ -278,27 +281,29 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: transparent;
   opacity: 0;
   visibility: hidden;
+  z-index: 20; /* 确保在图片之上 */
+  pointer-events: none; /* 隐藏时不阻挡鼠标事件 */
   transition:
     opacity 0.3s ease,
-    visibility 0.3s;
+    visibility 0.3s ease;
 }
 
-/* 悬停时显示按钮 */
 .picture-card:hover .picture-footer {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto; /* 显示时恢复鼠标事件 */
 }
 
 .picture-goto-btn {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 12px 80px;
   background: rgba(240, 240, 240, 0.95);
-  color: #000000;
+  color: #000;
   border: 2px solid rgba(255, 255, 255, 0.95);
   border-radius: 24px;
   font-size: 17px;
@@ -308,13 +313,24 @@ onMounted(() => {
   box-shadow: 0 4px 16px rgba(100, 100, 100, 0.4);
   letter-spacing: 0.5px;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  z-index: 1; /* 确保按钮在最上层 */
+}
+
+.picture-goto-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(245, 245, 245, 0.95);
+  box-shadow: 0 5px 16px rgba(100, 100, 100, 0.4);
+}
+
+.picture-goto-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(100, 100, 100, 0.25);
 }
 
 .picture-plane-icon {
   width: 18px;
   height: 18px;
-  color: #000000;
+  color: #000;
   flex-shrink: 0;
   animation: planeFloat 2s ease-in-out infinite;
 }
@@ -329,18 +345,7 @@ onMounted(() => {
   }
 }
 
-.picture-goto-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 16px rgba(100, 100, 100, 0.4);
-  background: rgba(245, 245, 245, 0.95);
-}
-
-.picture-goto-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(100, 100, 100, 0.25);
-}
-
-/* 加载更多 */
+/* ========== 加载更多和底部提示 ========== */
 .load-more-container {
   display: flex;
   justify-content: center;
@@ -348,6 +353,9 @@ onMounted(() => {
 }
 
 .load-more-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 14px 48px;
   background: rgba(138, 180, 248, 0.1);
   border: 2px solid rgba(138, 180, 248, 0.3);
@@ -357,9 +365,6 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .load-more-btn:hover:not(:disabled) {
@@ -422,40 +427,51 @@ onMounted(() => {
   background: linear-gradient(to left, transparent, rgba(160, 174, 192, 0.3));
 }
 
-/* ========== 响应式设计 ========== */
+/* ========== 响应式布局 ========== */
+
+/* 中等屏幕：3列布局 */
 @media (max-width: 1200px) {
   .waterfall-container {
     column-count: 3;
-    column-gap: 18px;
+    column-gap: 14px;
   }
 
   .picture-card {
-    margin-bottom: 18px;
+    padding: 0 5%;
+    margin-bottom: 14px;
   }
 }
 
-@media (max-width: 968px) {
-  .waterfall-container {
-    column-count: 2;
-    column-gap: 16px;
-  }
-
-  .picture-card {
-    margin-bottom: 16px;
-  }
-}
-
+/* 小屏幕：2列布局 */
 @media (max-width: 768px) {
   .vertical-pictures-view {
-    padding: 0 2px;
+    padding: 0 20px;
   }
 
   .waterfall-container {
-    column-count: 1;
+    column-count: 2;
     column-gap: 12px;
   }
 
   .picture-card {
+    padding: 0 6%;
+    margin-bottom: 12px;
+  }
+}
+
+/* 移动端：1列布局 */
+@media (max-width: 480px) {
+  .vertical-pictures-view {
+    padding: 0 15px;
+  }
+
+  .waterfall-container {
+    column-count: 1;
+    column-gap: 0;
+  }
+
+  .picture-card {
+    padding: 0 8%;
     margin-bottom: 12px;
   }
 }

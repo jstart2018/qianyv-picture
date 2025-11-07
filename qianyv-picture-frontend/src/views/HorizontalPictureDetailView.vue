@@ -457,29 +457,8 @@ onMounted(() => {
   gap: 10px;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
   padding-top: 4px;
   padding-bottom: 8px;
-}
-
-.tags-container::-webkit-scrollbar {
-  height: 6px;
-}
-
-.tags-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* 滚动条颜色 */
-.tags-container::-webkit-scrollbar-thumb {
-  background: rgba(128, 128, 128, 0.3);
-  border-radius: 3px;
-}
-
-/* 滚动条颜色 */
-.tags-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(128, 128, 128, 0.5);
 }
 
 .tag-item {

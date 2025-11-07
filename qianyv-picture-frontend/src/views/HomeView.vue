@@ -222,38 +222,38 @@ onMounted(async () => {
 <style scoped>
 .home-view {
   width: 100%;
-  min-height: calc(100vh - 60px);
-  overflow: visible;
+  min-height: 100vh; /* 最小高度，允许内容扩展 */
   position: relative;
-  padding-bottom: 40px;
+  overflow: visible; /* 允许内容溢出使用全局滚动条 */
+  padding-bottom: 40px; /* 底部留白 */
 }
 
 /* ========== 左侧用户信息区域 ========== */
 .left-panel {
   position: fixed;
   left: 0;
-  top: 60px;
-  width: 36%;
-  height: calc(100vh - 60px);
-  overflow: hidden;
+  top: 76px; /* 导航栏下方（padding 14px * 2 + 内容约 48px） */
+  width: 28%;
+  height: calc(100vh - 76px);
+  overflow: hidden; /* 完全禁止滚动，避免多层滚动嵌套 */
   background: transparent;
   z-index: 15;
   display: flex;
   align-items: flex-start;
-  padding: 0;
+  justify-content: center;
+  padding: 20px 0;
   pointer-events: auto;
 }
 
 /* ========== 中部博客列表区域 ========== */
 .center-panel {
-  position: absolute;
-  left: 28%;
-  right: 22%;
-  top: 0;
-  min-height: 100vh;
-  overflow: visible;
+  margin-left: 28%; /* 使用 margin 代替定位，让它占据文档流 */
+  margin-right: 25%;
+  min-height: 100vh; /* 最小高度，允许内容扩展 */
+  overflow: visible; /* 使用全局滚动条 */
   padding: 0;
   z-index: 1;
+  /* 不使用 position，让它在文档流中撑开父容器高度 */
 }
 
 .blog-list {
@@ -339,10 +339,10 @@ onMounted(async () => {
 .right-panel {
   position: fixed;
   right: 0;
-  top: 60px;
+  top: 76px; /* 导航栏下方 */
   width: 25%;
-  height: calc(100vh - 60px);
-  overflow: hidden;
+  height: calc(100vh - 76px);
+  overflow: hidden; /* 完全禁止滚动，避免多层滚动嵌套 */
   background: transparent;
   z-index: 15;
   display: flex;
@@ -435,8 +435,16 @@ onMounted(async () => {
   flex-direction: column;
   gap: 0;
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto; /* 允许垂直滚动 */
+  overflow-x: hidden; /* 禁止水平滚动 */
   padding-top: 12px;
+  /* 隐藏滚动条 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.ranking-list::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 /* 聊天框 */
@@ -472,13 +480,21 @@ onMounted(async () => {
 
 .chat-messages {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto; /* 允许垂直滚动 */
+  overflow-x: hidden; /* 禁止水平滚动 */
   margin-bottom: var(--spacing-md);
   padding: var(--spacing-md);
   background: rgba(247, 250, 252, 0.6);
   border-radius: var(--radius-md);
   min-height: 300px;
   max-height: 400px;
+  /* 隐藏滚动条 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.chat-messages::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .chat-message {
@@ -541,18 +557,18 @@ onMounted(async () => {
 
   .center-panel {
     left: 30%;
-    width: 50%;
+    right: 22%;
   }
 
   .right-panel {
-    width: 20%;
+    width: 22%;
   }
 }
 
 @media (max-width: 1200px) {
   .home-view {
-    flex-direction: column;
-    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
   .left-panel,
@@ -561,13 +577,17 @@ onMounted(async () => {
     width: 100%;
     height: auto;
     min-height: 300px;
+    top: 0;
+    padding: 20px;
+    overflow: visible; /* 移动端使用全局滚动 */
   }
 
   .center-panel {
-    position: relative;
-    left: 0;
+    margin-left: 0;
+    margin-right: 0;
     width: 100%;
-    max-width: 100%;
+    height: auto;
+    overflow: visible;
     order: -1;
   }
 }
