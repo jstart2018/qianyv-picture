@@ -12,24 +12,6 @@ declare namespace API {
     introduction?: string
   }
 
-  type BlogCommentDTO = {
-    id?: number
-    parentId?: number
-    content?: string
-  }
-
-  type BlogCommentVO = {
-    id?: number
-    commentId?: number
-    userId?: number
-    username?: string
-    userAvatar?: string
-    createTime?: string
-    content?: string
-    parentId?: number
-    parentUsername?: string
-  }
-
   type BlogCreateDTO = {
     title?: string
     content?: string
@@ -43,12 +25,7 @@ declare namespace API {
   }
 
   type BlogLikeOrCollectDTO = {
-    id?: number
-  }
-
-  type BlogLikeOrCollectVO = {
-    count?: number
-    haveBean?: boolean
+    blogId?: number
   }
 
   type BlogListDTO = {
@@ -85,25 +62,46 @@ declare namespace API {
     userId: number
   }
 
+  type checkBlogLikeParams = {
+    blogId: number
+  }
+
+  type checkCollect1Params = {
+    blogId: number
+  }
+
   type checkCollectParams = {
     id: number
+  }
+
+  type checkFollowParams = {
+    userId: number
   }
 
   type checkHasSpaceParams = {
     userId: number
   }
 
-  type collectionsToggleParams = {
-    blogLikeOrCollectDTO: BlogLikeOrCollectDTO
-  }
-
   type collectToggleParams = {
     id: number
-    collect: number
   }
 
-  type commentsParams = {
-    blogCommentDTO: BlogCommentDTO
+  type CommentAddDTO = {
+    content?: string
+    blogId?: number
+    parentId?: number
+    replyToUserId?: number
+  }
+
+  type CommentQueryVO = {
+    id?: number
+    content?: string
+    blogId?: number
+    userInfoVO?: UserInfoVO
+    parentCommon?: CommentQueryVO
+    likeCount?: number
+    replyToUser?: UserInfoVO
+    createTime?: string
   }
 
   type delBlogParams = {
@@ -122,6 +120,10 @@ declare namespace API {
   type editSpaceParams = {
     spaceId: number
     name: string
+  }
+
+  type followToggleParams = {
+    userId: number
   }
 
   type getBlogDetailParams = {
@@ -150,8 +152,8 @@ declare namespace API {
     userId: number
   }
 
-  type likeToggleParams = {
-    blogLikeOrCollectDTO: BlogLikeOrCollectDTO
+  type listParentCommonParams = {
+    blogId: number
   }
 
   type OrderItem = {
@@ -289,21 +291,13 @@ declare namespace API {
     userInfoVO?: UserInfoVO
   }
 
+  type removeCommonParams = {
+    id: number
+  }
+
   type Result = {
     code?: number
     data?: Record<string, any>
-    message?: string
-  }
-
-  type ResultBlogCommentVO = {
-    code?: number
-    data?: BlogCommentVO
-    message?: string
-  }
-
-  type ResultBlogLikeOrCollectVO = {
-    code?: number
-    data?: BlogLikeOrCollectVO
     message?: string
   }
 
@@ -319,9 +313,9 @@ declare namespace API {
     message?: string
   }
 
-  type ResultInteger = {
+  type ResultListCommentQueryVO = {
     code?: number
-    data?: number
+    data?: CommentQueryVO[]
     message?: string
   }
 

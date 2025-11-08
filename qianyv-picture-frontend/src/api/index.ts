@@ -6,11 +6,13 @@ import * as userController from './userController'
 import * as spaceController from './spaceController'
 import * as pictureController from './pictureController'
 import * as picCategoryController from './picCategoryController'
+import * as commonController from './commonController'
 import * as blogController from './blogController'
 export default {
   userController,
   spaceController,
   pictureController,
   picCategoryController,
+  commonController,
   blogController,
 }

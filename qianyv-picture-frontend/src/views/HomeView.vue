@@ -85,18 +85,7 @@ const rankingList = ref([
   },
 ])
 
-// 事件处理
-const handleLike = async (blogId: number | undefined) => {
-  if (!blogId) return
-  console.log('点赞博客:', blogId)
-  // 此处应调用点赞接口
-}
-
-const handleCollect = async (blogId: number | undefined) => {
-  if (!blogId) return
-  console.log('收藏博客:', blogId)
-  // 此处应调用收藏接口
-}
+// 事件处理（点赞和收藏已在 BlogCard 组件内部处理）
 
 const toggleRightPanel = () => {
   rightPanelMode.value = rightPanelMode.value === 'ranking' ? 'chat' : 'ranking'
@@ -149,13 +138,7 @@ onMounted(async () => {
       </div>
 
       <div v-else class="blog-list">
-        <BlogCard
-          v-for="blog in blogStore.blogs"
-          :key="blog.id"
-          :blog="blog"
-          @like="handleLike"
-          @collect="handleCollect"
-        />
+        <BlogCard v-for="blog in blogStore.blogs" :key="blog.id" :blog="blog" />
 
         <!-- 加载更多按钮 -->
         <div v-if="hasMore" class="load-more-container">

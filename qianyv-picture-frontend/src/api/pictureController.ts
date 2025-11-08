@@ -6,7 +6,7 @@ import request from '@/request'
 export async function getOneById(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getOneByIdParams,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   const { id: param0, ...queryParams } = params
   return request<API.ResultPictureVO>(`/picture/${param0}`, {
@@ -18,27 +18,27 @@ export async function getOneById(
   })
 }
 
-/** 此处后端没有提供注释 POST /picture/${param0}/${param1} */
+/** 此处后端没有提供注释 POST /picture/${param0} */
 export async function collectToggle(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.collectToggleParams,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
-  const { id: param0, collect: param1, ...queryParams } = params
-  return request<API.Result>(`/picture/${param0}/${param1}`, {
+  const { id: param0, ...queryParams } = params
+  return request<API.Result>(`/picture/${param0}`, {
     method: 'POST',
     params: { ...queryParams },
     ...(options || {}),
   })
 }
 
-/** 此处后端没有提供注释 GET /picture/collect/check */
+/** 此处后端没有提供注释 GET /picture/checkCollect */
 export async function checkCollect(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.checkCollectParams,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
-  return request<API.ResultInteger>('/picture/collect/check', {
+  return request<API.ResultBoolean>('/picture/checkCollect', {
     method: 'GET',
     params: {
       ...params,
@@ -51,7 +51,7 @@ export async function checkCollect(
 export async function delete2(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.delete2Params,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   return request<API.ResultBoolean>('/picture/delete', {
     method: 'DELETE',
@@ -65,7 +65,7 @@ export async function delete2(
 /** 此处后端没有提供注释 POST /picture/download */
 export async function pictureDownload(
   body: API.PictureDownLoadDTO,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   return request<API.ResultString>('/picture/download', {
     method: 'POST',
@@ -118,10 +118,13 @@ export async function upload(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.uploadParams,
   body: {},
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   return request<API.ResultPictureUploadVO>('/picture/uploadByFile', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     params: {
       ...params,
     },
@@ -134,7 +137,7 @@ export async function upload(
 export async function uploadByUrl(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.uploadByUrlParams,
-  options?: { [key: string]: any },
+  options?: { [key: string]: any }
 ) {
   return request<API.ResultPictureUploadVO>('/picture/uploadByUrl', {
     method: 'POST',

@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { blogList, likeToggle, collectionsToggle, comments } from '@/api/blogController'
+import { blogList } from '@/api/blogController'
 
 export const useBlogStore = defineStore('blog', () => {
   // 博客列表
@@ -94,61 +94,21 @@ export const useBlogStore = defineStore('blog', () => {
       })
     }
     return pictures
-  } // 点赞切换
-  const toggleLike = async (blogId: number) => {
-    try {
-      const res = await likeToggle({
-        blogLikeOrCollectDTO: { id: blogId },
-      })
-      // 修改判断条件：code === 0 表示成功
-      if (res.data?.code === 0 && res.data?.data) {
-        // 更新本地数据
-        const blog = blogs.value.find((b) => b.id === blogId)
-        if (blog) {
-          blog.likeCount = res.data.data.count || 0
-        }
-        return res.data.data
-      }
-    } catch (error) {
-      console.error('点赞操作失败:', error)
-    }
   }
 
-  // 收藏切换
-  const toggleCollect = async (blogId: number) => {
-    try {
-      const res = await collectionsToggle({
-        blogLikeOrCollectDTO: { id: blogId },
-      })
-      // 修改判断条件：code === 0 表示成功
-      if (res.data?.code === 0 && res.data?.data) {
-        // 更新本地数据
-        const blog = blogs.value.find((b) => b.id === blogId)
-        if (blog) {
-          blog.collectCount = res.data.data.count || 0
-        }
-        return res.data.data
-      }
-    } catch (error) {
-      console.error('收藏操作失败:', error)
-    }
+  // 注意：点赞和收藏功能已迁移到 useBlogActions composable
+  // 这里保留空的函数以保持接口兼容性
+  const toggleLike = async (blogId: number) => {
+    console.log('toggleLike 已弃用，请使用 useBlogActions')
   }
-  // 获取评论
+
+  const toggleCollect = async (blogId: number) => {
+    console.log('toggleCollect 已弃用，请使用 useBlogActions')
+  }
+
   const fetchComments = async (blogId: number, parentId?: number) => {
-    try {
-      const res = await comments({
-        blogCommentDTO: {
-          id: blogId,
-          parentId,
-        },
-      })
-      // 修改判断条件：code === 0 表示成功
-      if (res.data?.code === 0 && res.data?.data) {
-        return res.data.data
-      }
-    } catch (error) {
-      console.error('获取评论失败:', error)
-    }
+    console.log('fetchComments 暂未实现')
+    return []
   }
 
   return {

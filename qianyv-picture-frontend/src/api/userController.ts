@@ -64,6 +64,21 @@ export async function changeRole(
   })
 }
 
+/** 此处后端没有提供注释 POST /user/checkFollow */
+export async function checkFollow(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.checkFollowParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultBoolean>('/user/checkFollow', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /user/code */
 export async function sendCode(body: API.SendCodeDTO, options?: { [key: string]: any }) {
   return request<API.ResultString>('/user/code', {
@@ -87,6 +102,21 @@ export async function createUser(
       'Content-Type': 'application/json',
     },
     data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /user/followToggle */
+export async function followToggle(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.followToggleParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultObject>('/user/followToggle', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
     ...(options || {}),
   })
 }
