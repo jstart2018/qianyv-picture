@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRouter, RouterLink, RouterView } from 'vue-router'
 import { useUserStore } from './stores/user'
+import UserAvatar from './components/UserAvatar.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -118,24 +119,6 @@ async function doLogout() {
   router.push('/')
 }
 
-const avatarText = computed(() => {
-  const u = userStore.user
-  return u && (u.username || u.nickname) ? (u.username || u.nickname).charAt(0).toUpperCase() : ''
-})
-
-const avatarStyle = computed(() => {
-  const u = userStore.user
-  const seed = (u && (u.username || u.nickname)) || 'guest'
-  let h = 0
-  for (let i = 0; i < seed.length; i++) {
-    h = seed.charCodeAt(i) + ((h << 5) - h)
-  }
-  const hue = Math.abs(h) % 360
-  return {
-    background: `linear-gradient(135deg, hsl(${hue} 60% 65%), hsl(${(hue + 40) % 360} 60% 55%))`,
-  }
-})
-
 // 处理滚动事件
 function handleScroll() {
   showBackToTop.value = window.scrollY > 300
@@ -221,36 +204,23 @@ function scrollToTop() {
 
         <!-- 用户头像或登录按钮 -->
         <template v-if="userStore.user">
-          <div
-            class="avatar"
-            :class="{ 'has-image': userStore.user.avatar }"
-            :style="userStore.user.avatar ? {} : avatarStyle"
-            @click.stop="toggleDropdown"
-          >
-            <img
-              v-if="userStore.user.avatar"
-              :src="userStore.user.avatar"
-              alt="头像"
-              class="avatar-image"
+          <div class="avatar-wrapper" @click.stop="toggleDropdown">
+            <UserAvatar
+              :nickname="userStore.user?.username || userStore.user?.nickname"
+              :avatar="userStore.user?.avatar"
+              :size="64"
+              shape="rounded"
             />
-            <span v-else class="avatar-text">{{ avatarText }}</span>
           </div>
 
           <div v-if="showDropdown" class="dropdown" @click.stop>
             <div class="dropdown-top">
-              <div
-                class="dropdown-avatar"
-                :class="{ 'has-image': userStore.user.avatar }"
-                :style="userStore.user.avatar ? {} : avatarStyle"
-              >
-                <img
-                  v-if="userStore.user.avatar"
-                  :src="userStore.user.avatar"
-                  alt="头像"
-                  class="avatar-image"
-                />
-                <span v-else>{{ avatarText }}</span>
-              </div>
+              <UserAvatar
+                :nickname="userStore.user?.username || userStore.user?.nickname"
+                :avatar="userStore.user?.avatar"
+                :size="64"
+                shape="rounded"
+              />
               <div class="dropdown-info">
                 <div class="name">
                   {{ userStore.user?.username || userStore.user?.nickname || '用户' }}
@@ -692,43 +662,14 @@ function scrollToTop() {
   box-shadow: 0 4px 12px rgba(26, 160, 193, 0.15);
 }
 
-/* 用户头像样式优化 - 放大 */
-.avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
+/* 用户头像包装器 */
+.avatar-wrapper {
   cursor: pointer;
-  font-size: 20px;
-  font-weight: 600;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  overflow: hidden;
 }
 
-.avatar.has-image {
-  background: transparent;
-  border-color: rgba(255, 255, 255, 0.8);
-}
-
-.avatar:hover {
+.avatar-wrapper:hover {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-.avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-text {
-  font-weight: 700;
-  font-size: 25px;
 }
 
 /* 用户下拉菜单 */
@@ -766,30 +707,6 @@ function scrollToTop() {
   align-items: center;
   border-bottom: 1px solid rgba(230, 230, 250, 0.3);
   background: rgba(230, 230, 250, 0.2);
-}
-
-.dropdown-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.dropdown-avatar.has-image {
-  background: transparent;
-}
-
-.dropdown-avatar .avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .dropdown-info .name {

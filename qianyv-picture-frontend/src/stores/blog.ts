@@ -99,15 +99,15 @@ export const useBlogStore = defineStore('blog', () => {
   // 注意：点赞和收藏功能已迁移到 useBlogActions composable
   // 这里保留空的函数以保持接口兼容性
   const toggleLike = async (blogId: number) => {
-    console.log('toggleLike 已弃用，请使用 useBlogActions')
+    // 已弃用，请使用 useBlogActions
   }
 
   const toggleCollect = async (blogId: number) => {
-    console.log('toggleCollect 已弃用，请使用 useBlogActions')
+    // 已弃用，请使用 useBlogActions
   }
 
   const fetchComments = async (blogId: number, parentId?: number) => {
-    console.log('fetchComments 暂未实现')
+    // 暂未实现
     return []
   }
 

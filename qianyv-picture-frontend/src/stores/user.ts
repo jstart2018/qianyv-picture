@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import * as userApi from '@/api/userController'
 
 export const useUserStore = defineStore('user', () => {
-  const user = ref<API.UserVO | null>(null)
+  const user = ref<API.UserInfoVO | null>(null)
 
   async function fetchUser() {
     try {

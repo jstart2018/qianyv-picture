@@ -62,7 +62,7 @@
 <script setup lang="ts">
 interface Props {
   reply: API.CommentQueryVO
-  blogId?: number
+  blogId?: number | string
 }
 
 const props = defineProps<Props>()

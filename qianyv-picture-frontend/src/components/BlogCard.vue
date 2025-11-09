@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { getUserAvatarText } from '@/utils'
 import { useBlogActions } from '@/composables'
 import CommentSection from './CommentSection.vue'
+import UserAvatar from './UserAvatar.vue'
 import Masonry from 'masonry-layout'
 
 interface Props {
@@ -99,10 +99,7 @@ onMounted(async () => {
       <!-- 博客头部：作者信息 + 点赞收藏 -->
       <div class="blog-header">
         <div class="author-info">
-          <div class="author-avatar" :class="{ 'has-image': blog.user?.avatar }">
-            <img v-if="blog.user?.avatar" :src="blog.user.avatar" alt="avatar" />
-            <span v-else>{{ getUserAvatarText(blog.user?.nickname) }}</span>
-          </div>
+          <UserAvatar :nickname="blog.user?.nickname" :avatar="blog.user?.avatar" size="medium" />
           <div class="author-details">
             <div class="author-name">{{ blog.user?.nickname || '匿名用户' }}</div>
             <div class="author-tag">
@@ -283,32 +280,6 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.author-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  color: white;
-  background: linear-gradient(135deg, #52c85c 0%, #cef4f4 100%);
-  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
-  transition: var(--transition-all);
-}
-
-.author-avatar.has-image {
-  background: transparent;
-  overflow: hidden;
-}
-
-.author-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .author-details {

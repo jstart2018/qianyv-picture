@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getUserAvatarText } from '@/utils'
+import UserAvatar from './UserAvatar.vue'
 
 interface User {
   id: number
@@ -20,10 +20,7 @@ defineProps<Props>()
 
 <template>
   <div class="ranking-item">
-    <div class="rank-avatar" :class="{ 'has-image': user.avatar }">
-      <img v-if="user.avatar" :src="user.avatar" alt="avatar" />
-      <span v-else>{{ getUserAvatarText(user.nickname) }}</span>
-    </div>
+    <UserAvatar :nickname="user.nickname" :avatar="user.avatar" size="medium" />
     <div class="rank-info">
       <div class="rank-name">{{ user.nickname }}</div>
       <div class="rank-stats">
@@ -54,32 +51,6 @@ defineProps<Props>()
 .ranking-item:hover {
   background: rgba(138, 180, 248, 0.08);
   transform: translateX(2px);
-}
-
-.rank-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: white;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
-  flex-shrink: 0;
-}
-
-.rank-avatar.has-image {
-  background: transparent;
-  overflow: hidden;
-}
-
-.rank-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .rank-info {

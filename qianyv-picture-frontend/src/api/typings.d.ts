@@ -331,6 +331,12 @@ declare namespace API {
     message?: string
   }
 
+  type ResultListUserInfoVO = {
+    code?: number
+    data?: UserInfoVO[]
+    message?: string
+  }
+
   type ResultLong = {
     code?: number
     data?: number
@@ -488,9 +494,11 @@ declare namespace API {
     avatar?: string
     tag?: string
     introduction?: string
-    shareCount?: number
-    likeCount?: number
-    downloadCount?: number
+    downloadCount?: number | string
+    likeCount?: number | string
+    collectCount?: number | string
+    fanCount?: number | string
+    publishCount?: number | string
   }
 
   type UserLoginByCodeDTO = {

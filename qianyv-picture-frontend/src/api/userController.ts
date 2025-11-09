@@ -121,6 +121,14 @@ export async function followToggle(
   })
 }
 
+/** 此处后端没有提供注释 GET /user/getHotUser */
+export async function getHotUser(options?: { [key: string]: any }) {
+  return request<API.ResultListUserInfoVO>('/user/getHotUser', {
+    method: 'GET',
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /user/login/code */
 export async function loginWithCode(
   body: API.UserLoginByCodeDTO,

@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useBlogStore } from '@/stores/blog'
+import * as userApi from '@/api/userController'
 import BlogUploadModal from '@/components/BlogUploadModal.vue'
 import BlogCard from '@/components/BlogCard.vue'
 import RankingUserCard from '@/components/RankingUserCard.vue'
@@ -16,74 +17,79 @@ const showUploadModal = ref(false)
 // 右侧切换状态：排行榜 or 聊天框
 const rightPanelMode = ref<'ranking' | 'chat'>('ranking')
 
-// 静态数据：用户统计信息
-const userStats = ref({
-  postCount: 128,
-  likeCount: 3456,
-  collectCount: 892,
+// 用户统计信息 - 从后端数据计算
+const userStats = computed(() => {
+  const user = userStore.user
+  if (!user) {
+    return {
+      postCount: 0,
+      likeCount: 0,
+      collectCount: 0,
+      downloadCount: 0,
+      fansCount: 0,
+    }
+  }
+
+  // 将字符串转换为数字
+  const toNumber = (value: number | string | undefined): number => {
+    if (value === undefined || value === null) return 0
+    if (typeof value === 'string') return parseInt(value, 10) || 0
+    return value
+  }
+
+  return {
+    postCount: toNumber(user.publishCount),
+    likeCount: toNumber(user.likeCount),
+    collectCount: toNumber(user.collectCount),
+    downloadCount: toNumber(user.downloadCount),
+    fansCount: toNumber(user.fanCount),
+  }
 })
 
-// ========== 静态数据：排行榜 ==========
-// 【重要说明】以下为临时静态数据，用于界面展示和调试
-// 【后端接入指南】见原注释
-const rankingList = ref([
-  {
-    id: 1,
-    nickname: '壁纸达人',
-    avatar: '',
-    postCount: 356,
-    fansCount: 1234,
-    recentShareCount: 28,
-  },
-  {
-    id: 2,
-    nickname: '设计师小王',
-    avatar: '',
-    postCount: 298,
-    fansCount: 987,
-    recentShareCount: 24,
-  },
-  {
-    id: 3,
-    nickname: '美图收藏家',
-    avatar: '',
-    postCount: 267,
-    fansCount: 856,
-    recentShareCount: 21,
-  },
-  {
-    id: 4,
-    nickname: '创意无限',
-    avatar: '',
-    postCount: 234,
-    fansCount: 723,
-    recentShareCount: 19,
-  },
-  {
-    id: 5,
-    nickname: '色彩大师',
-    avatar: '',
-    postCount: 198,
-    fansCount: 645,
-    recentShareCount: 17,
-  },
-  {
-    id: 6,
-    nickname: '摄影爱好者',
-    avatar: '',
-    postCount: 176,
-    fansCount: 567,
-    recentShareCount: 15,
-  },
-  {
-    id: 7,
-    nickname: '艺术追梦人',
-    avatar: '',
-    postCount: 156,
-    fansCount: 489,
-    recentShareCount: 13,
-  },
-])
+// ========== 排行榜数据 ==========
+const rankingList = ref<
+  Array<{
+    id: number
+    nickname: string
+    avatar?: string
+    postCount: number
+    fansCount: number
+    recentShareCount: number
+  }>
+>([])
+
+const rankingLoading = ref(false)
+
+// 获取热门用户排行榜
+const fetchRankingList = async () => {
+  rankingLoading.value = true
+  try {
+    const res = await userApi.getHotUser()
+    if (res.data?.code === 0 && res.data?.data) {
+      // 将字符串转换为数字的工具函数
+      const toNumber = (value: number | string | undefined | null): number => {
+        if (value === undefined || value === null) return 0
+        if (typeof value === 'string') return parseInt(value, 10) || 0
+        return value
+      }
+
+      // 转换为 RankingUserCard 需要的格式
+      rankingList.value = res.data.data.map((user, index) => ({
+        id: user.id || index + 1, // 如果 id 为 null，使用索引+1作为临时 id
+        nickname: user.nickname || '未知用户',
+        avatar: user.avatar,
+        postCount: toNumber(user.publishCount),
+        fansCount: toNumber(user.fanCount),
+        recentShareCount: toNumber(user.publishCount), // 使用发布数作为最近分享数
+      }))
+    }
+  } catch (error) {
+    console.error('获取排行榜数据失败:', error)
+    rankingList.value = []
+  } finally {
+    rankingLoading.value = false
+  }
+}
 
 // 事件处理（点赞和收藏已在 BlogCard 组件内部处理）
 
@@ -115,6 +121,13 @@ const hasMore = computed(() => {
 
 // 初始化
 onMounted(async () => {
+  // 获取用户信息（如果未登录会返回 null）
+  await userStore.fetchUser().catch(() => {
+    // 静默处理错误，用户可能未登录
+  })
+  // 获取排行榜数据
+  await fetchRankingList()
+  // 获取博客列表
   await blogStore.fetchBlogList()
 })
 </script>
@@ -167,13 +180,25 @@ onMounted(async () => {
           <span class="bookmark-text">近期贡献者</span>
         </div>
 
-        <div class="ranking-list">
+        <!-- 加载状态 -->
+        <div v-if="rankingLoading" class="ranking-loading">
+          <div class="loading-spinner-small"></div>
+          <p>加载中...</p>
+        </div>
+
+        <!-- 排行榜列表 -->
+        <div v-else-if="rankingList.length > 0" class="ranking-list">
           <RankingUserCard
             v-for="(user, index) in rankingList"
             :key="user.id"
             :user="user"
             :rank="index + 1"
           />
+        </div>
+
+        <!-- 空状态 -->
+        <div v-else class="ranking-empty">
+          <p>暂无排行榜数据</p>
         </div>
       </div>
 
@@ -428,6 +453,36 @@ onMounted(async () => {
 
 .ranking-list::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
+}
+
+/* 排行榜加载状态 */
+.ranking-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--text-tertiary);
+  gap: 12px;
+}
+
+.ranking-loading .loading-spinner-small {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(138, 180, 248, 0.2);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* 排行榜空状态 */
+.ranking-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--text-tertiary);
+  font-size: 14px;
 }
 
 /* 聊天框 */

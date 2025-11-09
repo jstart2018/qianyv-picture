@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { getUserAvatarText } from '@/utils'
+import { useRouter } from 'vue-router'
+import UserAvatar from './UserAvatar.vue'
+
+const router = useRouter()
 
 interface User {
+  id?: number
   nickname?: string
   avatar?: string
   introduction?: string
@@ -11,6 +15,8 @@ interface UserStats {
   postCount: number
   likeCount: number
   collectCount: number
+  downloadCount?: number
+  fansCount?: number
 }
 
 interface Props {
@@ -18,7 +24,7 @@ interface Props {
   stats: UserStats
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   share: []
@@ -27,31 +33,59 @@ const emit = defineEmits<{
 const handleShare = () => {
   emit('share')
 }
+
+// 点击头像跳转到用户详情页
+const handleAvatarClick = () => {
+  if (props.user?.id) {
+    router.push(`/user/${props.user.id}`)
+  }
+}
+
+// 格式化数字（大于 10000 显示 x.xw）
+const formatNumber = (num: number = 0) => {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + 'w'
+  }
+  return num.toString()
+}
 </script>
 
 <template>
   <div class="user-stats-card">
-    <div class="user-avatar-large" :class="{ 'has-image': user?.avatar }">
-      <img v-if="user?.avatar" :src="user.avatar" alt="avatar" />
-      <span v-else>{{ getUserAvatarText(user?.nickname) }}</span>
+    <div class="avatar-container" @click="handleAvatarClick">
+      <UserAvatar
+        :nickname="user?.nickname"
+        :avatar="user?.avatar"
+        size="large"
+        class="user-avatar-large"
+      />
     </div>
     <h3 class="user-nickname">{{ user?.nickname || '游客' }}</h3>
     <p class="user-intro">{{ user?.introduction || '这个人很懒，什么都没写~' }}</p>
 
-    <div class="user-stats">
-      <div class="stat-item">
-        <div class="stat-value">{{ stats.postCount }}</div>
-        <div class="stat-label">发布数</div>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <div class="stat-value">{{ stats.likeCount }}</div>
-        <div class="stat-label">点赞数</div>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <div class="stat-value">{{ stats.collectCount }}</div>
-        <div class="stat-label">收藏数</div>
+    <!-- 用户元数据统计 - 网格布局 -->
+    <div class="user-metadata">
+      <div class="metadata-grid">
+        <div class="metadata-item">
+          <div class="metadata-value">{{ formatNumber(stats.downloadCount || 0) }}</div>
+          <div class="metadata-label">获载量</div>
+        </div>
+        <div class="metadata-item">
+          <div class="metadata-value">{{ formatNumber(stats.likeCount) }}</div>
+          <div class="metadata-label">获赞</div>
+        </div>
+        <div class="metadata-item">
+          <div class="metadata-value">{{ formatNumber(stats.collectCount) }}</div>
+          <div class="metadata-label">获收藏</div>
+        </div>
+        <div class="metadata-item">
+          <div class="metadata-value">{{ formatNumber(stats.fansCount || 0) }}</div>
+          <div class="metadata-label">粉丝数</div>
+        </div>
+        <div class="metadata-item">
+          <div class="metadata-value">{{ formatNumber(stats.postCount) }}</div>
+          <div class="metadata-label">发布数</div>
+        </div>
       </div>
     </div>
 
@@ -111,39 +145,28 @@ const handleShare = () => {
   transform: translateY(-4px);
 }
 
-.user-avatar-large {
-  width: 140px;
-  height: 140px;
-  min-height: 140px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 56px;
-  font-weight: 700;
-  color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* 头像容器 - 添加点击和悬停效果 */
+.avatar-container {
+  cursor: pointer;
   margin-bottom: 20px;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-  border: 4px solid rgba(255, 255, 255, 0.9);
-  transition: all 0.3s ease;
-  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
 }
 
-.user-avatar-large.has-image {
-  background: transparent;
-  overflow: hidden;
+.avatar-container:hover {
+  transform: translateY(-6px) scale(1.05);
 }
 
-.user-avatar-large img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.avatar-container:active {
+  transform: translateY(-3px) scale(1.02);
 }
 
-.user-avatar-large:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+.user-avatar-large {
+  border: none;
+  box-shadow:
+    0 2px 8px rgba(230, 230, 230, 0.8),
+    0 4px 16px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .user-nickname {
@@ -159,48 +182,69 @@ const handleShare = () => {
   font-size: 15px;
   color: #4a5568;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   line-height: 1.6;
   max-width: 90%;
 }
 
-.user-stats {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+/* 用户元数据统计区域 */
+.user-metadata {
   width: 100%;
-  padding: 20px 0;
-  background: rgba(138, 180, 248, 0.08);
-  border-radius: 14px;
-  gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.stat-item {
+.metadata-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  width: 100%;
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.metadata-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  flex: 1;
+  justify-content: center;
+  gap: 6px;
+  width: 88px;
+  height: 88px;
+  background: transparent;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+  box-shadow:
+    0 0 0 1px rgba(138, 180, 248, 0.15),
+    0 0 12px rgba(255, 255, 255, 0.4),
+    0 0 20px rgba(255, 255, 255, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.05);
+  position: relative;
+  flex-shrink: 0;
 }
 
-.stat-value {
-  font-size: 26px;
+.metadata-item:hover {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow:
+    0 0 0 1px rgba(138, 180, 248, 0.3),
+    0 0 15px rgba(255, 255, 255, 0.6),
+    0 0 28px rgba(255, 255, 255, 0.4),
+    0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.metadata-value {
+  font-size: 20px;
   font-weight: 700;
-  color: #667eea;
+  color: #000000;
   line-height: 1;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #718096;
+.metadata-label {
+  font-size: 11px;
+  color: #000000;
   white-space: nowrap;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 44px;
-  background: rgba(138, 180, 248, 0.2);
+  font-weight: 500;
+  opacity: 0.75;
 }
 
 .share-btn {

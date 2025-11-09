@@ -94,7 +94,7 @@ import { listParentCommon, addCommon } from '@/api/commonController'
 import CommentItem from './CommentItem.vue'
 
 interface Props {
-  blogId?: number
+  blogId?: number | string
   commentCount?: number
 }
 
@@ -124,7 +124,6 @@ const loadComments = async () => {
   loading.value = true
   try {
     const response = await listParentCommon({ blogId: props.blogId })
-    console.log('评论数据:', response.data)
 
     if (response.data?.code === 200 || response.data?.code === 0) {
       comments.value = response.data.data || []

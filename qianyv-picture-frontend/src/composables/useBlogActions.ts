@@ -2,7 +2,7 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { likesToggle, collectToggle1, checkBlogLike, checkCollect1 } from '@/api/blogController'
 
 interface UseBlogActionsOptions {
-  blogId: number | undefined
+  blogId: number | string | undefined
   initialLikeCount?: number
   initialCollectCount?: number
   autoCheck?: boolean
@@ -29,12 +29,10 @@ export function useBlogActions(options: UseBlogActionsOptions) {
     if (!blogId) return
     try {
       const response = await checkBlogLike({ blogId })
-      console.log(`[BlogId: ${blogId}] 初始检查点赞:`, response.data)
       const code = response.data?.code
       const data = response.data?.data
       if ((code === 200 || code === 0) && data !== undefined) {
         isLiked.value = data === true
-        console.log(`[BlogId: ${blogId}] 设置点赞状态:`, isLiked.value)
       }
     } catch (error) {
       console.error('检查点赞状态失败:', error)
@@ -46,12 +44,10 @@ export function useBlogActions(options: UseBlogActionsOptions) {
     if (!blogId) return
     try {
       const response = await checkCollect1({ blogId })
-      console.log(`[BlogId: ${blogId}] 初始检查收藏:`, response.data)
       const code = response.data?.code
       const data = response.data?.data
       if ((code === 200 || code === 0) && data !== undefined) {
         isCollected.value = data === true
-        console.log(`[BlogId: ${blogId}] 设置收藏状态:`, isCollected.value)
       }
     } catch (error) {
       console.error('检查收藏状态失败:', error)
@@ -79,13 +75,11 @@ export function useBlogActions(options: UseBlogActionsOptions) {
     try {
       // 调用点赞切换接口
       const response = await likesToggle({ blogId })
-      console.log('点赞响应:', response.data)
 
       const toggleCode = response.data?.code
       if (toggleCode === 200 || toggleCode === 0) {
         // 调用检查接口获取最新状态
         const checkResponse = await checkBlogLike({ blogId })
-        console.log('检查点赞状态:', checkResponse.data)
 
         const checkCode = checkResponse.data?.code
         const checkData = checkResponse.data?.data
@@ -110,8 +104,6 @@ export function useBlogActions(options: UseBlogActionsOptions) {
               justLiked.value = false
             }, 600)
           }
-
-          console.log(newLikedState ? '✅ 点赞成功' : '❌ 取消点赞', '当前状态:', isLiked.value)
         }
       } else {
         console.error('操作失败:', response.data)
@@ -133,13 +125,11 @@ export function useBlogActions(options: UseBlogActionsOptions) {
     try {
       // 调用收藏切换接口
       const response = await collectToggle1({ blogId })
-      console.log('收藏响应:', response.data)
 
       const toggleCode = response.data?.code
       if (toggleCode === 200 || toggleCode === 0) {
         // 调用检查接口获取最新状态
         const checkResponse = await checkCollect1({ blogId })
-        console.log('检查收藏状态:', checkResponse.data)
 
         const checkCode = checkResponse.data?.code
         const checkData = checkResponse.data?.data
@@ -164,12 +154,6 @@ export function useBlogActions(options: UseBlogActionsOptions) {
               justCollected.value = false
             }, 600)
           }
-
-          console.log(
-            newCollectedState ? '⭐ 收藏成功' : '❌ 取消收藏',
-            '当前状态:',
-            isCollected.value,
-          )
         }
       } else {
         console.error('操作失败:', response.data)

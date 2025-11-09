@@ -121,7 +121,7 @@ import CommentReply from './CommentReply.vue'
 
 interface Props {
   comment: API.CommentQueryVO
-  blogId?: number
+  blogId?: number | string
 }
 
 const props = defineProps<Props>()
