@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface PubPictureMapper extends BaseMapper<PubPicture> {
 
+    void updateCollectCount(Long id, Long increaseCount);
 }
 
 

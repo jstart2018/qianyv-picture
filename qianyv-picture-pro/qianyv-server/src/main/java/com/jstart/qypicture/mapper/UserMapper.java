@@ -12,7 +12,7 @@ import com.jstart.qypicture.model.vo.UserInfoVO;
  */
 public interface UserMapper extends BaseMapper<User> {
 
-    UserInfoVO getUserInfo(Long id);
+    UserInfoVO getUserVOInfo(Long id, Integer userStatus, String orderBy, Integer beginIndex, Integer pageSize);
 }
 
 

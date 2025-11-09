@@ -33,8 +33,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -168,11 +170,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public UserInfoVO getUserInfoVO(User user) {
 
-        //todo 查询用户的分享数、获点赞数等信息
-        //UserInfoVO userInfoVO = userMapper.getUserInfo(user.getId());
-        UserInfoVO userInfoVO = new UserInfoVO();
-        BeanUtils.copyProperties(user, userInfoVO);
-        return userInfoVO;
+        UserInfoVO userVOInfo = userMapper.getUserVOInfo(user.getId(), null, null, null, null);
+
+        return userVOInfo;
     }
 
     @Override
@@ -183,6 +183,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 无锁模式：
      * 关注/取关 切换
+     *
      * @param userId
      */
     @Override
@@ -214,7 +215,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 return;
             } else {
                 // 数据库已无记录，但Redis有（数据不一致），强制删Redis
-                redisTemplate.opsForSet().remove(redisKey,  followUser.getId());
+                redisTemplate.opsForSet().remove(redisKey, followUser.getId());
                 throw new BusinessException(ResultEnum.SYSTEM_ERROR, "操作失败，请稍后再试");
             }
         } else {
@@ -257,6 +258,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return false;
         }
         return false;
+    }
+
+    /**
+     * 获取贡献榜用户
+     * @return
+     */
+    @Override
+    public List<UserInfoVO> getHotUser() {
+        //从redis中获取用户id
+        List<UserInfoVO> hotUserList = new ArrayList<>();
+
+        Set<Object> hotUserIdSet = redisTemplate.opsForZSet().range(RedisKey.USER_CONTRIBUTION_RANK_KEY, 0, 9);
+        if (hotUserIdSet.isEmpty()) {
+            return hotUserList;
+        }
+        List<Long> hotUserIdList = hotUserIdSet.stream().map(id -> Long.parseLong(String.valueOf(id))).toList();
+        List<User> userList = this.lambdaQuery().in(User::getId, hotUserIdList)
+                //手动指定排序方式，保证redis排行榜中的顺序不变
+                .last("order by field(id," + StringUtils.join(hotUserIdList, ",") + ")")
+                .list();
+        //todo 这里循环获取性能稍差，后续优化
+        userList.forEach(user -> {
+            UserInfoVO userInfoVO = this.getUserInfoVO(user);
+            hotUserList.add(userInfoVO);
+        });
+
+        return hotUserList;
     }
 
 

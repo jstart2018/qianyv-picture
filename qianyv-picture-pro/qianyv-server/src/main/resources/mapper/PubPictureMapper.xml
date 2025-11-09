@@ -39,4 +39,12 @@
         review_time,create_time,update_time,
         delete_time
     </sql>
+
+    <update id="updateCollectCount">
+        UPDATE pub_picture
+        SET collect_count = collect_count + (#{increaseCount}),
+            update_time = NOW()
+        WHERE id = #{id}
+
+    </update>
 </mapper>

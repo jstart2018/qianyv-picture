@@ -2,6 +2,7 @@ package com.jstart.qypicture.handler.picture;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.auth.SpaceRoleEnum;
 import com.jstart.qypicture.enums.PicturePlaceEnum;
@@ -12,6 +13,7 @@ import com.jstart.qypicture.model.UploadPictureResult;
 import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
+import com.jstart.qypicture.model.entity.PubPicture;
 import com.jstart.qypicture.model.entity.SpaPicture;
 import com.jstart.qypicture.model.entity.Space;
 import com.jstart.qypicture.model.vo.PictureListVO;
@@ -221,7 +223,11 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
 
     @Override
     public String downLoad(PictureDownLoadDTO pictureDownLoadDTO) {
-        return "";
+        spaPictureMapper.update(new UpdateWrapper<SpaPicture>()
+                .set("download_count", "download_count + 1")
+                .eq("id", pictureDownLoadDTO.getPictureId())
+        );
+        return spaPictureMapper.selectById(pictureDownLoadDTO.getPictureId()).getUrl();
     }
 
     //校验空间属性、成员权限

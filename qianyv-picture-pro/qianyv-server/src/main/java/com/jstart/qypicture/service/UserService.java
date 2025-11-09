@@ -50,4 +50,10 @@ public interface UserService extends IService<User> {
      * @return
      */
     Boolean checkFollow(Long userId);
+
+    /**
+     * 获取热门用户
+     * @return
+     */
+    List<UserInfoVO> getHotUser();
 }

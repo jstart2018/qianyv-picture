@@ -33,9 +33,9 @@ public class UserInfoVO {
     private String introduction;
 
     /**
-     * 分享数
+     * 获载数
      */
-    private Long shareCount = 0L;
+    private Long downloadCount = 0L;
 
     /**
      * 获赞数
@@ -43,8 +43,21 @@ public class UserInfoVO {
     private Long likeCount = 0L;
 
     /**
-     * 获载数
+     * 获收藏
      */
-    private Long downloadCount = 0L;
+    private Long collectCount = 0L;
+
+    /**
+     * 粉丝数
+     */
+    private Long fanCount = 0L;
+
+    /**
+     * 分享数
+     */
+    private Long publishCount = 0L;
+
+
+
 
 }

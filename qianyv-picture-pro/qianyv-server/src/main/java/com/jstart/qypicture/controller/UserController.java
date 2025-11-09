@@ -19,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/user")
 @Slf4j
@@ -183,5 +185,14 @@ public class UserController {
         return Result.success(result);
     }
 
+
+    @GetMapping("/getHotUser")
+    public Result<List<UserInfoVO>> getHotUser(){
+
+        List<UserInfoVO> hotUser = userService.getHotUser();
+
+        return Result.success(hotUser);
+
+    }
 
 }

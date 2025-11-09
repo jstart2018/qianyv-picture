@@ -12,24 +12,19 @@ import com.jstart.qypicture.mapper.PubPictureMapper;
 import com.jstart.qypicture.model.dto.BlogCreateDTO;
 import com.jstart.qypicture.model.dto.BlogListDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
-import com.jstart.qypicture.model.entity.Blog;
-import com.jstart.qypicture.model.entity.Collection;
-import com.jstart.qypicture.model.entity.PubPicture;
-import com.jstart.qypicture.model.entity.User;
+import com.jstart.qypicture.model.entity.*;
 import com.jstart.qypicture.model.vo.BlogAuthorVO;
 import com.jstart.qypicture.model.vo.BlogsVO;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.result.Result;
-import com.jstart.qypicture.service.BlogService;
+import com.jstart.qypicture.service.*;
 import com.jstart.qypicture.mapper.BlogMapper;
-import com.jstart.qypicture.service.CollectionService;
-import com.jstart.qypicture.service.PictureService;
-import com.jstart.qypicture.service.UserService;
 import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,9 +53,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
     @Resource
     private UserService userservice;
     @Resource
+    @Lazy
     private CollectionService collectionService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+    @Resource
+    private CommentService commentService;
 
 
 
@@ -88,6 +86,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
             pictureEditDTO.setSpaceId(null);
             pictureService.edit(pictureEditDTO);
         }
+
+        //刷新贡献值
+        redisTemplate.opsForZSet().incrementScore(RedisKey.USER_CONTRIBUTION_RANK_KEY,
+                StpUtil.getLoginIdAsLong(),
+                1);
 
         return blog.getId();
     }
@@ -216,6 +219,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
                     .toList();
             BlogsVO blogsVO = new BlogsVO();
             BeanUtils.copyProperties(blog, blogsVO);
+            //查询收藏数
+            Long collectCount = redisTemplate.opsForSet().size(RedisKey.BLOG_COLLECTION_KEY + id);
+            blogsVO.setCollectCount(collectCount);
+            //查询评论数
+            Long commentCount = commentService.lambdaQuery().eq(Comment::getBlogId, id).count();
+            blogsVO.setCommentCount(commentCount);
+
             blogsVO.setPictureVOList(pictureVOList);
             return blogsVO;
         }).toList();

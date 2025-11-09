@@ -36,7 +36,7 @@ public class CommentQueryVO {
     private UserInfoVO userInfoVO;
 
     /**
-     * 父评论 id，null 表示一级评论
+     * 父评论，null 表示一级评论
      */
     private CommentQueryVO parentCommon;
 

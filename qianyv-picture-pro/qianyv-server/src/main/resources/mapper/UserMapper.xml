@@ -20,6 +20,7 @@
         <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
         <result property="lastLoginTime" column="last_login_time" jdbcType="TIMESTAMP"/>
         <result property="deleteTime" column="delete_time" jdbcType="TIMESTAMP"/>
+
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -30,8 +31,73 @@
         update_time,last_login_time,delete_time
     </sql>
 
-    <select id="getUserInfo" resultType="com.jstart.qypicture.model.vo.UserInfoVO">
-        select * from user
+    <!-- 通用查询：支持“查询所有用户”或“按用户ID筛选”（动态条件） -->
+    <select id="getUserVOInfo" resultType="com.jstart.qypicture.model.vo.UserInfoVO">
+        SELECT
+        u.id,
+        u.nickname,
+        u.avatar,
+        u.gender,
+        u.introduction,
+        u.email,
+        u.phone,
+        u.create_time AS register_time,
+        u.status AS user_status,
+        IFNULL(pp_stats.download_count, 0) AS download_count,
+        IFNULL(b_stats.like_count, 0) AS like_count,
+        IFNULL(b_stats.collect_count, 0) + IFNULL(pp_stats.collect_count, 0) AS collect_count,
+        IFNULL(f_stats.fan_count, 0) AS fan_count,
+        IFNULL(b_stats.publish_count, 0) AS publish_count
+        FROM
+        `user` u
+        LEFT JOIN (
+        SELECT
+        user_id,
+        SUM(download_count) AS download_count,
+        SUM(collect_count) AS collect_count
+        FROM pub_picture
+        GROUP BY user_id
+        ) pp_stats ON u.id = pp_stats.user_id
+        LEFT JOIN (
+        SELECT
+        user_id,
+        SUM(like_count) AS like_count,
+        SUM(collect_count) AS collect_count,
+        COUNT(*) AS publish_count
+        FROM blog
+        GROUP BY user_id
+        ) b_stats ON u.id = b_stats.user_id
+        LEFT JOIN (
+        SELECT
+        follow_user_id,
+        COUNT(*) AS fan_count
+        FROM follow
+        GROUP BY follow_user_id
+        ) f_stats ON u.id = f_stats.follow_user_id
+
+        <!-- 动态条件：支持传入用户ID筛选单个用户，无ID则查所有 -->
+        <where>
+            <if test="id != null and id > 0">
+                u.id = #{id, jdbcType=BIGINT}
+            </if>
+            <!-- 可扩展其他条件：如筛选启用状态的用户 -->
+            <if test="userStatus != null">
+                AND u.status = #{userStatus, jdbcType=TINYINT}
+            </if>
+        </where>
+
+        <!-- 动态排序：默认按粉丝数降序，可通过参数指定排序字段 -->
+        <if test="orderBy != null and orderBy != ''">
+            ORDER BY ${orderBy}
+        </if>
+        <if test="orderBy == null or orderBy == ''">
+            ORDER BY fan_count DESC, publish_count DESC
+        </if>
+
+        <!-- 分页支持：配合 MyBatis 分页插件（如 PageHelper） -->
+        <if test="beginIndex != null and pageSize != null">
+            LIMIT #{beginIndex, jdbcType=INTEGER}, #{pageSize, jdbcType=INTEGER}
+        </if>
     </select>
 
 </mapper>

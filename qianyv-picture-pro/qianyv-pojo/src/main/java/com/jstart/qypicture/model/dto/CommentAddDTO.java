@@ -27,6 +27,6 @@ public class CommentAddDTO {
     /**
      * 回复的用户 id，null 表示回复帖子本身
      */
-    private Long replyUserId;
+    private Long replyToUserId;
 
 }

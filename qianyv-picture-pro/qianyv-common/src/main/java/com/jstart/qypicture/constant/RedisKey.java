@@ -14,5 +14,7 @@ public interface RedisKey {
     //用户关注key
     String USER_FOLLOW_KEY = "qypicture:user:follow:";
 
+    //用户贡献排行榜key
+    String USER_CONTRIBUTION_RANK_KEY = "qypicture:user:contribution:rank";
 
 }

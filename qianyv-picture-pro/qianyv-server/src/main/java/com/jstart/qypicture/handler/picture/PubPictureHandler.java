@@ -2,6 +2,7 @@ package com.jstart.qypicture.handler.picture;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.auth.SystemRoleEnum;
 import com.jstart.qypicture.enums.PicturePlaceEnum;
@@ -215,6 +216,10 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
 
     @Override
     public String downLoad(PictureDownLoadDTO pictureDownLoadDTO) {
+        pubPictureMapper.update(new UpdateWrapper<PubPicture>()
+                .set("download_count", "download_count + 1")
+                .eq("id", pictureDownLoadDTO.getPictureId())
+        );
         return pubPictureMapper.selectById(pictureDownLoadDTO.getPictureId()).getUrl();
     }
 }

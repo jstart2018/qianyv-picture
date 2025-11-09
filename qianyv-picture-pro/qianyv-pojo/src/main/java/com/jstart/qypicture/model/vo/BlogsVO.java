@@ -42,7 +42,7 @@ public class BlogsVO {
     /**
      * 评论数
      */
-    private Integer commentCount;
+    private Long commentCount;
 
     /**
      * 收藏数量

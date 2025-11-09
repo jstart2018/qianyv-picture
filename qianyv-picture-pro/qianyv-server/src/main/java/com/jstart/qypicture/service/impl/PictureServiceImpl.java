@@ -44,6 +44,7 @@ public class PictureServiceImpl implements PictureService {
     @Resource
     private PubPictureMapper pubPictureMapper;
     @Resource
+    @Lazy
     private CollectionService collectionService;
 
     /**
@@ -146,6 +147,8 @@ public class PictureServiceImpl implements PictureService {
         ThrowUtils.throwIf(pubPicture == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
 
         collectionService.collectionToggle(StpUtil.getLoginIdAsLong(),id, CollectionEnum.PICTURE);
+
+        //pubPictureMapper.updateCollectCount(id,1L);
 
     }
 

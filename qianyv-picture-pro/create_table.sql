@@ -66,7 +66,10 @@ create table pub_picture
     INDEX idx_userId (user_id),             -- 提升基于用户 ID 的查询性能
     INDEX idx_uploadStatus (upload_status), -- 提升基于上传状态的查询性能
     INDEX idx_reviewStatus (review_status)  -- 提升基于审核状态的查询性能
-) comment '图片表' collate = utf8mb4_unicode_ci;
+) comment '公共图片表' collate = utf8mb4_unicode_ci;
+
+ALTER TABLE pub_picture
+    ADD COLUMN download_count bigint default 0 comment "下载量" AFTER collect_count;
 
 -- 3、图片分类表
 drop table if exists pic_category;
@@ -114,7 +117,10 @@ create table spa_picture
     INDEX idx_userId (user_id),            -- 提升基于用户 ID 的查询性能
     INDEX idx_spaceId (space_id),          -- 提升基于空间 ID 的查询性能
     INDEX idx_reviewStatus (review_status) -- 提升基于审核状态的查询性能
-) comment '图片表' collate = utf8mb4_unicode_ci;
+) comment '空间图片表' collate = utf8mb4_unicode_ci;
+
+ALTER TABLE spa_picture
+    ADD COLUMN download_count bigint default 0 comment "下载量" AFTER pic_format;
 
 -- 5、空间目录表
 drop table if exists spa_catalog;

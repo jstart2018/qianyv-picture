@@ -34,12 +34,15 @@ public class CommonController {
         ThrowUtils.throwIf(commentAddDTO.getBlogId() == null, ResultEnum.PARAMS_ERROR, "评论目标不能为空");
         ThrowUtils.throwIf(commentAddDTO.getContent() == null, ResultEnum.PARAMS_ERROR, "评论内容不能为空");
         if (commentAddDTO.getParentId() != null) {
+            //todo：查询评论回复目标是否存在（可选，一般不会出错）
+
             // 回复评论，检查评论是否存在
             boolean isExist = commentService.query().eq("id", commentAddDTO.getParentId()).exists();
             ThrowUtils.throwIf(!isExist, ResultEnum.PARAMS_ERROR, "回复的评论不存在或已被删除");
         }
         Comment comment = BeanUtil.copyProperties(commentAddDTO, Comment.class);
         comment.setUserId(StpUtil.getLoginIdAsLong());
+        if (commentAddDTO.getReplyToUserId() != null) comment.setReplyUserId(commentAddDTO.getReplyToUserId());
         boolean save = commentService.save(comment);
         ThrowUtils.throwIf(!save, ResultEnum.SYSTEM_ERROR, "评论失败，请稍后重试");
         return Result.success();
