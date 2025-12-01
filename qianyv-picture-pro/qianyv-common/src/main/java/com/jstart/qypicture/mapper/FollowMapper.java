@@ -1,7 +1,7 @@
 package com.jstart.qypicture.mapper;
 
-import com.jstart.qypicture.model.entity.Follow;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jstart.qypicture.model.entity.Follow;
 
 /**
 * @author 28435

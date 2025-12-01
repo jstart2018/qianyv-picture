@@ -45,6 +45,11 @@ public class PubPicture {
     private String introduction;
 
     /**
+     * AI图片描述
+     */
+    private String aiDesc;
+
+    /**
      * 分类id
      */
     private Long categoryId;

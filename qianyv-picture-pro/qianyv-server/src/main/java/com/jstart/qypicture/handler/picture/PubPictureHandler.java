@@ -13,6 +13,7 @@ import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.entity.PubPicture;
+import com.jstart.qypicture.model.entity.SpaPicture;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
 import com.jstart.qypicture.model.vo.PictureVO;
@@ -217,7 +218,7 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
     @Override
     public String downLoad(PictureDownLoadDTO pictureDownLoadDTO) {
         pubPictureMapper.update(new UpdateWrapper<PubPicture>()
-                .set("download_count", "download_count + 1")
+                .setSql("download_count = download_count + 1")
                 .eq("id", pictureDownLoadDTO.getPictureId())
         );
         return pubPictureMapper.selectById(pictureDownLoadDTO.getPictureId()).getUrl();

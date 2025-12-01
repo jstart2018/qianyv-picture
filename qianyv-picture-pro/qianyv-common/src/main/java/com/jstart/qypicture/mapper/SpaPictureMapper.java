@@ -1,7 +1,7 @@
 package com.jstart.qypicture.mapper;
 
-import com.jstart.qypicture.model.entity.SpaPicture;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jstart.qypicture.model.entity.SpaPicture;
 
 /**
  * @author 28435

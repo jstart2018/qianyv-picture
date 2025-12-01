@@ -34,6 +34,20 @@ spring:
             enable: true
             required: true
 
+  ai:
+    openai:
+      base-url: https://api.deepseek.com
+      api-key: sk-ae90b3568ea5df85a77be5gni7105cbf # 随便填的，避免自动装配报错
+ai:
+  dashscope:
+    base-url: https://dashscope.aliyuncs.com/compatible-mode
+    api-key: ${api-key.dashscope}
+  deepseek:
+    base-url: https://api.deepseek.com
+    api-key: ${api-key.deepseek}
+  siliconflow:
+    api-key: ${api-key.siliconflow}
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true # 开启驼峰命名
@@ -51,7 +65,6 @@ cos:
     secretKey: ${cosClient.secretKey}   #秘钥key
     region: ${cosClient.region}  #区域
     bucket: ${cosClient.bucket} #桶名
-
 
 
 

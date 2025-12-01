@@ -1,7 +1,7 @@
 package com.jstart.qypicture.mapper;
 
-import com.jstart.qypicture.model.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jstart.qypicture.model.entity.User;
 import com.jstart.qypicture.model.vo.UserInfoVO;
 
 /**

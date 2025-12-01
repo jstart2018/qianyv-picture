@@ -10,6 +10,7 @@
         <result property="blogId" column="blog_id" jdbcType="BIGINT"/>
         <result property="url" column="url" jdbcType="VARCHAR"/>
         <result property="introduction" column="introduction" jdbcType="VARCHAR"/>
+        <result property="aiDesc" column="ai_desc" jdbcType="VARCHAR"/>
         <result property="categoryId" column="category_id" jdbcType="BIGINT"/>
         <result property="tags" column="tags" jdbcType="VARCHAR"/>
         <result property="picSize" column="pic_size" jdbcType="BIGINT"/>
@@ -31,7 +32,7 @@
 
     <sql id="Base_Column_List">
         id,user_id,blog_id,
-        url,introduction,category_id,
+        url,introduction,ai_desc,category_id,
         tags,pic_size,pic_width,
         pic_height,pic_scale,pic_format,
         collect_count,upload_status,is_recommend,

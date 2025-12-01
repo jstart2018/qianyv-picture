@@ -224,7 +224,7 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
     @Override
     public String downLoad(PictureDownLoadDTO pictureDownLoadDTO) {
         spaPictureMapper.update(new UpdateWrapper<SpaPicture>()
-                .set("download_count", "download_count + 1")
+                .setSql("download_count = download_count + 1")
                 .eq("id", pictureDownLoadDTO.getPictureId())
         );
         return spaPictureMapper.selectById(pictureDownLoadDTO.getPictureId()).getUrl();

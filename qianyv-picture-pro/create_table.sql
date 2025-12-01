@@ -70,6 +70,8 @@ create table pub_picture
 
 ALTER TABLE pub_picture
     ADD COLUMN download_count bigint default 0 comment "下载量" AFTER collect_count;
+ALTER TABLE pub_picture
+    ADD COLUMN ai_desc VARCHAR(500) default '' COMMENT 'AI图片描述' AFTER introduction;
 
 -- 3、图片分类表
 drop table if exists pic_category;
