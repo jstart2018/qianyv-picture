@@ -19,16 +19,16 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class ChatModelConfig {
 
-    @Value("ai.dashscope.base-url")
+    @Value("${ai.dashscope.base-url}")
     private String dashScopeBaseUrl;
 
-    @Value("ai.dashscope.api-key")
+    @Value("${ai.dashscope.api-key}")
     private String dashScopeApiKey;
 
-    @Value("ai.deepseek.base-url")
+    @Value("${ai.deepseek.base-url}")
     private String deepSeekBaseUrl;
 
-    @Value("ai.deepseek.api-key")
+    @Value("${ai.deepseek.api-key}")
     private String deepSeekApiKey;
 
 
@@ -104,7 +104,7 @@ public class ChatModelConfig {
             return baseChatModel.mutate()
                     .openAiApi(baseOpenAiApi.mutate()
                             .baseUrl(deepSeekBaseUrl)
-                            .apiKey(deepSeekBaseUrl)
+                            .apiKey(deepSeekApiKey)
                             .build())
                     .defaultOptions(OpenAiChatOptions.builder()
                             .model("deepseek-chat")

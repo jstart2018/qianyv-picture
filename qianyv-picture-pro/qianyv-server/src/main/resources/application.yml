@@ -38,6 +38,11 @@ spring:
     openai:
       base-url: https://api.deepseek.com
       api-key: sk-ae90b3568ea5df85a77be5gni7105cbf # 随便填的，避免自动装配报错
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
 ai:
   dashscope:
     base-url: https://dashscope.aliyuncs.com/compatible-mode

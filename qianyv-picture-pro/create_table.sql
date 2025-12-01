@@ -255,5 +255,20 @@ create table follow
     INDEX idx_followId (follow_user_id)                      -- 提升按被关注用户查询关注的性能
 ) comment '关注表' collate = utf8mb4_unicode_ci;;
 
-
+CREATE TABLE `ai_picture`
+(
+    `id`          bigint       NOT NULL AUTO_INCREMENT COMMENT '主键ID，自增唯一标识',
+    `url`         varchar(512) NOT NULL COMMENT '图片存储URL（支持长链接，最大512字符）',
+    `user_id`     bigint       NOT NULL COMMENT '关联的用户ID（与用户表主键关联）',
+    `space_id`    bigint                DEFAULT null COMMENT '空间id（null表示用户个人图片）',
+    `create_time` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（默认当前时间，无需手动插入）',
+    `status`      tinyint      NOT NULL DEFAULT 0 COMMENT '状态：0=生成，1=已转移',
+    delete_time   datetime              DEFAULT null COMMENT '逻辑删除：null-正常, 非null-删除时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_user_id` (`user_id`) USING BTREE,        -- 按用户查询图片时加速
+    KEY `idx_status` (`status`) USING BTREE,          -- 按状态筛选时加速
+    KEY `idx_create_time` (`create_time`) USING BTREE -- 按时间排序/查询时加速
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci COMMENT ='图片信息表';
 

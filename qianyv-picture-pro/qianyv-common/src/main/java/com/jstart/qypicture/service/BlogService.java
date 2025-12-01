@@ -8,8 +8,6 @@ import com.jstart.qypicture.model.entity.Blog;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jstart.qypicture.model.vo.BlogsVO;
 
-import java.util.List;
-
 /**
  * @author 28435
  * @description 针对表【blog(博客表)】的数据库操作Service

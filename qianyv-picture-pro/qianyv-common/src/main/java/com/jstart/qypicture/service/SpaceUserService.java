@@ -2,7 +2,6 @@ package com.jstart.qypicture.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.jstart.qypicture.auth.SpaceRoleEnum;
 import com.jstart.qypicture.model.dto.SpaceUserAddDTO;
 import com.jstart.qypicture.model.dto.SpaceUserEditDTO;
 import com.baomidou.mybatisplus.extension.service.IService;

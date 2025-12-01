@@ -1,13 +1,12 @@
 package com.jstart.qypicture.ai.config;
 
 
-import com.jstart.qypicture.ai.toolCalling.PictureTool;
 import com.jstart.qypicture.utils.ResourceTxtReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,7 +45,7 @@ public class ChatClientConfig {
      * 生成图片模型（qwen-flash）
      */
     @Bean
-    public ChatClient generatePictureClient(ChatModel qwenFlashChatModel) {
+    public ChatClient generatePictureClient(ChatModel qwenFlashChatModel, JdbcChatMemoryRepository chatMemoryRepository) {
         log.info("初始化 generatePictureClient(图片生成AI)...");
         String sysPrompt = ResourceTxtReaderUtils
                 .loadPromptFromResource("prompt/create-picture-system-prompt.txt");
@@ -55,7 +54,7 @@ public class ChatClientConfig {
                 .defaultAdvisors(MessageChatMemoryAdvisor
                         .builder(MessageWindowChatMemory
                                 .builder()
-                                .chatMemoryRepository(new InMemoryChatMemoryRepository())
+                                .chatMemoryRepository(chatMemoryRepository)
                                 .maxMessages(20)
                                 .build())
                         .build())
@@ -79,7 +78,7 @@ public class ChatClientConfig {
      * 普通聊天AI（deepseek-v3）
      */
     @Bean
-    public ChatClient normalChatClient(ChatModel deepSeekV3ChatModel) {
+    public ChatClient normalChatClient(ChatModel deepSeekV3ChatModel, JdbcChatMemoryRepository chatMemoryRepository) {
         log.info("初始化 normalChatClient(普通聊天AI)...");
         String sysPrompt = ResourceTxtReaderUtils
                 .loadPromptFromResource("prompt/normal-chat.txt");
@@ -88,7 +87,7 @@ public class ChatClientConfig {
                 .defaultAdvisors(MessageChatMemoryAdvisor
                         .builder(MessageWindowChatMemory
                                 .builder()
-                                .chatMemoryRepository(new InMemoryChatMemoryRepository())
+                                .chatMemoryRepository(chatMemoryRepository)
                                 .maxMessages(20)
                                 .build())
                         .build())

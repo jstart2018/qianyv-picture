@@ -9,6 +9,7 @@ import com.jstart.qypicture.ai.entity.QwenImageGenerateRequest;
 import com.jstart.qypicture.ai.enums.PictureSizeEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
+import com.jstart.qypicture.service.PictureService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -27,9 +28,10 @@ public class PictureTool {
     @Value("${api-key.dashscope}")
     private String dashscopeApiKey;
 
-
     @Resource
     private ChatClient chatSummaryClient;
+    @Resource
+    private PictureService pictureService;
 
 
     @Tool(description = "获取图片生成的专业提示词")
@@ -91,8 +93,9 @@ public class PictureTool {
                 JSONUtil.parse(respBody),
                 "output.choices[0].message.content[0].image"
         );
+        pictureService.upload(imageUrl,null);
         log.info("生成图片成功，图片URL：{}", imageUrl);
-
+        pictureService.upload(imageUrl,null);
         return imageUrl;
 
     }
