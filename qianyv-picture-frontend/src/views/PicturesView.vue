@@ -67,10 +67,8 @@ const isHorizontal = () => {
 }
 
 const handleSearch = () => {
-  // 触发搜索，先trim再强制触发更新
-  searchText.value = searchText.value.trim()
-  // 增加触发器的值，强制子组件刷新
-  searchTrigger.value++
+  // 跳转到AI对话页面
+  router.push('/chat')
 }
 
 const handleClearSearch = () => {

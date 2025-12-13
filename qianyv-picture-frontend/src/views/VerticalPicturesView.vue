@@ -239,6 +239,7 @@ onMounted(() => {
   padding: 0 4%; /* 左右各留4%空白 */
   break-inside: avoid;
   box-sizing: border-box;
+  background: transparent;
 }
 
 /* ========== 图片容器和图片 ========== */
@@ -248,9 +249,7 @@ onMounted(() => {
   line-height: 0;
   border-radius: 13px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.9);
-  border-left: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
   box-shadow:
     6px 6px 12px rgba(0, 0, 0, 0.35),
     10px 10px 35px rgba(0, 0, 0, 0.25);
@@ -269,6 +268,7 @@ onMounted(() => {
   width: 100%;
   height: auto;
   display: block;
+  background: transparent;
 }
 
 /* ========== 图片悬停按钮 ========== */

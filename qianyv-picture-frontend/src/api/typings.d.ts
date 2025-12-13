@@ -117,6 +117,11 @@ declare namespace API {
     spaceId?: number
   }
 
+  type doChatParams = {
+    input: string
+    conversationId: number
+  }
+
   type editSpaceParams = {
     spaceId: number
     name: string
@@ -408,6 +413,8 @@ declare namespace API {
     phone?: string
   }
 
+  type ServerSentEventString = true
+
   type SpaceUserEditDTO = {
     userId?: number
     spaceId?: number
@@ -494,11 +501,11 @@ declare namespace API {
     avatar?: string
     tag?: string
     introduction?: string
-    downloadCount?: number | string
-    likeCount?: number | string
-    collectCount?: number | string
-    fanCount?: number | string
-    publishCount?: number | string
+    downloadCount?: number
+    likeCount?: number
+    collectCount?: number
+    fanCount?: number
+    publishCount?: number
   }
 
   type UserLoginByCodeDTO = {

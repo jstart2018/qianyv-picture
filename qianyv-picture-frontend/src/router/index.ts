@@ -38,6 +38,16 @@ const router = createRouter({
       component: () => import('../views/SpaceView/index.vue'),
     },
     {
+      path: '/chat',
+      name: 'chat',
+      component: () => import('../views/AiChatView.vue'),
+    },
+    {
+      path: '/chat/:conversationId',
+      name: 'chatWithId',
+      component: () => import('../views/AiChatView.vue'),
+    },
+    {
       path: '/user/:id',
       name: 'userDetail',
       component: () => import('../views/UserDetailView.vue'),
