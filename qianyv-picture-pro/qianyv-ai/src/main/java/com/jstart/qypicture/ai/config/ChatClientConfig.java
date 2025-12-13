@@ -5,6 +5,8 @@ import com.jstart.qypicture.utils.ResourceTxtReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.ai.chat.model.ChatModel;
@@ -32,12 +34,19 @@ public class ChatClientConfig {
      * 聊天总结图像意图AI（qwen3-max）
      */
     @Bean
-    public ChatClient chatSummaryClient(ChatModel qwen3MaxChatModel) {
+    public ChatClient chatSummaryClient(ChatModel qwen3MaxChatModel, JdbcChatMemoryRepository chatMemoryRepository) {
         log.info("初始化 chatSummaryChatClient(聊天总结图像意图AI)...");
         String sysPrompt = ResourceTxtReaderUtils
                 .loadPromptFromResource("prompt/chat-summary-system-prompt.txt");
         return ChatClient.builder(qwen3MaxChatModel)
                 .defaultSystem(sysPrompt)
+                .defaultAdvisors(MessageChatMemoryAdvisor
+                        .builder(MessageWindowChatMemory
+                                .builder()
+                                .chatMemoryRepository(chatMemoryRepository)
+                                .maxMessages(20)
+                                .build())
+                        .build())
                 .build();
     }
 
@@ -62,19 +71,6 @@ public class ChatClientConfig {
     }
 
     /**
-     * 视觉模型，解析图片（qwen3-vl-plus）
-     */
-    @Bean
-    public ChatClient parsePictureClient(ChatModel qwen3VlPlusChatModel) {
-        log.info("初始化 parsePictureChatClient(图片解析AI)...");
-        String sysPrompt = ResourceTxtReaderUtils
-                .loadPromptFromResource("prompt/parse-picture-system-prompt.txt");
-        return ChatClient.builder(qwen3VlPlusChatModel)
-                .defaultSystem(sysPrompt)
-                .build();
-    }
-
-    /**
      * 普通聊天AI（deepseek-v3）
      */
     @Bean
@@ -93,5 +89,20 @@ public class ChatClientConfig {
                         .build())
                 .build();
     }
+
+
+    /**
+     * 视觉模型，解析图片（qwen3-vl-plus）
+     */
+    @Bean
+    public ChatClient parsePictureClient(ChatModel qwen3VlPlusChatModel) {
+        log.info("初始化 parsePictureChatClient(图片解析AI)...");
+        String sysPrompt = ResourceTxtReaderUtils
+                .loadPromptFromResource("prompt/parse-picture-system-prompt.txt");
+        return ChatClient.builder(qwen3VlPlusChatModel)
+                .defaultSystem(sysPrompt)
+                .build();
+    }
+
 
 }

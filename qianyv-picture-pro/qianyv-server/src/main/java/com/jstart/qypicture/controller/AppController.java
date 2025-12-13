@@ -1,12 +1,14 @@
 package com.jstart.qypicture.controller;
 
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.json.JSONUtil;
 import com.jstart.qypicture.result.Result;
 import com.jstart.qypicture.service.AiService;
 import jakarta.annotation.Resource;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
@@ -29,7 +31,7 @@ public class AppController {
     @GetMapping("/create/session")
     public Result<Long> createSession() {
 
-        return Result.success(1L);
+        return Result.success(StpUtil.getLoginIdAsLong());
     }
 
 
@@ -39,7 +41,7 @@ public class AppController {
      * @param input
      * @return
      */
-    @GetMapping("/chat")
+    @PostMapping("/chat/{conversationId}")
     public Flux<ServerSentEvent<String>> doChat(String input,Long conversationId) {
         return aiService.doChat(input,conversationId)
                 .map(data -> {

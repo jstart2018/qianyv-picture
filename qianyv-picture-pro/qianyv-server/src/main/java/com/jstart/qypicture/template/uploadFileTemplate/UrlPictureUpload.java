@@ -32,6 +32,11 @@ public class UrlPictureUpload extends PictureUploadTemplate {
     @Override
     protected void checkPictureObject(Object inputSource) {
         String fileUrl = (String) inputSource;
+        //如果是阿里云的url，直接放行
+        if (fileUrl.contains("dashscope-result-wlcb-acdr-1.oss-cn-wulanchabu-acdr-1")) {
+            return;
+        }
+
         ThrowUtils.throwIf(StringUtils.isBlank(fileUrl), ResultEnum.PARAMS_ERROR, "url不能为空");
         //1、校验url格式
         try {

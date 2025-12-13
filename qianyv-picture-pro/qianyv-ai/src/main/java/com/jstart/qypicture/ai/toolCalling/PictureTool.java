@@ -1,5 +1,7 @@
 package com.jstart.qypicture.ai.toolCalling;
 
+import cn.dev33.satoken.context.mock.SaTokenContextMockUtil;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpUtil;
@@ -7,12 +9,11 @@ import cn.hutool.http.Method;
 import cn.hutool.json.JSONUtil;
 import com.jstart.qypicture.ai.entity.QwenImageGenerateRequest;
 import com.jstart.qypicture.ai.enums.PictureSizeEnum;
-import com.jstart.qypicture.enums.ResultEnum;
-import com.jstart.qypicture.exception.BusinessException;
-import com.jstart.qypicture.service.PictureService;
+import com.jstart.qypicture.model.vo.PictureUploadVO;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -30,12 +31,13 @@ public class PictureTool {
 
     @Resource
     private ChatClient chatSummaryClient;
-    @Resource
-    private PictureService pictureService;
+//    @Resource
+//    private PictureService pictureService;
 
 
     @Tool(description = "获取图片生成的专业提示词")
-    public String getPrompt(ToolContext toolContext) {
+    public String getPrompt(@ToolParam(description = "用户输入的提示词")String userInput,
+                            ToolContext toolContext) {
         //1. 从上下文中获取conversationId
         Long conversationId = (Long) toolContext.getContext().get("conversationId");
         //2. todo 根据conversationId获取聊天记录等信息（此处省略，假设已经获取到相关信息）
@@ -45,7 +47,8 @@ public class PictureTool {
         String prompt = null;
         try {
             prompt = chatSummaryClient.prompt()
-                    .user("userInput")
+                    .user(userInput)
+                    .advisors(memory -> memory.param(ChatMemory.CONVERSATION_ID, conversationId))
                     .call()
                     .content();
         } catch (Exception e) {
@@ -59,7 +62,8 @@ public class PictureTool {
     @Tool(description = "生成图片并获取到图片URL")
     public String generateImage(@ToolParam(description = "图片生成的提示词") String prompt,
                                 @ToolParam(description = "图片比例，默认是1:1", required = false) String scale,
-                                @ToolParam(description = "反向提示词，无希望出现的内容，例如‘畸形’、‘残缺’", required = false) String negativePrompt
+                                @ToolParam(description = "反向提示词，无希望出现的内容，例如'畸形'、'残缺'", required = false) String negativePrompt,
+                                ToolContext toolContext
     ) {
         String pictureSize = PictureSizeEnum.getSizeByScale(scale);
         QwenImageGenerateRequest request = new QwenImageGenerateRequest(
@@ -93,10 +97,24 @@ public class PictureTool {
                 JSONUtil.parse(respBody),
                 "output.choices[0].message.content[0].image"
         );
-        pictureService.upload(imageUrl,null);
-        log.info("生成图片成功，图片URL：{}", imageUrl);
-        pictureService.upload(imageUrl,null);
-        return imageUrl;
+
+        String finalImageUrl = SaTokenContextMockUtil.setMockContext(() -> {
+            String tokenValue = (String)toolContext.getContext().get("tokenValue");
+            StpUtil.setTokenValueToStorage(tokenValue);
+            try {
+                // todo 上传图片到图床服务
+                log.info("开始上传图片到图床服务，图片URL：{}", imageUrl);
+                return imageUrl;
+//               PictureUploadVO uploadResult = pictureService.upload(imageUrl, null);
+//                log.info("生成图片成功，图片URL：{}", uploadResult.getThumbUrl());
+//                return uploadResult.getThumbUrl();
+            } catch (Exception e) {
+                log.error("上传图片失败：{}", e.getMessage(), e);
+                return imageUrl;
+            }
+        });
+
+        return finalImageUrl;
 
     }
 

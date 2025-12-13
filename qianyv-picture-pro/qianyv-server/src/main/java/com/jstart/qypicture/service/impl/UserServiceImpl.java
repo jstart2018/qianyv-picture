@@ -5,10 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jstart.qypicture.constant.RedisKey;
 import com.jstart.qypicture.constant.UserConstant;
-import com.jstart.qypicture.enums.CollectionEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
-import com.jstart.qypicture.model.entity.Blog;
 import com.jstart.qypicture.model.entity.Follow;
 import com.jstart.qypicture.service.FollowService;
 import com.jstart.qypicture.template.sendCodeTemplate.SendCodeTemplate;
@@ -25,8 +23,6 @@ import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -34,7 +30,6 @@ import org.springframework.transaction.support.TransactionSynchronizationAdapter
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

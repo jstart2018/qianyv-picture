@@ -1,15 +1,11 @@
 package com.jstart.qypicture.ai.rag;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.jstart.qypicture.mapper.PubPictureMapper;
 import com.jstart.qypicture.model.entity.PubPicture;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -26,13 +22,15 @@ public class InitRedisRagDb implements CommandLineRunner {
 
     @Resource
     private VectorStore redisVectorStore;
-    @Resource
-    private PubPictureMapper pubPictureMapper;
+//    @Resource
+//    private PubPictureMapper pubPictureMapper;
 
     @Override
     public void run(String... args) throws Exception {
         log.info("应用启动初始化，精选图片纳入知识库。。。");
 
+        //todo : 初始化好RAG知识库
+/*
         try {
             QueryWrapper<PubPicture> qw = new QueryWrapper<>();
             qw.eq("is_recommend",1);
@@ -61,5 +59,6 @@ public class InitRedisRagDb implements CommandLineRunner {
             throw new RuntimeException(e);
         }
 
+*/
     }
 }

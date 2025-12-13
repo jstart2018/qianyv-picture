@@ -13,7 +13,6 @@ import com.jstart.qypicture.model.UploadPictureResult;
 import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
-import com.jstart.qypicture.model.entity.PubPicture;
 import com.jstart.qypicture.model.entity.SpaPicture;
 import com.jstart.qypicture.model.entity.Space;
 import com.jstart.qypicture.model.vo.PictureListVO;

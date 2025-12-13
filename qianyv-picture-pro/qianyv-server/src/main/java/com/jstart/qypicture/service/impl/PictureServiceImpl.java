@@ -12,7 +12,6 @@ import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.entity.PubPicture;
-import com.jstart.qypicture.model.entity.User;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
 import com.jstart.qypicture.model.vo.PictureVO;

@@ -1,5 +1,6 @@
 package com.jstart.qypicture.ai.handle;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.jstart.qypicture.ai.enums.AiActEnum;
 import com.jstart.qypicture.ai.toolCalling.PictureTool;
 import jakarta.annotation.Resource;
@@ -29,7 +30,9 @@ public class GenImgService implements AiActHandler {
                 .user(input)
                 .advisors(advisor -> advisor.param("conversationId", conversationId))
                 .tools(pictureTool)//工具调用生成图片
-                .toolContext(Map.of("conversationId", conversationId))//工具上下文，传入会话id给工具使用
+
+                .toolContext(Map.of("conversationId", conversationId,//工具上下文，传入会话id给工具使用
+                                    "tokenValue", StpUtil.getTokenValue()))
                 .stream()
                 .content();
     }
