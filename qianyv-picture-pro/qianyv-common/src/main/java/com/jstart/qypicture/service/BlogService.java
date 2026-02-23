@@ -4,9 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.model.dto.BlogCreateDTO;
 import com.jstart.qypicture.model.dto.BlogListDTO;
+import com.jstart.qypicture.model.dto.BlogPageQueryDTO;
 import com.jstart.qypicture.model.entity.Blog;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jstart.qypicture.model.vo.BlogSimpleVO;
 import com.jstart.qypicture.model.vo.BlogsVO;
+
+import java.util.List;
 
 /**
  * @author 28435
@@ -19,7 +23,9 @@ public interface BlogService extends IService<Blog> {
 
     void delBlog(Long id);
 
-    Page<BlogsVO> selectList(BlogListDTO blogListDTO);
+    List<BlogsVO> selectList(BlogListDTO blogListDTO);
+
+    List<BlogsVO> selectListByPage(BlogListDTO blogListDTO);
 
     QueryWrapper<Blog> getQueryWrapper(BlogListDTO blogListDTO);
 
@@ -34,4 +40,20 @@ public interface BlogService extends IService<Blog> {
      * @param id
      */
     void blogLike(Long id);
+
+    List<BlogsVO> getBlogVOList(List<Blog> blogList);
+
+    /**
+     * 博客分页查询（支持查询我发布的/我点赞的/我收藏的）
+     * @param blogPageQueryDTO
+     * @return
+     */
+    Page<BlogSimpleVO> selectBlogByPage(BlogPageQueryDTO blogPageQueryDTO);
+
+    /**
+     * 将Blog列表转换为BlogSimpleVO列表
+     * @param blogList
+     * @return
+     */
+    List<BlogSimpleVO> getBlogSimpleVOList(List<Blog> blogList);
 }

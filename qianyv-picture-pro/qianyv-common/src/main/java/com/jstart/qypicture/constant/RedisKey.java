@@ -17,4 +17,13 @@ public interface RedisKey {
     //用户贡献排行榜key
     String USER_CONTRIBUTION_RANK_KEY = "qypicture:user:contribution:rank";
 
+    // 用户点赞的博客key（以用户ID为维度）
+    String USER_BLOG_LIKE_KEY = "qypicture:user:blog:like:";
+
+    // 用户收藏的博客key（以用户ID为维度）
+    String USER_BLOG_COLLECTION_KEY = "qypicture:user:blog:collection:";
+
+    // 用户收藏的图片key（以用户ID为维度）
+    String USER_PICTURE_COLLECTION_KEY = "qypicture:user:picture:collection:";
+
 }

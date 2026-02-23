@@ -1,6 +1,7 @@
 package com.jstart.qypicture.model.dto;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.jstart.qypicture.model.PageRequest;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -12,7 +13,7 @@ import java.io.Serializable;
  */
 @TableName(value = "space_user")
 @Data
-public class SpaceUserQueryDTO implements Serializable {
+public class SpaceUserQueryDTO extends PageRequest implements Serializable {
 
     /**
      * 空间成员关系id
@@ -28,6 +29,11 @@ public class SpaceUserQueryDTO implements Serializable {
      * 用户 id
      */
     private Long userId;
+
+    /**
+     * 用户 id
+     */
+    private String username;
 
 
     /**

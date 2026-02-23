@@ -164,6 +164,7 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
             vo.setId(p.getId());
             vo.setThumbUrl(p.getThumbUrl());
             vo.setTags(p.getTags());
+            vo.setIntroduction(p.getIntroduction());
             return vo;
         }).collect(Collectors.toList());
         Page<PictureListVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());

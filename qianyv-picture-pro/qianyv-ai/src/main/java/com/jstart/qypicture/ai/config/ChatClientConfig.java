@@ -1,6 +1,9 @@
 package com.jstart.qypicture.ai.config;
 
 
+import com.jstart.qypicture.ai.chatMemory.AiMemoryWindows;
+import com.jstart.qypicture.ai.chatMemory.MySQLBasedChatMemory;
+import com.jstart.qypicture.service.SpringAiChatMemoryService;
 import com.jstart.qypicture.utils.ResourceTxtReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -31,42 +34,18 @@ public class ChatClientConfig {
 
 
     /**
-     * 聊天总结图像意图AI（qwen3-max）
+     * 生成图片模型（qwen3-max，支持tool calling）
      */
     @Bean
-    public ChatClient chatSummaryClient(ChatModel qwen3MaxChatModel, JdbcChatMemoryRepository chatMemoryRepository) {
-        log.info("初始化 chatSummaryChatClient(聊天总结图像意图AI)...");
-        String sysPrompt = ResourceTxtReaderUtils
-                .loadPromptFromResource("prompt/chat-summary-system-prompt.txt");
-        return ChatClient.builder(qwen3MaxChatModel)
-                .defaultSystem(sysPrompt)
-                .defaultAdvisors(MessageChatMemoryAdvisor
-                        .builder(MessageWindowChatMemory
-                                .builder()
-                                .chatMemoryRepository(chatMemoryRepository)
-                                .maxMessages(20)
-                                .build())
-                        .build())
-                .build();
-    }
-
-    /**
-     * 生成图片模型（qwen-flash）
-     */
-    @Bean
-    public ChatClient generatePictureClient(ChatModel qwenFlashChatModel, JdbcChatMemoryRepository chatMemoryRepository) {
+    public ChatClient generatePictureClient(ChatModel qwen3MaxChatModel, JdbcChatMemoryRepository chatMemoryRepository, SpringAiChatMemoryService springAiChatMemoryService) {
+        ChatMemory chatMemory = new MySQLBasedChatMemory(springAiChatMemoryService);
         log.info("初始化 generatePictureClient(图片生成AI)...");
         String sysPrompt = ResourceTxtReaderUtils
                 .loadPromptFromResource("prompt/create-picture-system-prompt.txt");
-        return ChatClient.builder(qwenFlashChatModel)
+        return ChatClient.builder(qwen3MaxChatModel)
                 .defaultSystem(sysPrompt)
                 .defaultAdvisors(MessageChatMemoryAdvisor
-                        .builder(MessageWindowChatMemory
-                                .builder()
-                                .chatMemoryRepository(chatMemoryRepository)
-                                .maxMessages(20)
-                                .build())
-                        .build())
+                        .builder(chatMemory).build())
                 .build();
     }
 
@@ -74,18 +53,33 @@ public class ChatClientConfig {
      * 普通聊天AI（deepseek-v3）
      */
     @Bean
-    public ChatClient normalChatClient(ChatModel deepSeekV3ChatModel, JdbcChatMemoryRepository chatMemoryRepository) {
+    public ChatClient normalChatClient(ChatModel deepSeekV3ChatModel,
+                                       //JdbcChatMemoryRepository chatMemoryRepository,
+                                       SpringAiChatMemoryService springAiChatMemoryService) {
+        ChatMemory chatMemory = new MySQLBasedChatMemory(springAiChatMemoryService);
         log.info("初始化 normalChatClient(普通聊天AI)...");
         String sysPrompt = ResourceTxtReaderUtils
                 .loadPromptFromResource("prompt/normal-chat.txt");
         return ChatClient.builder(deepSeekV3ChatModel)
                 .defaultSystem(sysPrompt)
                 .defaultAdvisors(MessageChatMemoryAdvisor
-                        .builder(MessageWindowChatMemory
-                                .builder()
-                                .chatMemoryRepository(chatMemoryRepository)
-                                .maxMessages(20)
-                                .build())
+                        .builder(chatMemory)
+                        .build())
+                .build();
+    }
+
+    @Bean
+    public ChatClient chatSummaryClient(ChatModel qwen3MaxChatModel,
+                                        SpringAiChatMemoryService springAiChatMemoryService
+                                        ) {
+        ChatMemory chatMemory = new MySQLBasedChatMemory(springAiChatMemoryService);
+        log.info("初始化 chatSummaryChatClient(聊天总结图像意图AI)...");
+        String sysPrompt = ResourceTxtReaderUtils
+                .loadPromptFromResource("prompt/chat-summary-system-prompt.txt");
+        return ChatClient.builder(qwen3MaxChatModel)
+                .defaultSystem(sysPrompt)
+                .defaultAdvisors(MessageChatMemoryAdvisor
+                        .builder(chatMemory)
                         .build())
                 .build();
     }
@@ -104,5 +98,28 @@ public class ChatClientConfig {
                 .build();
     }
 
+
+//     已经用自制mysql代替，这里
+//    /**
+//     * 聊天总结图像意图AI（qwen3-max）
+//     */
+//    @Bean
+//    public ChatClient chatSummaryClient(ChatModel qwen3MaxChatModel,
+//                                        JdbcChatMemoryRepository chatMemoryRepository,
+//                                         ) {
+//        log.info("初始化 chatSummaryChatClient(聊天总结图像意图AI)...");
+//        String sysPrompt = ResourceTxtReaderUtils
+//                .loadPromptFromResource("prompt/chat-summary-system-prompt.txt");
+//        return ChatClient.builder(qwen3MaxChatModel)
+//                .defaultSystem(sysPrompt)
+//                .defaultAdvisors(MessageChatMemoryAdvisor
+//                        .builder(MessageWindowChatMemory
+//                                .builder()
+//                                .chatMemoryRepository(chatMemoryRepository)
+//                                .maxMessages(AiMemoryWindows.AI_MEMORY_SIZE)
+//                                .build())
+//                        .build())
+//                .build();
+//    }
 
 }

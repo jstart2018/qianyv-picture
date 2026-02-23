@@ -43,7 +43,6 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void collectionToggle(Long loginUserId, Long targetId , CollectionEnum collectionEnum) {
-
         synchronized (lockMap.computeIfAbsent(loginUserId, k -> new Object())) {
             //查询该收藏记录是否存在
             log.info("用户{}操作收藏，目标id:{}，类型:{}-{}", loginUserId, targetId, collectionEnum.getValue(),collectionEnum.getDesc());
@@ -64,6 +63,13 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
                 ThrowUtils.throwIf(!remove, ResultEnum.SYSTEM_ERROR, "操作失败，请稍后再试");
                 redisTemplate.opsForSet().remove(redisKey, loginUserId);
 
+                // 从用户维度的收藏key中移除目标ID
+                if (collectionEnum.equals(CollectionEnum.BLOG)) {
+                    redisTemplate.opsForSet().remove(RedisKey.USER_BLOG_COLLECTION_KEY + loginUserId, targetId);
+                } else if (collectionEnum.equals(CollectionEnum.PICTURE)) {
+                    redisTemplate.opsForSet().remove(RedisKey.USER_PICTURE_COLLECTION_KEY + loginUserId, targetId);
+                }
+
                 //同步数据库 收藏数-1
                 if (redisKey.contains(RedisKey.BLOG_COLLECTION_KEY)){
                     log.info("用户{}取消收藏博客{}, redisKey:{}", loginUserId, targetId, redisKey);
@@ -82,6 +88,14 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
             boolean save = this.save(collection);
             //redis增加该用户
             redisTemplate.opsForSet().add(redisKey, loginUserId);
+
+            // 向用户维度的收藏key中添加目标ID
+            if (collectionEnum.equals(CollectionEnum.BLOG)) {
+                redisTemplate.opsForSet().add(RedisKey.USER_BLOG_COLLECTION_KEY + loginUserId, targetId);
+            } else if (collectionEnum.equals(CollectionEnum.PICTURE)) {
+                redisTemplate.opsForSet().add(RedisKey.USER_PICTURE_COLLECTION_KEY + loginUserId, targetId);
+            }
+
             //同步数据库 收藏数+1
             if (redisKey.contains(RedisKey.BLOG_COLLECTION_KEY)){
                 log.info("用户{}点击收藏博客{}, redisKey:{}", loginUserId, targetId, redisKey);

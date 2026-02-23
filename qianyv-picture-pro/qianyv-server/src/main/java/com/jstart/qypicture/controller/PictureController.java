@@ -8,6 +8,7 @@ import com.jstart.qypicture.constant.RedisKey;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
+import com.jstart.qypicture.model.dto.PicturePageQueryDTO;
 import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.entity.Blog;
 import com.jstart.qypicture.model.vo.PictureListVO;
@@ -114,6 +115,18 @@ public class PictureController {
     public Result<Page<PictureListVO>> list(@RequestBody PictureQueryListDTO pictureQueryListDTO) {
 
         Page<PictureListVO> page = pictureService.pageList(pictureQueryListDTO);
+
+        return Result.success(page);
+    }
+
+    /**
+     * 图片分页查询（支持查询我发布的/我收藏的）
+     */
+    @PostMapping("/list/page")
+    public Result<Page<PictureListVO>> listByPage(@RequestBody PicturePageQueryDTO picturePageQueryDTO) {
+        ThrowUtils.throwIf(picturePageQueryDTO == null, ResultEnum.PARAMS_ERROR, "请求参数为空");
+
+        Page<PictureListVO> page = pictureService.selectPictureByPage(picturePageQueryDTO);
 
         return Result.success(page);
     }

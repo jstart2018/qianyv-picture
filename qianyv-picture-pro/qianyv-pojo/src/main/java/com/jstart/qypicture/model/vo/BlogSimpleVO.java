@@ -1,26 +1,18 @@
 package com.jstart.qypicture.model.vo;
 
-
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
 
 /**
- * @TableName blog
+ * 简化版博客VO（不包含关联图片）
  */
 @Data
-public class BlogsVO {
+public class BlogSimpleVO {
     /**
      * 文章ID
      */
     private Long id;
-
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
 
     /**
      * 作者ID
@@ -63,13 +55,12 @@ public class BlogsVO {
     private Integer isRecommend;
 
     /**
-     * 图片url集合
+     * 更新时间
      */
-    private List<PictureListVO> pictureVOList;
+    private Date updateTime;
 
     /**
      * 博客作者
      */
     private BlogAuthorVO user;
-
 }

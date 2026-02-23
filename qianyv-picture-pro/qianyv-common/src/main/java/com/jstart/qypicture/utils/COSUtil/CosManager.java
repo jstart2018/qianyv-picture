@@ -77,7 +77,7 @@ public class CosManager {
 
             thumbnailRule.setFileId(thumbnailKey);
             // 缩放规则 /thumbnail/<Width>x<Height>>（如果大于原图宽高，则不处理）
-            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 512, 512));
+            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 1024, 1024));
             rules.add(thumbnailRule);
             // 构造处理参数
             picOperations.setRules(rules);

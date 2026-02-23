@@ -13,6 +13,16 @@ public class UserInfoVO {
     private Long id;
 
     /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 手机号
+     */
+    private String phone;
+
+    /**
      * 用户昵称
      */
     private String nickname;

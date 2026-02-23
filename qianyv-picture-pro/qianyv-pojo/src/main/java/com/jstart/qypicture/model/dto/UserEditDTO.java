@@ -9,16 +9,6 @@ import lombok.Data;
 public class UserEditDTO {
 
     /**
-     * 邮箱
-     */
-    private String email;
-
-    /**
-     * 手机号
-     */
-    private String phone;
-
-    /**
      * 用户昵称（最长10汉字）
      */
     private String nickname;

@@ -3,15 +3,23 @@ package com.jstart.qypicture.model.dto;
 import com.jstart.qypicture.model.PageRequest;
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * @TableName blog
  */
 @Data
 public class BlogListDTO extends PageRequest {
     /**
-     * 文章ID
+     * 文章ID（游标）
      */
     private Long id;
+
+
+    /**
+     * 更新时间（游标）
+     */
+    private Date updateTime;
 
     /**
      * 作者ID

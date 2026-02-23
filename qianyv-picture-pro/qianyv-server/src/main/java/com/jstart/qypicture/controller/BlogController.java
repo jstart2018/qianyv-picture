@@ -9,6 +9,7 @@ import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.model.dto.*;
 import com.jstart.qypicture.model.entity.Blog;
+import com.jstart.qypicture.model.vo.BlogSimpleVO;
 import com.jstart.qypicture.model.vo.BlogsVO;
 import com.jstart.qypicture.result.Result;
 import com.jstart.qypicture.service.BlogService;
@@ -17,6 +18,8 @@ import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/blog")
@@ -68,12 +71,26 @@ public class BlogController {
     }
 
     @PostMapping("/list")
-    public Result<Page<BlogsVO>> blogList(@RequestBody BlogListDTO blogListDTO) {
+    public Result<List<BlogsVO>> blogList(@RequestBody BlogListDTO blogListDTO) {
         ThrowUtils.throwIf(blogListDTO == null, ResultEnum.PARAMS_ERROR, "请求参数为空");
 
-        Page<BlogsVO> blogListVOPage = blogService.selectList(blogListDTO);
+        List<BlogsVO> blogsVOList = blogService.selectList(blogListDTO);
 
-        return Result.success(blogListVOPage);
+        return Result.success(blogsVOList);
+    }
+
+    /**
+     * 分页查询博客列表（支持查询我发布的/我点赞的/我收藏的）
+     * @param blogPageQueryDTO
+     * @return
+     */
+    @PostMapping("/list/page")
+    public Result<Page<BlogSimpleVO>> blogListByPage(@RequestBody BlogPageQueryDTO blogPageQueryDTO) {
+        ThrowUtils.throwIf(blogPageQueryDTO == null, ResultEnum.PARAMS_ERROR, "请求参数为空");
+
+        Page<BlogSimpleVO> blogSimpleVOPage = blogService.selectBlogByPage(blogPageQueryDTO);
+
+        return Result.success(blogSimpleVOPage);
     }
 
     /**
@@ -89,10 +106,7 @@ public class BlogController {
         Blog blog = blogService.getById(id);
         ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
 
-        BlogsVO blogsVO = new BlogsVO();
-        BeanUtils.copyProperties(blog, blogsVO);
-
-        return Result.success(blogsVO);
+        return Result.success(blogService.getBlogVOList(List.of(blog)).get(0));
     }
 
     /**

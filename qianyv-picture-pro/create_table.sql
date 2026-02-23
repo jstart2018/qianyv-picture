@@ -165,7 +165,7 @@ drop table if exists space_user;
 create table if not exists space_user
 (
     id          bigint auto_increment comment 'id' primary key,
-    space_id    bigint                             not null comment '空间 id',
+        space_id    bigint                             not null comment '空间 id',
     user_id     bigint                             not null comment '用户 id',
     space_role  tinyint  default '3'               not null comment '空间角色：0-creator；1-admin；2-editor；3-viewer',
     status      tinyint  default '1'               not null comment '状态：0-禁用；1-启用',

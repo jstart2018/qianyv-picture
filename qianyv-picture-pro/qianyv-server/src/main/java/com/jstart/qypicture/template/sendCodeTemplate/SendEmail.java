@@ -13,6 +13,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -52,24 +53,33 @@ public class SendEmail extends SendCodeTemplate {
 
     @Override
     protected void send(String account, String context) {
-        //发送邮件的逻辑
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(from);
-            message.setTo(account);
-            message.setSubject("登录验证码"); //邮件主题
-            String code = String.valueOf((int) ((Math.random() * 9 + 1) * 100000));
-            if (context == null) {
-                context = "您的验证码是: " + code + "，请勿泄露给他人。";
+        // 1. 先生成验证码并存入Redis（确保用户立即可用）
+        String code = String.valueOf((int) ((Math.random() * 9 + 1) * 100000));
+        redisTemplate.opsForValue().set(UserConstant.USER_ACCOUNT_CODE_KEY + account, code, 300, TimeUnit.SECONDS);
+
+        // 2. 构建邮件内容
+        String finalContext = (context == null) ? "您的验证码是: " + code + "，请勿泄露给他人。" : context;
+
+        // 3. 异步发送邮件（不阻塞接口返回）
+        CompletableFuture.runAsync(() -> {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(from);
+                message.setTo(account);
+                message.setSubject("登录验证码");
+                message.setText(finalContext);
+                mailSender.send(message);
+                log.info("发送邮件到: {} 成功，验证码为：{}", account, code);
+            } catch (MailException e) {
+                log.error("邮件发送失败: {}, 错误: {}", account, e.getMessage());
             }
-            message.setText(context);
-            mailSender.send(message);
-            //验证码存入redis，设置过期时间为5分钟
-            redisTemplate.opsForValue().set(UserConstant.USER_LOGIN_CODE_KEY + account, code, 300, TimeUnit.SECONDS);
-        } catch (MailException e) {
-            throw new BusinessException(ResultEnum.SYSTEM_ERROR, "邮件发送失败");
+        });
+        try {
+
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            throw new BusinessException(ResultEnum.SYSTEM_ERROR);
         }
-        log.info("发送邮件到: {} 成功，验证码为：{}", account, context);
     }
 }
 

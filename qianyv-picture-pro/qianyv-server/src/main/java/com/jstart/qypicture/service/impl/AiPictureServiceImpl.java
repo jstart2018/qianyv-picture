@@ -1,9 +1,10 @@
 package com.jstart.qypicture.service.impl;
 
+
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jstart.qypicture.model.entity.AiPicture;
-import com.jstart.qypicture.service.AiPictureService;
 import com.jstart.qypicture.mapper.AiPictureMapper;
+import com.jstart.qypicture.model.entity.AiPicture;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 */
 @Service
 public class AiPictureServiceImpl extends ServiceImpl<AiPictureMapper, AiPicture>
-    implements AiPictureService{
+    implements IService<AiPicture> {
 
 }
 

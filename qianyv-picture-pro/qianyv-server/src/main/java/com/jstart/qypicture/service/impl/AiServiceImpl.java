@@ -1,5 +1,6 @@
 package com.jstart.qypicture.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.jstart.qypicture.ai.core.AiApp;
 import com.jstart.qypicture.service.AiService;
 import jakarta.annotation.Resource;
@@ -19,8 +20,7 @@ public class AiServiceImpl implements AiService {
      */
     @Override
     public Flux<String> doChat(String input,Long conversationId) {
-        //todo 会话id待校验
-
+        conversationId = StpUtil.getLoginIdAsLong();
         return aiApp.doChat(input,conversationId);
     }
 }

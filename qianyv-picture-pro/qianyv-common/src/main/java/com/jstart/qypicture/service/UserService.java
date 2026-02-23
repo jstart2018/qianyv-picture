@@ -1,12 +1,14 @@
 package com.jstart.qypicture.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.jstart.qypicture.model.dto.ChangePasswordDTO;
 import com.jstart.qypicture.model.dto.UserLoginByCodeDTO;
 import com.jstart.qypicture.model.dto.UserLoginByPasswordDTO;
 import com.jstart.qypicture.model.dto.SendCodeDTO;
 import com.jstart.qypicture.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jstart.qypicture.model.vo.UserInfoVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -56,4 +58,23 @@ public interface UserService extends IService<User> {
      * @return
      */
     List<UserInfoVO> getHotUser();
+
+    /**
+     * 更换用户头像
+     * @param file 头像文件
+     * @return 新头像URL
+     */
+    String updateAvatar(MultipartFile file);
+
+    /**
+     * 发送修改密码验证码
+     * @param type 验证方式：email-邮箱, phone-手机号
+     */
+    void sendPasswordCode(String type);
+
+    /**
+     * 修改密码
+     * @param changePasswordDTO 修改密码请求参数
+     */
+    void changePassword(ChangePasswordDTO changePasswordDTO);
 }

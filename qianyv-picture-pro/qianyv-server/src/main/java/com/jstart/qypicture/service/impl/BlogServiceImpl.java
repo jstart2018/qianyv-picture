@@ -1,6 +1,7 @@
 package com.jstart.qypicture.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -11,9 +12,11 @@ import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.mapper.PubPictureMapper;
 import com.jstart.qypicture.model.dto.BlogCreateDTO;
 import com.jstart.qypicture.model.dto.BlogListDTO;
+import com.jstart.qypicture.model.dto.BlogPageQueryDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.entity.*;
 import com.jstart.qypicture.model.vo.BlogAuthorVO;
+import com.jstart.qypicture.model.vo.BlogSimpleVO;
 import com.jstart.qypicture.model.vo.BlogsVO;
 import com.jstart.qypicture.model.vo.PictureListVO;
 import com.jstart.qypicture.service.*;
@@ -28,9 +31,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +57,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
     private RedisTemplate<String, Object> redisTemplate;
     @Resource
     private CommentService commentService;
+    @Resource
+    private PicCategoryService picCategoryService;
 
 
 
@@ -66,7 +69,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
         ThrowUtils.throwIf(blogCreateDTO.getTitle().length() > 15, ResultEnum.OPERATION_ERROR, "标题不可超过15个字符");
         ThrowUtils.throwIf(blogCreateDTO.getContent().length() > 100, ResultEnum.OPERATION_ERROR, "正文不可超过100个字符");
 
-        // 创建博客
+        // 1、创建博客
         Blog blog = new Blog();
         BeanUtils.copyProperties(blogCreateDTO, blog);
         blog.setUserId(StpUtil.getLoginIdAsLong());
@@ -76,15 +79,20 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
             throw new BusinessException(ResultEnum.SYSTEM_ERROR, "创建失败，请稍后再试");
         }
 
-        // 更改图片表
+        // 2、更改图片表
         List<PictureEditDTO> pictureEditDTOList = blogCreateDTO.getPictureEditDTOList();
         for (PictureEditDTO pictureEditDTO : pictureEditDTOList) {
             pictureEditDTO.setBlogId(blog.getId());
             pictureEditDTO.setSpaceId(null);
+            //如果没有设置标签就设置为分类名
+            if (StrUtil.isBlank(pictureEditDTO.getTags())){
+                PicCategory picCategory = picCategoryService.getById(pictureEditDTO.getCategoryId());
+                pictureEditDTO.setTags(picCategory.getCategoryName());
+            }
             pictureService.edit(pictureEditDTO);
         }
 
-        //刷新贡献值
+        // 3、刷新贡献值
         redisTemplate.opsForZSet().incrementScore(RedisKey.USER_CONTRIBUTION_RANK_KEY,
                 StpUtil.getLoginIdAsLong(),
                 1);
@@ -114,24 +122,51 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
         ThrowUtils.throwIf(!removeBlog || !removePicture, ResultEnum.SYSTEM_ERROR, "删除失败，请稍后再试");
     }
 
+    /**
+     * 博客游标查询
+     * @param blogListDTO
+     * @return
+     */
     @Override
-    public Page<BlogsVO> selectList(BlogListDTO blogListDTO) {
+    public List<BlogsVO> selectList(BlogListDTO blogListDTO) {
         QueryWrapper<Blog> queryWrapper = getQueryWrapper(blogListDTO);
 
-        Page<Blog> blogPage = new Page<>(blogListDTO.getCurrent(), blogListDTO.getPageSize());
-        blogPage = this.page(blogPage, queryWrapper);
+        //每次查五条
+        Page<Blog> blogPage = this.page(new Page<>(1, 5), queryWrapper);
+        List<Blog> blogList = blogPage.getRecords();
 
+        //封装VO
+        List<BlogsVO> blogsVOList = getBlogVOList(blogList);
 
-        Page<BlogsVO> blogListVOPage = new Page<>(blogPage.getCurrent(), blogPage.getSize(), blogPage.getTotal());
+        return blogsVOList;
 
-        blogListVOPage.setRecords(this.getBlogVOList(blogPage.getRecords()));
+    }
 
-        return blogListVOPage;
+    /**
+     * 博客分页查询
+     * @param blogListDTO
+     * @return
+     */
+    @Override
+    public List<BlogsVO> selectListByPage(BlogListDTO blogListDTO) {
+        QueryWrapper<Blog> queryWrapper = getQueryWrapper(blogListDTO);
+
+        //分页查询
+        Page<Blog> blogPage = this
+                .page(new Page<>(blogListDTO.getCurrent(), blogListDTO.getPageSize()), queryWrapper);
+        List<Blog> blogList = blogPage.getRecords();
+
+        //封装VO
+        List<BlogsVO> blogsVOList = getBlogVOList(blogList);
+
+        return blogsVOList;
+
     }
 
     @Override
     public QueryWrapper<Blog> getQueryWrapper(BlogListDTO blogListDTO) {
         Long id = blogListDTO.getId();
+        Date updateTime = blogListDTO.getUpdateTime();
         Long userId = blogListDTO.getUserId();
         String searchText = blogListDTO.getSearchText();
         Integer isRecommend = blogListDTO.getIsRecommend();
@@ -143,16 +178,24 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
 
         QueryWrapper<Blog> qw = new QueryWrapper<>();
 
-        qw.eq(id != null, "id", id);
-        qw.eq(userId != null, "userId", id);
-        qw.like(searchText != null, "title", searchText);
-        qw.like(searchText != null, "content", searchText);
+        qw.lt(id != null, "id", id); //游标
+
+        qw.eq(userId != null, "user_id", userId);
+        if (searchText != null) {
+            // and() 表示：外层条件（id+userId）AND (title like OR content like)
+            qw.and(wrapper -> wrapper
+                    .like("title", searchText)  // 标题模糊查
+                    .or()                       // 或
+                    .like("content", searchText) // 内容模糊查
+            );
+        }
         qw.eq(isRecommend != null, "is_recommend", isRecommend);
         qw.eq(reviewStatus != null, "review_status", reviewStatus);
         qw.eq(reviewMessage != null, "review_message", reviewMessage);
         qw.eq(reviewerId != null, "reviewer_id", reviewerId);
-        qw.orderBy(upToDate != null, BooleanUtils.isFalse(upToDate), "update_time");
+        qw.orderBy(true, false, "id");
         qw.orderBy(sort != null, true, "sort");
+
 
         return qw;
     }
@@ -188,20 +231,31 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
             boolean addResult = this.lambdaUpdate().set(Blog::getLikeCount, blog.getLikeCount() - 1)
                     .eq(Blog::getId, id)
                     .update();
-            if (addResult)
+            if (addResult) {
                 redisTemplate.opsForSet().remove(RedisKey.BLOG_LIKE_KEY + id, loginUserId);
+                // 从用户维度的点赞key中移除博客ID
+                redisTemplate.opsForSet().remove(RedisKey.USER_BLOG_LIKE_KEY + loginUserId, id);
+            }
         } else {
             //未点赞，点赞
             boolean removeResult = this.lambdaUpdate().set(Blog::getLikeCount, blog.getLikeCount() + 1)
                     .eq(Blog::getId, id)
                     .update();
-            if (removeResult)
+            if (removeResult) {
                 redisTemplate.opsForSet().add(RedisKey.BLOG_LIKE_KEY + id, loginUserId);
+                // 向用户维度的点赞key中添加博客ID
+                redisTemplate.opsForSet().add(RedisKey.USER_BLOG_LIKE_KEY + loginUserId, id);
+            }
         }
 
     }
 
-    private List<BlogsVO> getBlogVOList(List<Blog> blogList) {
+    public List<BlogsVO> getBlogVOList(List<Blog> blogList) {
+
+        if (blogList == null || blogList.size() == 0) {
+            return Collections.emptyList();
+        }
+
         List<BlogsVO> blogsVOList = blogList.stream().map(blog -> {
             Long id = blog.getId();
             //查询博客携带的图片
@@ -253,6 +307,131 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
         });
 
         return blogsVOList;
+    }
+
+    /**
+     * 博客分页查询（支持查询我发布的/我点赞的/我收藏的）
+     * @param dto
+     * @return
+     */
+    @Override
+    public Page<BlogSimpleVO> selectBlogByPage(BlogPageQueryDTO dto) {
+        Long userId = dto.getUserId();
+        Boolean myLike = dto.getMyLike();
+        Boolean myCollect = dto.getMyCollect();
+        String searchText = dto.getSearchText();
+        Integer isRecommend = dto.getIsRecommend();
+        Integer reviewStatus = dto.getReviewStatus();
+
+        QueryWrapper<Blog> qw = new QueryWrapper<>();
+        List<Long> blogIds = null;
+
+        // 查询我点赞的博客
+        if (BooleanUtils.isTrue(myLike)) {
+            long loginUserId = StpUtil.getLoginIdAsLong();
+            Set<Object> likedBlogIds = redisTemplate.opsForSet().members(RedisKey.USER_BLOG_LIKE_KEY + loginUserId);
+            if (likedBlogIds == null || likedBlogIds.isEmpty()) {
+                Page<BlogSimpleVO> emptyPage = new Page<>(dto.getCurrent(), dto.getPageSize(), 0);
+                emptyPage.setRecords(Collections.emptyList());
+                return emptyPage;
+            }
+            blogIds = likedBlogIds.stream()
+                    .map(obj -> Long.valueOf(obj.toString()))
+                    .collect(Collectors.toList());
+        }
+
+        // 查询我收藏的博客
+        if (BooleanUtils.isTrue(myCollect)) {
+            long loginUserId = StpUtil.getLoginIdAsLong();
+            Set<Object> collectedBlogIds = redisTemplate.opsForSet().members(RedisKey.USER_BLOG_COLLECTION_KEY + loginUserId);
+            if (collectedBlogIds == null || collectedBlogIds.isEmpty()) {
+                Page<BlogSimpleVO> emptyPage = new Page<>(dto.getCurrent(), dto.getPageSize(), 0);
+                emptyPage.setRecords(Collections.emptyList());
+                return emptyPage;
+            }
+            blogIds = collectedBlogIds.stream()
+                    .map(obj -> Long.valueOf(obj.toString()))
+                    .collect(Collectors.toList());
+        }
+
+        // 如果有指定博客ID列表，添加in条件
+        if (blogIds != null && !blogIds.isEmpty()) {
+            qw.in("id", blogIds);
+        }
+
+        // 查询我发布的博客
+        qw.eq(userId != null, "user_id", userId);
+
+        // 搜索条件
+        if (StrUtil.isNotBlank(searchText)) {
+            qw.and(wrapper -> wrapper
+                    .like("title", searchText)
+                    .or()
+                    .like("content", searchText)
+            );
+        }
+
+        qw.eq(isRecommend != null, "is_recommend", isRecommend);
+        qw.eq(reviewStatus != null, "review_status", reviewStatus);
+        qw.orderBy(true, false, "id");
+
+        // 分页查询
+        Page<Blog> blogPage = this.page(new Page<>(dto.getCurrent(), dto.getPageSize()), qw);
+        List<Blog> blogList = blogPage.getRecords();
+
+        // 封装简化版VO
+        List<BlogSimpleVO> blogSimpleVOList = getBlogSimpleVOList(blogList);
+
+        // 返回分页对象
+        Page<BlogSimpleVO> voPage = new Page<>(blogPage.getCurrent(), blogPage.getSize(), blogPage.getTotal());
+        voPage.setRecords(blogSimpleVOList);
+        return voPage;
+    }
+
+    /**
+     * 将Blog列表转换为BlogSimpleVO列表（不包含图片）
+     * @param blogList
+     * @return
+     */
+    @Override
+    public List<BlogSimpleVO> getBlogSimpleVOList(List<Blog> blogList) {
+        if (blogList == null || blogList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<BlogSimpleVO> blogSimpleVOList = blogList.stream().map(blog -> {
+            Long id = blog.getId();
+            BlogSimpleVO blogSimpleVO = new BlogSimpleVO();
+            BeanUtils.copyProperties(blog, blogSimpleVO);
+
+            // 查询收藏数
+            Long collectCount = redisTemplate.opsForSet().size(RedisKey.BLOG_COLLECTION_KEY + id);
+            blogSimpleVO.setCollectCount(collectCount);
+
+            // 查询评论数
+            Long commentCount = commentService.lambdaQuery().eq(Comment::getBlogId, id).count();
+            blogSimpleVO.setCommentCount(commentCount);
+
+            return blogSimpleVO;
+        }).collect(Collectors.toList());
+
+        // 获取博客作者信息
+        Set<Long> blogAuthors = blogList.stream().map(Blog::getUserId).collect(Collectors.toSet());
+        List<User> users = userservice.listByIds(blogAuthors);
+        Map<Long, User> userMap = users.stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        // 填充作者信息
+        blogSimpleVOList.forEach(blogSimpleVO -> {
+            User user = userMap.get(blogSimpleVO.getUserId());
+            if (user != null) {
+                BlogAuthorVO blogAuthorVO = new BlogAuthorVO();
+                BeanUtils.copyProperties(user, blogAuthorVO);
+                blogSimpleVO.setUser(blogAuthorVO);
+            }
+        });
+
+        return blogSimpleVOList;
     }
 }
 

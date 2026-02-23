@@ -18,6 +18,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -84,7 +85,21 @@ public class UserController {
     public Result<UserInfoVO> getById(@PathVariable Long id) {
         User user = userService.getById(id);
         ThrowUtils.throwIf(user == null, ResultEnum.NOT_FOUND_ERROR, "用户不存在");
-        return Result.success(userService.getUserInfoVO(user));
+        UserInfoVO userInfoVO = userService.getUserInfoVO(user);
+
+        // 用户的隐藏邮箱和电话
+        if (userInfoVO.getEmail() != null && userInfoVO.getEmail().length() > 4) {
+            String email = userInfoVO.getEmail();
+            String hiddenEmail = email.charAt(0) + "****" + email.substring(email.indexOf("@") - 1);
+            userInfoVO.setEmail(hiddenEmail);
+        }
+        if (userInfoVO.getPhone() != null && userInfoVO.getPhone().length() > 4) {
+            String phone = userInfoVO.getPhone();
+            String hiddenPhone = phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
+            userInfoVO.setPhone(hiddenPhone);
+        }
+
+        return Result.success(userInfoVO);
     }
 
     // 用户编辑
@@ -186,6 +201,10 @@ public class UserController {
     }
 
 
+    /**
+     * 贡献排行榜
+     * @return
+     */
     @GetMapping("/getHotUser")
     public Result<List<UserInfoVO>> getHotUser(){
 
@@ -193,6 +212,39 @@ public class UserController {
 
         return Result.success(hotUser);
 
+    }
+
+    /**
+     * 更换用户头像
+     * @param file 头像文件
+     * @return 新头像URL
+     */
+    @PostMapping("/avatar")
+    public Result<String> updateAvatar(@RequestPart("file") MultipartFile file) {
+        String newAvatarUrl = userService.updateAvatar(file);
+        return Result.success(newAvatarUrl);
+    }
+
+    /**
+     * 发送修改密码验证码
+     * @param type 验证方式：email-邮箱, phone-手机号
+     * @return
+     */
+    @PostMapping("/password/code")
+    public Result<String> sendPasswordCode(@RequestParam String type) {
+        userService.sendPasswordCode(type);
+        return Result.success("验证码发送成功");
+    }
+
+    /**
+     * 确认修改密码
+     * @param changePasswordDTO 修改密码请求参数
+     * @return
+     */
+    @PostMapping("/password")
+    public Result<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
+        userService.changePassword(changePasswordDTO);
+        return Result.success("密码修改成功");
     }
 
 }

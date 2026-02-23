@@ -4,6 +4,8 @@ package com.jstart.qypicture.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.enums.ResultEnum;
+import com.jstart.qypicture.exception.BusinessException;
+import com.jstart.qypicture.model.dto.SpaceUserAddDTO;
 import com.jstart.qypicture.model.dto.SpaceUserEditDTO;
 import com.jstart.qypicture.model.dto.SpaceUserQueryDTO;
 import com.jstart.qypicture.model.entity.Space;
@@ -126,7 +128,12 @@ public class SpaceController {
     @GetMapping("getUserSpaceList")
     public Result<List<SpaceVO>> getUserSpaceList(@RequestParam(value = "spaceRole") HashSet<Integer> spaceRole) {
 
-        List<SpaceVO> spaceInfoList = spaceService.getUserSpaceInfoList(null, StpUtil.getLoginIdAsLong(), spaceRole);
+        List<SpaceVO> spaceInfoList = null;
+        try {
+            spaceInfoList = spaceService.getUserSpaceInfoList(null, StpUtil.getLoginIdAsLong(), spaceRole);
+        } catch (Exception e) {
+            throw new BusinessException(ResultEnum.NO_AUTH_ERROR);
+        }
 
         return Result.success(spaceInfoList);
 
@@ -135,6 +142,18 @@ public class SpaceController {
     /**
      * todo 邀请成员controller
      */
+    @PostMapping("inviteMember")
+    public Result<Boolean> inviteMember(@RequestParam("spaceId") Long spaceId,
+                                        @RequestParam("userId") Long userId) {
+        SpaceUserAddDTO spaceUserAddDTO = new SpaceUserAddDTO();
+        spaceUserAddDTO.setSpaceId(spaceId);
+        spaceUserAddDTO.setUserId(userId);
+        long result = spaceUserService.addSpaceUser(spaceUserAddDTO);
+        if (result <= 0) {
+            return Result.error(ResultEnum.SYSTEM_ERROR, "邀请成员失败");
+        }
+        return Result.success(true);
+    }
 
     /**
      * 踢出成员
@@ -152,7 +171,7 @@ public class SpaceController {
     /**
      * 获取空间内成员列表
      */
-    @PostMapping("list")
+    @PostMapping("/user/list")
     public Result<Page<SpaceUserVO>> listSpaceUsers(@RequestBody SpaceUserQueryDTO spaceUserQueryDTO) {
         ThrowUtils.throwIf(spaceUserQueryDTO == null || spaceUserQueryDTO.getSpaceId() == null, ResultEnum.PARAMS_ERROR);
 

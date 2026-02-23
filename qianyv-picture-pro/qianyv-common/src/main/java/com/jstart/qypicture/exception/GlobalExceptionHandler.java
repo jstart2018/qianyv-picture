@@ -30,12 +30,6 @@ public class GlobalExceptionHandler {
         return Result.error(ResultEnum.PARAMS_ERROR, e.getMessage());
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public Result<?> runtimeExceptionHandler(RuntimeException e) {
-        log.error("RuntimeException", e);
-        return Result.error(ResultEnum.SYSTEM_ERROR);
-    }
-
     @ExceptionHandler(NotLoginException.class)
     public Result<?> notLoginException(NotLoginException e) {
         log.error("NotLoginException", e);
@@ -51,8 +45,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SaTokenException.class)
     public Result<?> SaTokenExceptionHandler(SaTokenException e) {
         log.error("SaTokenException", e);
-        return Result.error(ResultEnum.NO_AUTH_ERROR, "账号错误");
+        return Result.error(ResultEnum.NO_AUTH_ERROR, "账号未登录或状态异常");
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public Result<?> runtimeExceptionHandler(RuntimeException e) {
+        log.error("RuntimeException", e);
+        //return Result.error(ResultEnum.SYSTEM_ERROR,"服务超时，请稍后再试");
+        return null;
+    }
 
 }

@@ -1,5 +1,6 @@
 package com.jstart.qypicture.service.impl;
 
+import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -7,6 +8,7 @@ import com.jstart.qypicture.constant.RedisKey;
 import com.jstart.qypicture.constant.UserConstant;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
+import com.jstart.qypicture.model.dto.ChangePasswordDTO;
 import com.jstart.qypicture.model.entity.Follow;
 import com.jstart.qypicture.service.FollowService;
 import com.jstart.qypicture.template.sendCodeTemplate.SendCodeTemplate;
@@ -19,6 +21,8 @@ import com.jstart.qypicture.model.entity.User;
 import com.jstart.qypicture.model.vo.UserInfoVO;
 import com.jstart.qypicture.service.UserService;
 import com.jstart.qypicture.mapper.UserMapper;
+import com.jstart.qypicture.utils.COSUtil.CosClientConfig;
+import com.jstart.qypicture.utils.COSUtil.CosManager;
 import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -28,11 +32,15 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author 28435
@@ -53,6 +61,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     private UserMapper userMapper;
     @Resource
     private FollowService followService;
+    @Resource
+    private CosManager cosManager;
+    @Resource
+    private CosClientConfig cosClientConfig;
 
 
     //锁对象
@@ -77,7 +89,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public void loginOrRegister(UserLoginByCodeDTO userLoginByCodeDTO) {
         //1. 获取验证码
         Object codeFromRedis = redisTemplate.opsForValue()
-                .get(UserConstant.USER_LOGIN_CODE_KEY + userLoginByCodeDTO.getEmailOrPhone());
+                .get(UserConstant.USER_ACCOUNT_CODE_KEY + userLoginByCodeDTO.getEmailOrPhone());
 
         // 2. 校验验证码
         if (codeFromRedis == null) {
@@ -111,7 +123,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         StpUtil.login(user.getId());
 
         //6. 删除验证码
-        redisTemplate.delete(UserConstant.USER_LOGIN_CODE_KEY + userLoginByCodeDTO.getEmailOrPhone());
+        redisTemplate.delete(UserConstant.USER_ACCOUNT_CODE_KEY + userLoginByCodeDTO.getEmailOrPhone());
         log.info("用户登录成功, 用户id: {}", user.getId());
 
     }
@@ -120,6 +132,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public void loginWithPassword(UserLoginByPasswordDTO userLoginByPasswordDTO) {
         // 查询用户是否存在
         User user = new User();
+        user.setPassword(SaSecureUtil.sha256(userLoginByPasswordDTO.getPassword()));
         if (userLoginByPasswordDTO.getAccount().contains("@")) {
             user.setEmail(userLoginByPasswordDTO.getAccount());
         } else {
@@ -256,31 +269,215 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
-     * 获取贡献榜用户
-     * @return
+     * 获取贡献榜用户（按贡献值降序排列）
+     * @return 贡献榜用户列表（前10名）
      */
     @Override
     public List<UserInfoVO> getHotUser() {
-        //从redis中获取用户id
-        List<UserInfoVO> hotUserList = new ArrayList<>();
-
-        Set<Object> hotUserIdSet = redisTemplate.opsForZSet().range(RedisKey.USER_CONTRIBUTION_RANK_KEY, 0, 9);
-        if (hotUserIdSet.isEmpty()) {
-            return hotUserList;
+        // 从Redis ZSet获取贡献值最高的前10名用户ID（按分数降序）
+        Set<Object> hotUserIdSet = redisTemplate.opsForZSet()
+                .range(RedisKey.USER_CONTRIBUTION_RANK_KEY, 0, 9);
+        
+        if (hotUserIdSet == null || hotUserIdSet.isEmpty()) {
+            return Collections.emptyList();
         }
-        List<Long> hotUserIdList = hotUserIdSet.stream().map(id -> Long.parseLong(String.valueOf(id))).toList();
-        List<User> userList = this.lambdaQuery().in(User::getId, hotUserIdList)
-                //手动指定排序方式，保证redis排行榜中的顺序不变
-                .last("order by field(id," + StringUtils.join(hotUserIdList, ",") + ")")
-                .list();
-        //todo 这里循环获取性能稍差，后续优化
-        userList.forEach(user -> {
-            UserInfoVO userInfoVO = this.getUserInfoVO(user);
-            hotUserList.add(userInfoVO);
-        });
 
-        return hotUserList;
+
+        // 转换为Long列表
+        List<Long> hotUserIdList = hotUserIdSet.stream()
+                .map(id -> Long.parseLong(String.valueOf(id)))
+                .toList()
+                .reversed();// 因为ZSet是按分数升序排列的，所以需要反转列表以获得降序
+
+        
+        // 批量查询用户信息
+        List<User> userList = this.lambdaQuery()
+                .in(User::getId, hotUserIdList)
+                .list();
+        
+        // 按Redis中的顺序排序（保持排行榜顺序）
+        Map<Long, User> userMap = userList.stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+        
+        // 按Redis顺序转换为VO
+        return hotUserIdList.stream()
+                .map(userMap::get)
+                .filter(Objects::nonNull)
+                .map(this::getUserInfoVO)
+                .toList();
     }
 
+    /**
+     * 更换用户头像
+     * @param file 头像文件
+     * @return 新头像URL
+     */
+    @Override
+    public String updateAvatar(MultipartFile file) {
+        // 1. 获取当前登录用户
+        long loginUserId = StpUtil.getLoginIdAsLong();
+        User user = this.getById(loginUserId);
+        ThrowUtils.throwIf(user == null, ResultEnum.NOT_FOUND_ERROR, "用户不存在");
+
+        // 2. 校验文件
+        ThrowUtils.throwIf(file == null || file.isEmpty(), ResultEnum.PARAMS_ERROR, "文件不能为空");
+        // 校验文件大小（3MB）
+        long maxSize = 3 * 1024 * 1024L;
+        ThrowUtils.throwIf(file.getSize() > maxSize, ResultEnum.PARAMS_ERROR, "头像文件不能大于2MB");
+        // 校验文件格式
+        String originalFilename = file.getOriginalFilename();
+        ThrowUtils.throwIf(originalFilename == null, ResultEnum.PARAMS_ERROR, "文件名不能为空");
+        String suffix = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+        List<String> allowSuffixList = Arrays.asList("png", "jpg", "jpeg", "gif", "webp");
+        ThrowUtils.throwIf(!allowSuffixList.contains(suffix), ResultEnum.PARAMS_ERROR, "仅支持 png, jpg, jpeg, gif, webp 格式的图片");
+
+        // 3. 构建上传路径
+        String fileName = String.format("%s_%s.%s",
+                LocalDate.now(),
+                UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12),
+                suffix);
+        String key = String.format("avatar/%s/%s", loginUserId, fileName);
+
+        // 4. 上传新头像到COS
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile("avatar_", "." + suffix);
+            file.transferTo(tempFile);
+            cosManager.putObject(key, tempFile);
+        } catch (IOException e) {
+            log.error("头像上传失败: {}", e.getMessage(), e);
+            throw new BusinessException(ResultEnum.SYSTEM_ERROR, "头像上传失败，请稍后重试");
+        } finally {
+            // 删除临时文件
+            if (tempFile != null && tempFile.exists()) {
+                boolean deleted = tempFile.delete();
+                if (!deleted) {
+                    log.warn("临时文件删除失败: {}", tempFile.getAbsolutePath());
+                }
+            }
+        }
+
+        // 5. 构建新头像URL
+        String newAvatarUrl = cosClientConfig.getHost() + "/" + key;
+
+        // 6. 删除旧头像（仅删除COS上的头像）
+        String oldAvatar = user.getAvatar();
+        if (oldAvatar != null && oldAvatar.startsWith(cosClientConfig.getHost())) {
+            // 从COS URL中提取key
+            String oldKey = oldAvatar.substring(cosClientConfig.getHost().length() + 1);
+            try {
+                cosManager.deleteObject(oldKey);
+                log.info("删除旧头像成功: {}", oldKey);
+            } catch (Exception e) {
+                // 删除失败不影响主流程，仅记录日志
+                log.warn("删除旧头像失败: {}, 错误: {}", oldKey, e.getMessage());
+            }
+        }
+
+        // 7. 更新用户头像URL
+        User updateUser = new User();
+        updateUser.setId(loginUserId);
+        updateUser.setAvatar(newAvatarUrl);
+        boolean updateResult = this.updateById(updateUser);
+        ThrowUtils.throwIf(!updateResult, ResultEnum.SYSTEM_ERROR, "更新头像失败，请稍后重试");
+
+        return newAvatarUrl;
+    }
+
+    /**
+     * 发送修改密码验证码
+     * @param type 验证方式：email-邮箱, phone-手机号
+     */
+    @Override
+    public void sendPasswordCode(String type) {
+        // 1. 参数校验
+        ThrowUtils.throwIf(StringUtils.isBlank(type), ResultEnum.PARAMS_ERROR, "请选择验证方式");
+        ThrowUtils.throwIf(!"email".equals(type) && !"phone".equals(type),
+                ResultEnum.PARAMS_ERROR, "验证方式参数错误");
+
+        // 2. 获取当前登录用户
+        long loginUserId = StpUtil.getLoginIdAsLong();
+        User user = this.getById(loginUserId);
+        ThrowUtils.throwIf(user == null, ResultEnum.NOT_FOUND_ERROR, "用户不存在");
+
+        // 3. 检查用户是否绑定了该方式
+        String account;
+        if ("email".equals(type)) {
+            account = user.getEmail();
+            ThrowUtils.throwIf(StringUtils.isBlank(account), ResultEnum.PARAMS_ERROR, "您未绑定邮箱，请选择其他方式");
+        } else {
+            account = user.getPhone();
+            ThrowUtils.throwIf(StringUtils.isBlank(account), ResultEnum.PARAMS_ERROR, "您未绑定手机号，请选择其他方式");
+        }
+
+        // 4. 发送验证码
+        SendCodeDTO sendCodeDTO = new SendCodeDTO();
+        if ("email".equals(type)) {
+            sendCodeDTO.setEmail(account);
+        } else {
+            sendCodeDTO.setPhone(account);
+        }
+        this.sendCode(sendCodeDTO);
+    }
+
+    /**
+     * 修改密码
+     * @param changePasswordDTO 修改密码请求参数
+     */
+    @Override
+    public void changePassword(ChangePasswordDTO changePasswordDTO) {
+        // 1. 参数校验
+        ThrowUtils.throwIf(changePasswordDTO == null, ResultEnum.PARAMS_ERROR, "参数不能为空");
+        String type = changePasswordDTO.getType();
+        String code = changePasswordDTO.getCode();
+        String newPassword = changePasswordDTO.getNewPassword();
+
+        ThrowUtils.throwIf(StringUtils.isBlank(type), ResultEnum.PARAMS_ERROR, "请选择验证方式");
+        ThrowUtils.throwIf(!"email".equals(type) && !"phone".equals(type),
+                ResultEnum.PARAMS_ERROR, "验证方式参数错误");
+        ThrowUtils.throwIf(StringUtils.isBlank(code), ResultEnum.PARAMS_ERROR, "验证码不能为空");
+        ThrowUtils.throwIf(StringUtils.isBlank(newPassword), ResultEnum.PARAMS_ERROR, "新密码不能为空");
+
+        // 2. 校验新密码格式（16位以下，需要数字和字母组合）
+        ThrowUtils.throwIf(newPassword.length() > 16 || newPassword.length() < 6,
+                ResultEnum.PARAMS_ERROR, "密码长度必须在6-16位之间");
+        boolean hasLetter = newPassword.matches(".*[a-zA-Z].*");
+        boolean hasDigit = newPassword.matches(".*\\d.*");
+        ThrowUtils.throwIf(!hasLetter || !hasDigit,
+                ResultEnum.PARAMS_ERROR, "密码必须包含数字和字母");
+
+        // 3. 获取当前登录用户
+        long loginUserId = StpUtil.getLoginIdAsLong();
+        User user = this.getById(loginUserId);
+        ThrowUtils.throwIf(user == null, ResultEnum.NOT_FOUND_ERROR, "用户不存在");
+
+        // 4. 获取用户对应的邮箱/手机号
+        String account;
+        if ("email".equals(type)) {
+            account = user.getEmail();
+            ThrowUtils.throwIf(StringUtils.isBlank(account), ResultEnum.PARAMS_ERROR, "您未绑定邮箱");
+        } else {
+            account = user.getPhone();
+            ThrowUtils.throwIf(StringUtils.isBlank(account), ResultEnum.PARAMS_ERROR, "您未绑定手机号");
+        }
+
+        // 5. 校验验证码
+        Object codeFromRedis = redisTemplate.opsForValue().get(UserConstant.USER_ACCOUNT_CODE_KEY + account);
+        ThrowUtils.throwIf(codeFromRedis == null, ResultEnum.PARAMS_ERROR, "验证码已过期，请重新获取");
+        String codeStr = String.valueOf(codeFromRedis);
+        ThrowUtils.throwIf(!codeStr.equals(code), ResultEnum.PARAMS_ERROR, "验证码错误");
+
+        // 6. 更新密码
+        User updateUser = new User();
+        updateUser.setId(loginUserId);
+        updateUser.setPassword(SaSecureUtil.sha256(newPassword));
+        boolean updateResult = this.updateById(updateUser);
+        ThrowUtils.throwIf(!updateResult, ResultEnum.SYSTEM_ERROR, "修改密码失败，请稍后重试");
+
+        // 7. 删除验证码
+        redisTemplate.delete(UserConstant.USER_ACCOUNT_CODE_KEY + account);
+
+        log.info("用户[{}]修改密码成功", loginUserId);
+    }
 
 }

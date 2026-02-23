@@ -3,6 +3,7 @@ package com.jstart.qypicture.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -47,6 +48,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
     /**
      * 添加空间成员 todo: 空间权限：仅空间管理员
+     *
      * @param spaceUserAddDTO
      * @return
      */
@@ -82,8 +84,9 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
     /**
      * 移除空间成员 todo: 空间权限：仅空间管理员
+     *
      * @param spaceId 空间 id
-     * @param userId 用户 id
+     * @param userId  用户 id
      * @return 移除是否成功
      */
     @Override
@@ -99,7 +102,6 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
     }
 
     /**
-     * todo 空间权限：仅空间管理员
      * 查看空间成员列表
      */
     @Override
@@ -109,17 +111,29 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         BeanUtils.copyProperties(spaceUserQueryDTO, spaceUser);
 
         QueryWrapper<SpaceUser> queryWrapper = this.getQueryWrapper(spaceUser);
-        Page<SpaceUser> page = this.page(new Page<>(1, 10), queryWrapper);
+        Page<SpaceUser> page = this.page(new Page<>(spaceUserQueryDTO.getCurrent(), spaceUserQueryDTO.getPageSize()), queryWrapper);
         List<SpaceUser> spaceUserList = page.getRecords();
+        if (CollUtil.isEmpty(spaceUserList)) {
+            return new Page<>();
+        }
         List<SpaceUserVO> spaceUserVOList = this.getSpaceUserVOList(spaceUserList);
 
-        //填充用户名称
+        //填充用户名称、头像
         Set<Long> userIdSet = spaceUserList.stream().map(SpaceUser::getUserId).collect(Collectors.toSet());
         List<User> userList = userService.listByIds(userIdSet);
         Map<Long, String> userIdNameMap = userList.stream().collect(Collectors.toMap(User::getId, User::getNickname));
+        Map<Long, String> userIdAvatarMap = userList.stream().collect(Collectors.toMap(User::getId, User::getAvatar));
         spaceUserVOList.forEach(spaceUserVO -> {
             spaceUserVO.setUserName(userIdNameMap.get(spaceUserVO.getUserId()));
+            spaceUserVO.setUserAvatar(userIdAvatarMap.get(spaceUserVO.getUserId()));
         });
+        //过滤按名字搜索
+        spaceUserVOList = spaceUserVOList.stream().filter(spaceUserVO -> {
+            if (StrUtil.isNotBlank(spaceUserQueryDTO.getUsername())) {
+                return StrUtil.containsIgnoreCase(spaceUserVO.getUserName(), spaceUserQueryDTO.getUsername());
+            }
+            return true;
+        }).collect(Collectors.toList());
 
         Page<SpaceUserVO> spaceUserVOPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         spaceUserVOPage.setRecords(spaceUserVOList);
@@ -128,6 +142,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
     /**
      * 修改空间成员权限
+     *
      * @param spaceUserEditDTO 参数
      * @return 修改是否成功
      */

@@ -8,6 +8,7 @@ import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 public class SpaceUserVO extends PageRequest implements Serializable {
@@ -33,19 +34,24 @@ public class SpaceUserVO extends PageRequest implements Serializable {
     private String userName;
 
     /**
+     * 用户头像
+     */
+    private String userAvatar;
+
+    /**
      * 空间角色：viewer/editor/admin
      */
-    private String spaceRole;
+    private Integer spaceRole;
 
     /**
      * 创建时间
      */
-    private LocalDateTime createTime;
+    private Date createTime;
 
     /**
      * 更新时间
      */
-    private LocalDateTime updateTime;
+    private Date updateTime;
 
 
 
