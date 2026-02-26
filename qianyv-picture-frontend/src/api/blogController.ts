@@ -117,7 +117,19 @@ export async function editBlog(body: API.BlogEditDTO, options?: { [key: string]:
 
 /** 此处后端没有提供注释 POST /blog/list */
 export async function blogList(body: API.BlogListDTO, options?: { [key: string]: any }) {
-  return request<API.ResultPageBlogsVO>('/blog/list', {
+  return request<API.ResultListBlogsVO>('/blog/list', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /blog/list/page */
+export async function blogListByPage(body: API.BlogPageQueryDTO, options?: { [key: string]: any }) {
+  return request<API.ResultPageBlogSimpleVO>('/blog/list/page', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

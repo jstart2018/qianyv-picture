@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useSpace } from './composables/useSpace'
 import { usePicture } from './composables/usePicture'
 import { useMember } from './composables/useMember'
@@ -9,6 +9,7 @@ import SpaceInfo from './components/SpaceInfo/index.vue'
 import ImageGallery from './components/ImageGallery/index.vue'
 import ImageUploader from './components/ImageUploader/index.vue'
 import MemberModal from './components/MemberModal/index.vue'
+import SpaceSettingModal from './components/SpaceSettingModal/index.vue'
 
 // 空间管理
 const {
@@ -30,6 +31,7 @@ const {
   createNewSpace,
   startEditSpaceName,
   saveSpaceName,
+  refreshCurrentSpace,
   toggleMySpaces,
   toggleJoinedSpaces,
   toggleJoinedManageable,
@@ -42,6 +44,7 @@ const { fetchPictures } = usePicture()
 
 // 上传管理
 const showUploadModal = ref(false)
+const refreshKey = ref(0)
 const openUploadModal = () => {
   showUploadModal.value = true
 }
@@ -50,7 +53,22 @@ const closeUploadModal = () => {
 }
 
 // 成员管理
-const { showMembersModal, openMembersModal, closeMembersModal } = useMember()
+const showMembersModal = ref(false)
+const openMembersModal = () => {
+  showMembersModal.value = true
+}
+const closeMembersModal = () => {
+  showMembersModal.value = false
+}
+
+// 设置管理
+const showSettingModal = ref(false)
+const openSettingModal = () => {
+  showSettingModal.value = true
+}
+const closeSettingModal = () => {
+  showSettingModal.value = false
+}
 
 // 初始化
 onMounted(() => {
@@ -68,9 +86,12 @@ watch(
 )
 
 // 处理上传完成
-const handleUploadComplete = () => {
+const handleUploadComplete = async () => {
   if (currentSpace.value) {
-    fetchPictures(currentSpace.value.id)
+    // 增加刷新 key，触发 ImageGallery 刷新
+    refreshKey.value++
+    // 刷新空间信息（更新容量进度条）
+    await refreshCurrentSpace()
   }
 }
 
@@ -119,13 +140,13 @@ const handleSelectSpace = (space: any) => {
         <div class="detail-header">
           <h2>{{ currentSpace.spaceName }}</h2>
           <div class="header-actions">
-            <button class="action-btn">设置</button>
-            <button class="action-btn primary" @click="openUploadModal">上传图片</button>
+            <button class="action-btn" @click="openSettingModal">设置</button>
+            <button class="action-btn" @click="openUploadModal">上传图片</button>
           </div>
         </div>
 
         <div class="detail-content">
-          <ImageGallery :space-id="currentSpace?.id" />
+          <ImageGallery :space-id="currentSpace?.id" :refresh-key="refreshKey" />
         </div>
       </div>
 
@@ -138,6 +159,7 @@ const handleSelectSpace = (space: any) => {
     <MemberModal
       :show="showMembersModal"
       :current-space="currentSpace"
+      :current-user-role="currentSpace?.role"
       @close="closeMembersModal"
     />
 
@@ -147,6 +169,14 @@ const handleSelectSpace = (space: any) => {
       :space-id="currentSpace?.id ?? null"
       @close="closeUploadModal"
       @uploaded="handleUploadComplete"
+    />
+
+    <!-- 设置弹窗 -->
+    <SpaceSettingModal
+      :show="showSettingModal"
+      :space-id="currentSpace?.id ?? null"
+      @close="closeSettingModal"
+      @updated="refreshCurrentSpace"
     />
   </div>
 </template>

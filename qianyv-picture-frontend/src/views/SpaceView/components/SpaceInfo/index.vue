@@ -18,7 +18,19 @@ const emit = defineEmits<Emits>()
 <template>
   <div v-if="space" class="space-info-card">
     <div class="info-header">
-      <span class="info-icon">📊</span>
+      <svg
+        class="info-icon-svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M18 20V10" />
+        <path d="M12 20V4" />
+        <path d="M6 20v-6" />
+      </svg>
       <span class="info-title">空间信息</span>
     </div>
     <div class="info-content">
@@ -30,7 +42,23 @@ const emit = defineEmits<Emits>()
         <span class="info-label">成员数量</span>
         <div class="member-info">
           <span class="info-value">{{ space.memberCount }} 人</span>
-          <button class="view-members-btn" @click="emit('open-members')">👥 查看成员</button>
+          <button class="view-members-btn" @click="emit('open-members')">
+            <svg
+              class="btn-icon-svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            查看成员
+          </button>
         </div>
       </div>
       <div class="info-item">

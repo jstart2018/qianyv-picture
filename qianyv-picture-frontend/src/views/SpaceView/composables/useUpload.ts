@@ -3,12 +3,14 @@
  */
 
 import { ref } from 'vue'
+import { message } from 'ant-design-vue'
 import { upload, editByBatch } from '@/api/pictureController'
 
 export interface UploadPreview {
   file: File
   url: string
-  tags: string
+  tags: string[]
+  introduction: string
   id?: number
   status?: 'pending' | 'uploading' | 'uploaded' | 'error'
   errorMsg?: string
@@ -35,7 +37,8 @@ export function useUpload() {
     const newPreviews: UploadPreview[] = files.map((file) => ({
       file,
       url: URL.createObjectURL(file),
-      tags: '',
+      tags: [],
+      introduction: '',
       status: 'uploading' as const,
     }))
 
@@ -49,7 +52,12 @@ export function useUpload() {
         formData.append('file', preview.file)
 
         console.log(`正在上传文件: ${preview.file.name}, 空间ID: ${spaceId}`)
-        const res = await upload({ spaceId }, formData)
+        // 使用 uploadByFile 接口上传，携带 spaceId
+        const res = await upload({ spaceId }, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
         console.log('上传响应:', res.data)
 
         if (res.data && res.data.code === 0 && res.data.data?.id) {
@@ -90,7 +98,7 @@ export function useUpload() {
    */
   const handleBatchEdit = async (spaceId: number | null) => {
     if (!spaceId) {
-      alert('空间ID不能为空')
+      message.error('空间ID不能为空')
       return false
     }
 
@@ -98,7 +106,7 @@ export function useUpload() {
     const uploadedItems = uploadPreviews.value.filter((p) => p.status === 'uploaded' && p.id)
 
     if (uploadedItems.length === 0) {
-      alert('没有可以保存的图片')
+      message.warning('没有可以保存的图片')
       return false
     }
 
@@ -108,7 +116,8 @@ export function useUpload() {
       // 构建编辑列表：每个元素包含图片id、标签tags和spaceId
       const editList: API.PictureEditDTO[] = uploadedItems.map((p) => ({
         id: p.id!,
-        tags: p.tags || undefined,
+        tags: p.tags.join(','),
+        introduction: p.introduction || undefined,
         spaceId: spaceId,
       }))
 
@@ -117,17 +126,17 @@ export function useUpload() {
       console.log('批量编辑响应:', res.data)
 
       if (res.data && res.data.code === 0) {
-        alert(`成功保存 ${uploadedItems.length} 张图片的信息！`)
+        message.success(`成功保存 ${uploadedItems.length} 张图片的信息！`)
         // 清空预览列表
         uploadPreviews.value = []
         return true
       } else {
-        alert(res.data?.message || '保存失败')
+        message.error(res.data?.message || '保存失败')
         return false
       }
     } catch (err) {
       console.error('批量编辑失败:', err)
-      alert('保存信息时出现错误，请重试')
+      message.error('保存信息时出现错误，请重试')
       return false
     } finally {
       isUploading.value = false

@@ -67,8 +67,11 @@ const isHorizontal = () => {
 }
 
 const handleSearch = () => {
-  // 跳转到AI对话页面
-  router.push('/chat')
+  // 跳转到AI对话页面，并传递搜索关键词
+  router.push({
+    path: '/chat',
+    query: searchText.value ? { keyword: searchText.value } : {},
+  })
 }
 
 const handleClearSearch = () => {
@@ -78,14 +81,7 @@ const handleClearSearch = () => {
   searchTrigger.value++
 }
 
-// 测试分类变化
-const handleCategoryChange = (event: Event) => {
-  const select = event.target as HTMLSelectElement
-  const selectedIndex = select.selectedIndex
-  if (selectedIndex >= 0) {
-    selectedCategoryId.value = categories.value[selectedIndex]?.id || null
-  }
-}
+// 删除错误的分类变化处理函数，v-model已经足够
 
 provide('selectedCategoryId', selectedCategoryId)
 provide('searchText', searchText)
@@ -122,11 +118,7 @@ onMounted(async () => {
         </div>
         <div class="filter-item">
           <label class="filter-label">分类：</label>
-          <select
-            v-model="selectedCategoryId"
-            class="category-select"
-            @change="handleCategoryChange"
-          >
+          <select v-model="selectedCategoryId" class="category-select">
             <option :value="null">全部</option>
             <option v-for="category in categories" :key="category.id" :value="category.id">
               {{ category.categoryName }}
@@ -174,7 +166,7 @@ onMounted(async () => {
 .pictures-view {
   width: 100%;
   min-height: calc(100vh - 60px);
-  padding: 24px;
+  padding: 24px 48px; /* 增加左右内边距，为4列布局提供更多空间 */
   background: transparent;
 }
 .filter-bar {
@@ -184,7 +176,7 @@ onMounted(async () => {
   justify-content: center;
 }
 .filter-container {
-  max-width: 1400px;
+  max-width: 1600px; /* 增加最大宽度，为4列布局提供更多空间 */
   width: 100%;
   display: flex;
   gap: 28px;

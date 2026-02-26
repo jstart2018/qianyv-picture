@@ -53,6 +53,16 @@ const router = createRouter({
       component: () => import('../views/UserDetailView.vue'),
     },
     {
+      path: '/user/edit/:id',
+      name: 'userEdit',
+      component: () => import('../views/UserEditView.vue'),
+    },
+    {
+      path: '/blog/:id',
+      name: 'blogDetail',
+      component: () => import('../views/BlogDetailView.vue'),
+    },
+    {
       path: '/pictures/horizontal/:id',
       name: 'horizontalPictureDetail',
       component: () => import('../views/HorizontalPictureDetailView.vue'),

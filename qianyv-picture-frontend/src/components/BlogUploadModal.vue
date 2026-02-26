@@ -279,6 +279,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
 import { upload } from '@/api/pictureController'
 import { addBlog } from '@/api/blogController'
 import { listAll } from '@/api/picCategoryController'
@@ -324,8 +325,10 @@ const currentImage = computed(() => uploadedImages.value[currentImageIndex.value
 const showMessage = (type: 'success' | 'error' | 'loading', text: string) => {
   if (type === 'loading') {
     // 加载状态提示（当前简单实现为空操作）
+  } else if (type === 'success') {
+    message.success(text)
   } else {
-    alert(text)
+    message.error(text)
   }
 }
 
@@ -660,7 +663,7 @@ const handlePublish = async () => {
     const response = await addBlog(blogData) // 检查响应
     const result = response.data || response
     if (result && result.code === 0) {
-      alert('发布成功！')
+      message.success('发布成功！')
       // 清除草稿
       clearDraft()
       // 重置表单
@@ -673,7 +676,7 @@ const handlePublish = async () => {
       // 通知父组件刷新
       emit('success')
     } else {
-      showMessage('error', `发布失败`)
+      message.error('发布失败')
     }
   } catch (error: any) {
     console.error('发布失败:', error)

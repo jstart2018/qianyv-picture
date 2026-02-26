@@ -34,6 +34,7 @@ declare namespace API {
     sortField?: string
     sortOrder?: string
     id?: number
+    updateTime?: string
     userId?: number
     searchText?: string
     isRecommend?: number
@@ -44,8 +45,36 @@ declare namespace API {
     upToDate?: boolean
   }
 
+  type BlogPageQueryDTO = {
+    current?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
+    userId?: number
+    myLike?: boolean
+    myCollect?: boolean
+    searchText?: string
+    isRecommend?: number
+    reviewStatus?: number
+  }
+
+  type BlogSimpleVO = {
+    id?: number
+    userId?: number
+    title?: string
+    content?: string
+    viewCount?: number
+    likeCount?: number
+    commentCount?: number
+    collectCount?: number
+    isRecommend?: number
+    updateTime?: string
+    user?: BlogAuthorVO
+  }
+
   type BlogsVO = {
     id?: number
+    updateTime?: string
     userId?: number
     title?: string
     content?: string
@@ -58,8 +87,27 @@ declare namespace API {
     user?: BlogAuthorVO
   }
 
+  type ChangePasswordDTO = {
+    type?: string
+    code?: string
+    newPassword?: string
+  }
+
   type changeRoleParams = {
     userId: number
+  }
+
+  type ChatMemoryQueryDTO = {
+    conversationId?: string
+    cursor?: string
+    pageSize?: number
+  }
+
+  type ChatMemoryVO = {
+    conversationId?: string
+    content?: string
+    type?: string
+    timestamp?: string
   }
 
   type checkBlogLikeParams = {
@@ -152,6 +200,11 @@ declare namespace API {
     spaceRole: number[]
   }
 
+  type inviteMemberParams = {
+    spaceId: number
+    userId: number
+  }
+
   type kickOutMemberParams = {
     spaceId: number
     userId: number
@@ -166,14 +219,14 @@ declare namespace API {
     asc?: boolean
   }
 
-  type PageBlogsVO = {
-    records?: BlogsVO[]
+  type PageBlogSimpleVO = {
+    records?: BlogSimpleVO[]
     total?: number
     size?: number
     current?: number
     orders?: OrderItem[]
-    optimizeCountSql?: PageBlogsVO
-    searchCount?: PageBlogsVO
+    optimizeCountSql?: PageBlogSimpleVO
+    searchCount?: PageBlogSimpleVO
     optimizeJoinOfCountSql?: boolean
     maxLimit?: number
     countId?: string
@@ -260,6 +313,20 @@ declare namespace API {
     collectCount?: number
   }
 
+  type PicturePageQueryDTO = {
+    current?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
+    userId?: number
+    myCollect?: boolean
+    searchText?: string
+    categoryId?: number
+    pictureType?: number
+    isRecommend?: number
+    reviewStatus?: number
+  }
+
   type PictureQueryListDTO = {
     current?: number
     pageSize?: number
@@ -318,6 +385,18 @@ declare namespace API {
     message?: string
   }
 
+  type ResultListBlogsVO = {
+    code?: number
+    data?: BlogsVO[]
+    message?: string
+  }
+
+  type ResultListChatMemoryVO = {
+    code?: number
+    data?: ChatMemoryVO[]
+    message?: string
+  }
+
   type ResultListCommentQueryVO = {
     code?: number
     data?: CommentQueryVO[]
@@ -354,9 +433,9 @@ declare namespace API {
     message?: string
   }
 
-  type ResultPageBlogsVO = {
+  type ResultPageBlogSimpleVO = {
     code?: number
-    data?: PageBlogsVO
+    data?: PageBlogSimpleVO
     message?: string
   }
 
@@ -413,6 +492,10 @@ declare namespace API {
     phone?: string
   }
 
+  type sendPasswordCodeParams = {
+    type: string
+  }
+
   type ServerSentEventString = true
 
   type SpaceUserEditDTO = {
@@ -422,9 +505,14 @@ declare namespace API {
   }
 
   type SpaceUserQueryDTO = {
+    current?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
     id?: number
     spaceId?: number
     userId?: number
+    username?: string
     spaceRole?: number
   }
 
@@ -437,7 +525,8 @@ declare namespace API {
     spaceId?: number
     userId?: number
     userName?: string
-    spaceRole?: string
+    userAvatar?: string
+    spaceRole?: number
     createTime?: string
     updateTime?: string
   }
@@ -488,8 +577,6 @@ declare namespace API {
   }
 
   type UserEditDTO = {
-    email?: string
-    phone?: string
     nickname?: string
     gender?: number
     introduction?: string
@@ -497,6 +584,8 @@ declare namespace API {
 
   type UserInfoVO = {
     id?: number
+    email?: string
+    phone?: string
     nickname?: string
     avatar?: string
     tag?: string

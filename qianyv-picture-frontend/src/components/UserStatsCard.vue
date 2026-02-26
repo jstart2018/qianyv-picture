@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import UserAvatar from './UserAvatar.vue'
 
@@ -30,6 +31,9 @@ const emit = defineEmits<{
   share: []
 }>()
 
+// 是否已登录
+const isLoggedIn = computed(() => !!props.user)
+
 const handleShare = () => {
   emit('share')
 }
@@ -52,38 +56,49 @@ const formatNumber = (num: number = 0) => {
 
 <template>
   <div class="user-stats-card">
-    <div class="avatar-container" @click="handleAvatarClick">
+    <div class="avatar-container" :class="{ clickable: isLoggedIn }" @click="handleAvatarClick">
       <UserAvatar
-        :nickname="user?.nickname"
-        :avatar="user?.avatar"
+        :nickname="isLoggedIn ? user?.nickname : undefined"
+        :avatar="isLoggedIn ? user?.avatar : undefined"
+        :is-ghost="!isLoggedIn"
         size="large"
         class="user-avatar-large"
       />
     </div>
-    <h3 class="user-nickname">{{ user?.nickname || '游客' }}</h3>
-    <p class="user-intro">{{ user?.introduction || '这个人很懒，什么都没写~' }}</p>
+    <h3 class="user-nickname">{{ isLoggedIn ? user?.nickname || '游客' : '请先登录' }}</h3>
+    <p class="user-intro">
+      {{
+        isLoggedIn ? user?.introduction || '这个人很懒，什么都没写~' : '登录后可以查看您的个人信息'
+      }}
+    </p>
 
     <!-- 用户元数据统计 - 网格布局 -->
     <div class="user-metadata">
       <div class="metadata-grid">
         <div class="metadata-item">
-          <div class="metadata-value">{{ formatNumber(stats.downloadCount || 0) }}</div>
+          <div class="metadata-value">
+            {{ isLoggedIn ? formatNumber(stats.downloadCount || 0) : '-' }}
+          </div>
           <div class="metadata-label">获载量</div>
         </div>
         <div class="metadata-item">
-          <div class="metadata-value">{{ formatNumber(stats.likeCount) }}</div>
+          <div class="metadata-value">{{ isLoggedIn ? formatNumber(stats.likeCount) : '-' }}</div>
           <div class="metadata-label">获赞</div>
         </div>
         <div class="metadata-item">
-          <div class="metadata-value">{{ formatNumber(stats.collectCount) }}</div>
+          <div class="metadata-value">
+            {{ isLoggedIn ? formatNumber(stats.collectCount) : '-' }}
+          </div>
           <div class="metadata-label">获收藏</div>
         </div>
         <div class="metadata-item">
-          <div class="metadata-value">{{ formatNumber(stats.fansCount || 0) }}</div>
+          <div class="metadata-value">
+            {{ isLoggedIn ? formatNumber(stats.fansCount || 0) : '-' }}
+          </div>
           <div class="metadata-label">粉丝数</div>
         </div>
         <div class="metadata-item">
-          <div class="metadata-value">{{ formatNumber(stats.postCount) }}</div>
+          <div class="metadata-value">{{ isLoggedIn ? formatNumber(stats.postCount) : '-' }}</div>
           <div class="metadata-label">发布数</div>
         </div>
       </div>
@@ -106,7 +121,7 @@ const formatNumber = (num: number = 0) => {
           stroke-linejoin="round"
         />
       </svg>
-      分享
+      {{ isLoggedIn ? '分享' : '登录后分享' }}
     </button>
   </div>
 </template>
@@ -153,11 +168,11 @@ const formatNumber = (num: number = 0) => {
   display: inline-block;
 }
 
-.avatar-container:hover {
+.avatar-container.clickable:hover {
   transform: translateY(-6px) scale(1.05);
 }
 
-.avatar-container:active {
+.avatar-container.clickable:active {
   transform: translateY(-3px) scale(1.02);
 }
 

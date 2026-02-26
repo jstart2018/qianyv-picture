@@ -9,17 +9,11 @@ const userStore = useUserStore()
 const showDropdown = ref(false)
 const showNotification = ref(false)
 const bubbles = ref<Array<{ id: number; left: number; delay: number; duration: number }>>([])
-const showBackToTop = ref(false)
 
 // 滑动指示器的样式
 const activeIndicatorStyle = ref({
   left: '0px',
   width: '0px',
-})
-
-// 判断是否在团队空间页面
-const isSpaceView = computed(() => {
-  return router.currentRoute.value.path.startsWith('/space')
 })
 
 // 更新滑动指示器位置
@@ -54,13 +48,6 @@ onMounted(() => {
       updateIndicator()
     })
   })
-
-  // 监听滚动事件，控制回到顶部按钮显示
-  window.addEventListener('scroll', handleScroll)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', handleScroll)
 })
 
 // 监听路由变化，更新指示器位置
@@ -116,20 +103,7 @@ function closeDropdown() {
 async function doLogout() {
   await userStore.logout()
   showDropdown.value = false
-  router.push('/')
-}
-
-// 处理滚动事件
-function handleScroll() {
-  showBackToTop.value = window.scrollY > 300
-}
-
-// 回到顶部
-function scrollToTop() {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth',
-  })
+  router.push('/login')
 }
 </script>
 
@@ -242,7 +216,7 @@ function scrollToTop() {
               <li
                 @click="
                   () => {
-                    router.push(`/user/${userStore.user?.id || ''}`)
+                    router.push(`/user/edit/${userStore.user?.id || ''}`)
                     showDropdown = false
                   }
                 "
@@ -261,34 +235,6 @@ function scrollToTop() {
     <main class="main">
       <RouterView />
     </main>
-
-    <!-- 回到顶部按钮 - 火箭图标 (团队空间不显示) -->
-    <transition name="rocket-fade">
-      <button
-        v-if="showBackToTop && !isSpaceView"
-        class="back-to-top-rocket"
-        @click="scrollToTop"
-        aria-label="回到顶部"
-      >
-        <svg class="rocket-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- 火箭主体 -->
-          <path
-            d="M12 2C12 2 7 6 7 12V18L9 20H15L17 18V12C17 6 12 2 12 2Z"
-            fill="currentColor"
-            opacity="0.9"
-          />
-          <!-- 火箭窗口 -->
-          <circle cx="12" cy="11" r="2" fill="white" opacity="0.8" />
-          <!-- 左侧火焰 -->
-          <path d="M9 20L7 22L8 20Z" fill="#FFA500" opacity="0.9" />
-          <!-- 右侧火焰 -->
-          <path d="M15 20L17 22L16 20Z" fill="#FFA500" opacity="0.9" />
-          <!-- 中间火焰 -->
-          <path d="M12 20L12 23L12 20Z" fill="#FF6B00" opacity="0.9" />
-        </svg>
-        <span class="rocket-text">TOP</span>
-      </button>
-    </transition>
   </div>
 </template>
 
@@ -750,158 +696,5 @@ function scrollToTop() {
   width: 100%;
   padding: 0;
   overflow: visible; /* 完全不创建滚动容器 */
-}
-
-/* ========== 回到顶部按钮 - 火箭样式 ========== */
-.back-to-top-rocket {
-  position: fixed;
-  right: 32px;
-  bottom: 32px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #7bd3d8 0%, #1aa0c1 100%);
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 4px 16px rgba(26, 160, 193, 0.4),
-    0 0 0 0 rgba(123, 211, 216, 0.4);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  z-index: 999;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  animation: float 3s ease-in-out infinite;
-}
-
-.back-to-top-rocket:hover {
-  transform: translateY(-8px) scale(1.1);
-  background: linear-gradient(135deg, #8bdee3 0%, #2ab0d1 100%);
-  box-shadow:
-    0 8px 24px rgba(26, 160, 193, 0.6),
-    0 0 0 10px rgba(123, 211, 216, 0.2);
-  animation:
-    float 1s ease-in-out infinite,
-    pulse 1.5s ease infinite;
-}
-
-.back-to-top-rocket:active {
-  transform: translateY(-12px) scale(1.05);
-  animation: launch 0.6s ease-out;
-}
-
-.rocket-icon {
-  width: 24px;
-  height: 24px;
-  color: white;
-  transition: all 0.3s ease;
-}
-
-.back-to-top-rocket:hover .rocket-icon {
-  transform: translateY(-3px) scale(1.1);
-  filter: drop-shadow(0 3px 6px rgba(255, 255, 255, 0.5));
-}
-
-.rocket-text {
-  font-size: 9px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-/* 火箭漂浮动画 */
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-/* 脉冲动画 */
-@keyframes pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 8px 24px rgba(26, 160, 193, 0.6),
-      0 0 0 0 rgba(123, 211, 216, 0.4);
-  }
-  50% {
-    box-shadow:
-      0 8px 24px rgba(26, 160, 193, 0.6),
-      0 0 0 15px rgba(123, 211, 216, 0);
-  }
-}
-
-/* 发射动画 */
-@keyframes launch {
-  0% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-20px) scale(0.95);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* 按钮淡入淡出动画 */
-.rocket-fade-enter-active {
-  animation: rocketEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.rocket-fade-leave-active {
-  animation: rocketLeave 0.3s ease-out;
-}
-
-@keyframes rocketEnter {
-  0% {
-    opacity: 0;
-    transform: translateY(60px) scale(0.5) rotate(-10deg);
-  }
-  60% {
-    opacity: 0.8;
-    transform: translateY(-10px) scale(1.1) rotate(5deg);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1) rotate(0deg);
-  }
-}
-
-@keyframes rocketLeave {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(40px) scale(0.6);
-  }
-}
-
-/* 响应式 */
-@media (max-width: 768px) {
-  .back-to-top-rocket {
-    right: 20px;
-    bottom: 20px;
-    width: 48px;
-    height: 48px;
-  }
-
-  .rocket-icon {
-    width: 20px;
-    height: 20px;
-  }
-
-  .rocket-text {
-    font-size: 8px;
-  }
 }
 </style>

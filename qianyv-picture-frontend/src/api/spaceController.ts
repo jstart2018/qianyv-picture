@@ -97,6 +97,21 @@ export async function getUserSpaceList(
   })
 }
 
+/** 此处后端没有提供注释 POST /space/inviteMember */
+export async function inviteMember(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.inviteMemberParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultBoolean>('/space/inviteMember', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /space/kickout */
 export async function kickOutMember(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -112,21 +127,6 @@ export async function kickOutMember(
   })
 }
 
-/** 此处后端没有提供注释 POST /space/list */
-export async function listSpaceUsers(
-  body: API.SpaceUserQueryDTO,
-  options?: { [key: string]: any }
-) {
-  return request<API.ResultPageSpaceUserVO>('/space/list', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
-    ...(options || {}),
-  })
-}
-
 /** 此处后端没有提供注释 POST /space/upgrade */
 export async function upgradeSpace(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -138,6 +138,21 @@ export async function upgradeSpace(
     params: {
       ...params,
     },
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /space/user/list */
+export async function listSpaceUsers(
+  body: API.SpaceUserQueryDTO,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultPageSpaceUserVO>('/space/user/list', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
     ...(options || {}),
   })
 }

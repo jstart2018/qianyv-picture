@@ -19,6 +19,7 @@
   "dependencies": {
     "ant-design-vue": "^4.2.6",
     "axios": "^1.13.1",
+    "cropperjs": "^1.6.2",
     "decimal.js": "^10.6.0",
     "masonry-layout": "^4.2.2",
     "pinia": "^3.0.3",

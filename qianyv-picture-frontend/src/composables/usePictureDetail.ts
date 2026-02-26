@@ -4,6 +4,7 @@
  */
 
 import { ref, onMounted, type Ref } from 'vue'
+import { message } from 'ant-design-vue'
 import { getOneById, checkCollect, collectToggle } from '@/api/pictureController'
 
 export interface UsePictureDetailOptions {
@@ -90,7 +91,7 @@ export function usePictureDetail(options: UsePictureDetailOptions): UsePictureDe
 
       if (res.data.code === 0 && res.data.data !== undefined) {
         // data 返回的是数字：1表示已收藏，0表示未收藏
-        isCollected.value = res.data.data === 1
+        isCollected.value = Number(res.data.data) === 1
       }
     } catch (err) {
       console.error('检查收藏状态失败:', err)
@@ -120,11 +121,11 @@ export function usePictureDetail(options: UsePictureDetailOptions): UsePictureDe
         link.click()
         document.body.removeChild(link)
       } else {
-        alert(data.message || '下载失败')
+        message.error(data.message || '下载失败')
       }
     } catch (err) {
       console.error('下载失败:', err)
-      alert('下载失败，请稍后重试')
+      message.error('下载失败，请稍后重试')
     } finally {
       downloading.value = false
     }
@@ -142,11 +143,11 @@ export function usePictureDetail(options: UsePictureDetailOptions): UsePictureDe
         // 切换收藏状态
         isCollected.value = !isCollected.value
       } else {
-        alert(res.data.message || '操作失败')
+        message.error(res.data.message || '操作失败')
       }
     } catch (err) {
       console.error('收藏操作失败:', err)
-      alert('操作失败，请稍后重试')
+      message.error('操作失败，请稍后重试')
     } finally {
       collecting.value = false
     }

@@ -18,6 +18,21 @@ export async function doChat(
   })
 }
 
+/** 此处后端没有提供注释 POST /app/chat/history */
+export async function getChatHistory(
+  body: API.ChatMemoryQueryDTO,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultListChatMemoryVO>('/app/chat/history', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 GET /app/create/session */
 export async function createSession(options?: { [key: string]: any }) {
   return request<API.ResultLong>('/app/create/session', {

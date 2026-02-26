@@ -2,6 +2,8 @@
 import { ref, onMounted, inject, watch, computed } from 'vue'
 import { list as getPictureList } from '../api/pictureController'
 import { useRouter } from 'vue-router'
+import { usePagination } from '@/composables'
+import Pagination from '@/components/Pagination.vue'
 
 const router = useRouter()
 
@@ -17,16 +19,9 @@ const searchTrigger = inject<import('vue').Ref<number> | null>('searchTrigger', 
 
 // 图片列表
 const pictures = ref<any[]>([])
-// 加载状态
-const loading = ref(false)
-// 分页参数
-const current = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
-
-// 是否还有更多数据
-const hasMore = computed(() => {
-  return pictures.value.length < total.value
+// 使用分页组合式函数
+const { current, pageSize, total, loading, hasMore, totalPages, goToPage } = usePagination({
+  pageSize: 16,
 })
 
 // 获取图片列表
@@ -61,11 +56,12 @@ const fetchPictures = async (isLoadMore = false) => {
   }
 }
 
-// 加载更多
-const loadMore = () => {
-  if (!hasMore.value || loading.value) return
-  current.value++
-  fetchPictures(true)
+// 页码变化处理
+const handlePageChange = (page: number) => {
+  goToPage(page)
+  fetchPictures()
+  // 滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // 打开图片详情 - 根据宽高比判断跳转到横屏或竖屏详情页
@@ -160,20 +156,20 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- 加载更多 -->
-    <div v-if="hasMore && pictures.length > 0" class="load-more-container">
-      <button class="load-more-btn" :disabled="loading" @click="loadMore">
-        <span v-if="loading" class="loading-text">
-          <span class="loading-spinner-small"></span>
-          加载中...
-        </span>
-        <span v-else>加载更多</span>
-      </button>
-    </div>
+    <!-- 分页组件 -->
+    <Pagination
+      v-if="pictures.length > 0"
+      :current="current || 1"
+      :total-pages="totalPages || 1"
+      :total="total || 0"
+      :page-size="pageSize || 20"
+      :loading="loading"
+      @change="handlePageChange"
+    />
 
-    <!-- 没有更多数据 -->
-    <div v-else-if="!hasMore && pictures.length > 0" class="no-more-data">
-      <span>—— 已经到底了 ——</span>
+    <!-- 没有数据 -->
+    <div v-else-if="!loading && pictures.length === 0" class="empty-state">
+      <p>暂无图片数据</p>
     </div>
   </div>
 </template>
@@ -182,9 +178,9 @@ onMounted(() => {
 /* ========== 容器样式 ========== */
 .vertical-pictures-view {
   width: 100%;
-  max-width: 1800px; /* 设置最大宽度，确保有足够空间容纳4列 */
+  max-width: 100%; /* 移除最大宽度限制，利用全部可用宽度 */
   margin: 0 auto;
-  padding: 0 0 0 0; /* 优化左右边距 */
+  padding: 0; /* 移除所有内边距 */
   animation: slideInFromLeft 0.4s ease-out forwards;
 }
 
@@ -223,23 +219,23 @@ onMounted(() => {
   }
 }
 
-/* ========== 瀑布流容器（4列布局）========== */
+/* ========== 瀑布流容器（Column 4列布局）========== */
 .waterfall-container {
-  column-count: 4; /* 4列布局 */
-  column-gap: 16px;
-  column-fill: balance;
+  column-count: 4; /* 固定4列 */
+  column-gap: 16px; /* 列间距 */
+  width: 100%;
+  min-width: 1000px; /* 确保有足够宽度容纳4列 */
 }
 
 /* ========== 图片卡片 ========== */
 .picture-card {
   position: relative;
-  display: block; /* block布局更适合多列 */
-  width: 100%; /* 占满列宽 */
-  margin: 0 0 16px 0; /* 只保留底部间距 */
-  padding: 0 4%; /* 左右各留4%空白 */
-  break-inside: avoid;
-  box-sizing: border-box;
+  display: inline-block; /* 改为inline-block适配column布局 */
+  width: 100%;
+  margin-bottom: 16px; /* 卡片底部间距 */
+  break-inside: avoid; /* 防止卡片被分割到两列 */
   background: transparent;
+  box-sizing: border-box;
 }
 
 /* ========== 图片容器和图片 ========== */
@@ -429,21 +425,21 @@ onMounted(() => {
 
 /* ========== 响应式布局 ========== */
 
-/* 中等屏幕：3列布局 */
-@media (max-width: 1200px) {
+/* 中等屏幕：保持4列布局 */
+@media (max-width: 1400px) and (min-width: 901px) {
   .waterfall-container {
-    column-count: 3;
-    column-gap: 14px;
+    column-count: 4;
+    column-gap: 12px;
+    min-width: 900px;
   }
 
   .picture-card {
-    padding: 0 5%;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
 }
 
 /* 小屏幕：2列布局 */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .vertical-pictures-view {
     padding: 0 20px;
   }
@@ -451,10 +447,10 @@ onMounted(() => {
   .waterfall-container {
     column-count: 2;
     column-gap: 12px;
+    min-width: auto; /* 小屏幕不限制最小宽度 */
   }
 
   .picture-card {
-    padding: 0 6%;
     margin-bottom: 12px;
   }
 }
@@ -468,10 +464,10 @@ onMounted(() => {
   .waterfall-container {
     column-count: 1;
     column-gap: 0;
+    min-width: auto;
   }
 
   .picture-card {
-    padding: 0 8%;
     margin-bottom: 12px;
   }
 }

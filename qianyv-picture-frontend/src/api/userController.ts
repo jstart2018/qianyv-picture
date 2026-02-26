@@ -6,7 +6,7 @@ import request from '@/request'
 export async function getById(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getByIdParams,
-  options?: { [key: string]: any }
+  options?: { [key: string]: any },
 ) {
   const { id: param0, ...queryParams } = params
   return request<API.ResultUserInfoVO>(`/user/${param0}`, {
@@ -21,7 +21,7 @@ export async function update(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.updateParams,
   body: API.UserEditDTO,
-  options?: { [key: string]: any }
+  options?: { [key: string]: any },
 ) {
   const { id: param0, ...queryParams } = params
   return request<boolean>(`/user/${param0}`, {
@@ -39,7 +39,7 @@ export async function update(
 export async function delete1(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.delete1Params,
-  options?: { [key: string]: any }
+  options?: { [key: string]: any },
 ) {
   const { id: param0, ...queryParams } = params
   return request<boolean>(`/user/${param0}`, {
@@ -49,11 +49,20 @@ export async function delete1(
   })
 }
 
+/** 此处后端没有提供注释 POST /user/avatar */
+export async function updateAvatar(body: {}, options?: { [key: string]: any }) {
+  return request<API.ResultString>('/user/avatar', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 GET /user/changeRole */
 export async function changeRole(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.changeRoleParams,
-  options?: { [key: string]: any }
+  options?: { [key: string]: any },
 ) {
   return request<API.ResultString>('/user/changeRole', {
     method: 'GET',
@@ -68,7 +77,7 @@ export async function changeRole(
 export async function checkFollow(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.checkFollowParams,
-  options?: { [key: string]: any }
+  options?: { [key: string]: any },
 ) {
   return request<API.ResultBoolean>('/user/checkFollow', {
     method: 'POST',
@@ -94,7 +103,7 @@ export async function sendCode(body: API.SendCodeDTO, options?: { [key: string]:
 /** 此处后端没有提供注释 POST /user/createUser */
 export async function createUser(
   body: API.UserLoginByPasswordDTO,
-  options?: { [key: string]: any }
+  options?: { [key: string]: any },
 ) {
   return request<API.ResultString>('/user/createUser', {
     method: 'POST',
@@ -110,7 +119,7 @@ export async function createUser(
 export async function followToggle(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.followToggleParams,
-  options?: { [key: string]: any }
+  options?: { [key: string]: any },
 ) {
   return request<API.ResultObject>('/user/followToggle', {
     method: 'POST',
@@ -132,7 +141,7 @@ export async function getHotUser(options?: { [key: string]: any }) {
 /** 此处后端没有提供注释 POST /user/login/code */
 export async function loginWithCode(
   body: API.UserLoginByCodeDTO,
-  options?: { [key: string]: any }
+  options?: { [key: string]: any },
 ) {
   return request<API.ResultString>('/user/login/code', {
     method: 'POST',
@@ -147,7 +156,7 @@ export async function loginWithCode(
 /** 此处后端没有提供注释 POST /user/login/password */
 export async function loginWithPassword(
   body: API.UserLoginByPasswordDTO,
-  options?: { [key: string]: any }
+  options?: { [key: string]: any },
 ) {
   return request<API.ResultString>('/user/login/password', {
     method: 'POST',
@@ -183,6 +192,36 @@ export async function page(body: API.UserQueryDTO, options?: { [key: string]: an
       'Content-Type': 'application/json',
     },
     data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /user/password */
+export async function changePassword(
+  body: API.ChangePasswordDTO,
+  options?: { [key: string]: any },
+) {
+  return request<API.ResultString>('/user/password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /user/password/code */
+export async function sendPasswordCode(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.sendPasswordCodeParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.ResultString>('/user/password/code', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
     ...(options || {}),
   })
 }

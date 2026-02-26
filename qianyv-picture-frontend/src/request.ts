@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { message } from 'ant-design-vue'
 
 // 创建 Axios 实例
 const myAxios = axios.create({
@@ -63,26 +64,33 @@ myAxios.interceptors.response.use(
       }
     } catch (e) {
       // 规范化失败不影响主流程，记录一次警告以便排查
-      // eslint-disable-next-line no-console
+
       console.warn('response data normalization failed', e)
+    }
+
+    // 处理后端返回的业务错误（code 不为 0 时）
+    if (data && data.code !== undefined && data.code !== 0 && data.code !== 40100) {
+      const errorMsg = data.message || '操作失败'
+      message.error(errorMsg)
     }
 
     // 未登录
     if (data.code === 40100) {
-      // 不是获取用户信息的请求，并且用户目前不是已经在用户登录页面，则跳转到登录页面
+      // 不是获取用户信息的请求，并且用户目前不是已经在登录页面，则跳转到登录页面
       if (
         !response.request.responseURL.includes('user/get/login') &&
-        !window.location.pathname.includes('/user/login')
+        !window.location.pathname.includes('/login')
       ) {
-        console.warn('请先登录')
-        window.location.href = `/user/login?redirect=${window.location.href}`
+        message.warning('请先登录')
+        window.location.href = `/login?redirect=${window.location.href}`
       }
     }
     return response
   },
   function (error) {
-    // Any status codes that falls outside the range of 2xx cause this function to trigger
-    // Do something with response error
+    // 处理网络错误或其他异常
+    const errorMsg = error.message || '网络错误，请稍后重试'
+    message.error(errorMsg)
     return Promise.reject(error)
   },
 )

@@ -10,6 +10,8 @@ interface Props {
   size?: 'small' | 'medium' | 'large' | 'xlarge' | number
   // 头像形状：circle-圆形，rounded-圆角矩形
   shape?: 'circle' | 'rounded'
+  // 是否为透明幽灵模式（用于未登录时显示）
+  isGhost?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -17,6 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
   avatar: '',
   size: 'medium',
   shape: 'circle',
+  isGhost: false,
 })
 
 // 计算头像文本（昵称首字母）
@@ -69,7 +72,7 @@ const borderRadius = computed(() => {
 <template>
   <div
     class="user-avatar"
-    :class="{ 'has-image': avatar }"
+    :class="{ 'has-image': avatar, 'is-ghost': isGhost }"
     :style="{
       width: avatarSize,
       height: avatarSize,
@@ -100,6 +103,14 @@ const borderRadius = computed(() => {
 
 .user-avatar.has-image {
   background: transparent;
+}
+
+/* 幽灵模式 - 透明背景，只显示问号 */
+.user-avatar.is-ghost {
+  background: transparent !important;
+  border: 2px dashed rgba(26, 160, 193, 0.3);
+  color: rgba(26, 160, 193, 0.5);
+  box-shadow: none;
 }
 
 .user-avatar img {

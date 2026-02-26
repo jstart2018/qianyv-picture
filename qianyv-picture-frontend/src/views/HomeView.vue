@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onUnmounted, watch, nextTick } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useBlogStore } from '@/stores/blog'
 import * as userApi from '@/api/userController'
@@ -16,6 +16,10 @@ const showUploadModal = ref(false)
 
 // 右侧切换状态：排行榜 or 聊天框
 const rightPanelMode = ref<'ranking' | 'chat'>('ranking')
+
+// 筛选条件
+const activeFilter = ref<'recommend' | 'latest' | null>(null)
+const searchKeyword = ref('')
 
 // 用户统计信息 - 从后端数据计算
 const userStats = computed(() => {
@@ -103,33 +107,126 @@ const handleShare = () => {
 
 // 博客发布成功回调
 const handlePublishSuccess = async () => {
-  blogStore.current = 1
-  await blogStore.fetchBlogList()
+  await refreshBlogList()
 }
 
-// 加载更多
-const loadMore = async () => {
-  if (blogStore.loading) return
-  blogStore.current++
-  await blogStore.fetchBlogList()
+// 筛选条件变化时重新加载
+const handleFilterChange = async (filter: 'recommend' | 'latest' | null) => {
+  if (activeFilter.value === filter) {
+    // 如果点击已选中的，则取消选择
+    activeFilter.value = null
+  } else {
+    activeFilter.value = filter
+  }
+  await refreshBlogList()
 }
 
-// 是否有更多数据
-const hasMore = computed(() => {
-  return blogStore.blogs.length < blogStore.total
-})
+// 搜索功能
+const handleSearch = async () => {
+  await refreshBlogList()
+}
+
+// 重新加载博客列表
+const refreshBlogList = async () => {
+  // 更新 store 中的筛选条件
+  blogStore.searchText = searchKeyword.value
+  blogStore.isRecommend = activeFilter.value === 'recommend' ? true : undefined
+  blogStore.upToDate = activeFilter.value === 'latest' ? true : undefined
+
+  // 重置加载
+  await blogStore.fetchBlogList(true)
+}
+
+// 滚动加载更多
+let lastScrollTime = 0 // 上次滚动触发时间
+const throttleDelay = 500 // 节流延迟（毫秒）
+let observer: IntersectionObserver | null = null // 底部观察器
+
+const handleScroll = () => {
+  const now = Date.now()
+  // 节流：避免频繁触发
+  if (now - lastScrollTime < throttleDelay) return
+  lastScrollTime = now
+
+  const scrollTop = window.scrollY || document.documentElement.scrollTop
+  const scrollHeight = document.documentElement.scrollHeight
+  const clientHeight = window.innerHeight
+
+  // 当滚动到页面底部附近时加载更多
+  if (scrollTop + clientHeight >= scrollHeight - 300 && blogStore.hasMore && !blogStore.loading) {
+    blogStore.fetchBlogList(false)
+  }
+}
+
+// 设置底部观察器（备用方案）
+const setupIntersectionObserver = () => {
+  // 清理旧的观察器
+  if (observer) {
+    observer.disconnect()
+  }
+
+  // 创建观察器
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries.length === 0) return
+      const entry = entries[0]
+      if (entry && entry.isIntersecting && blogStore.hasMore && !blogStore.loading) {
+        blogStore.fetchBlogList(false)
+      }
+    },
+    {
+      rootMargin: '300px', // 提前300px触发
+    },
+  )
+
+  // 观察最后一个博客元素
+  const blogList = document.querySelector('.blog-list')
+  if (blogList && blogList.lastElementChild) {
+    observer.observe(blogList.lastElementChild)
+  }
+}
 
 // 初始化
 onMounted(async () => {
-  // 获取用户信息（如果未登录会返回 null）
-  await userStore.fetchUser().catch(() => {
+  // 不等待用户信息，先让页面能浏览
+  // 使用 Promise.allSettled 并行加载排行榜和博客列表
+  Promise.allSettled([fetchRankingList(), blogStore.fetchBlogList(true)])
+
+  // 同时尝试获取用户信息（不阻塞页面）
+  userStore.fetchUser().catch(() => {
     // 静默处理错误，用户可能未登录
   })
-  // 获取排行榜数据
-  await fetchRankingList()
-  // 获取博客列表
-  await blogStore.fetchBlogList()
+
+  // 添加滚动监听
+  window.addEventListener('scroll', handleScroll)
+
+  // 延迟设置 IntersectionObserver 和手动触发一次滚动检测
+  setTimeout(() => {
+    handleScroll()
+    setupIntersectionObserver()
+  }, 1000)
 })
+
+onUnmounted(() => {
+  // 移除滚动监听
+  window.removeEventListener('scroll', handleScroll)
+
+  // 清理 IntersectionObserver
+  if (observer) {
+    observer.disconnect()
+    observer = null
+  }
+})
+
+// 监听博客列表变化，重新设置观察器
+watch(
+  () => blogStore.blogs.length,
+  () => {
+    nextTick(() => {
+      setupIntersectionObserver()
+    })
+  },
+)
 </script>
 
 <template>
@@ -141,27 +238,55 @@ onMounted(async () => {
 
     <!-- 中部：博客列表 -->
     <main class="center-panel">
-      <div v-if="blogStore.loading" class="loading-state">
+      <!-- 筛选条件区域 -->
+      <div class="filter-container">
+        <div class="filter-buttons">
+          <button
+            :class="['filter-btn', { active: activeFilter === 'recommend' }]"
+            @click="handleFilterChange('recommend')"
+          >
+            精选
+          </button>
+          <button
+            :class="['filter-btn', { active: activeFilter === 'latest' }]"
+            @click="handleFilterChange('latest')"
+          >
+            最新
+          </button>
+        </div>
+
+        <div class="search-box">
+          <input
+            v-model="searchKeyword"
+            type="text"
+            placeholder="搜索博客..."
+            class="search-input"
+            @keyup.enter="handleSearch"
+          />
+          <button class="search-btn" @click="handleSearch">搜索</button>
+        </div>
+      </div>
+
+      <div v-if="blogStore.loading && blogStore.blogs.length === 0" class="loading-state">
         <div class="loading-spinner"></div>
         <p>加载中...</p>
       </div>
 
       <div v-else-if="blogStore.blogs.length === 0" class="empty-state">
-        <p>暂无博客内容</p>
+        <p>暂无更多博客内容</p>
       </div>
 
       <div v-else class="blog-list">
         <BlogCard v-for="blog in blogStore.blogs" :key="blog.id" :blog="blog" />
 
-        <!-- 加载更多按钮 -->
-        <div v-if="hasMore" class="load-more-container">
-          <button class="load-more-btn" :disabled="blogStore.loading" @click="loadMore">
-            <span v-if="blogStore.loading" class="loading-text">
-              <span class="loading-spinner-small"></span>
-              加载中...
-            </span>
-            <span v-else>加载更多</span>
-          </button>
+        <!-- 加载更多提示 -->
+        <div v-if="blogStore.loading" class="loading-more">
+          <div class="loading-spinner-small"></div>
+          <span>加载中...</span>
+        </div>
+
+        <div v-else-if="!blogStore.hasMore" class="no-more">
+          <span>没有更多了 ~</span>
         </div>
       </div>
     </main>
@@ -264,6 +389,93 @@ onMounted(async () => {
   /* 不使用 position，让它在文档流中撑开父容器高度 */
 }
 
+/* 筛选条件区域 */
+.filter-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 12px var(--spacing-lg);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  margin: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.filter-buttons {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.filter-btn {
+  padding: 8px 20px;
+  border-radius: 10px;
+  border: 2px solid rgba(138, 180, 248, 0.3);
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  color: #2c5282;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(138, 180, 248, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(138, 180, 248, 0.2);
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, #8ab4f8 0%, #5a9cf8 100%);
+  border-color: #5a9cf8;
+  color: white;
+  box-shadow: 0 4px 12px rgba(90, 156, 248, 0.4);
+}
+
+.search-box {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 2px solid rgba(138, 180, 248, 0.3);
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #8ab4f8;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.1);
+}
+
+.search-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #8ab4f8 0%, #5a9cf8 100%);
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(90, 156, 248, 0.4);
+}
+
 .blog-list {
   display: flex;
   flex-direction: column;
@@ -298,39 +510,20 @@ onMounted(async () => {
 }
 
 /* 加载更多 */
-.load-more-container {
+.loading-more,
+.no-more {
   display: flex;
   justify-content: center;
-  padding: var(--spacing-lg) 0;
-}
-
-.load-more-btn {
-  padding: var(--spacing-md) var(--spacing-xl);
-  background: var(--gradient-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  transition: var(--transition-all);
-  min-width: 160px;
-}
-
-.load-more-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.load-more-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.loading-text {
-  display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  padding: var(--spacing-xl) 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.no-more {
+  color: #999;
+  font-style: italic;
 }
 
 .loading-spinner-small {

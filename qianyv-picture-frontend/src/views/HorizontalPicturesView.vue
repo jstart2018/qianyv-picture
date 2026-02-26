@@ -4,6 +4,7 @@ import { list as getPictureList } from '../api/pictureController'
 import { useRouter } from 'vue-router'
 import { parseTags } from '@/utils/parse'
 import { usePagination } from '@/composables'
+import Pagination from '@/components/Pagination.vue'
 
 const router = useRouter()
 
@@ -19,7 +20,9 @@ const searchTrigger = inject<import('vue').Ref<number> | null>('searchTrigger', 
 const pictures = ref<any[]>([])
 
 // 使用分页组合式函数
-const { current, pageSize, total, loading, hasMore } = usePagination({ pageSize: 20 })
+const { current, pageSize, total, loading, hasMore, totalPages, goToPage } = usePagination({
+  pageSize: 15,
+})
 
 // 3D 旋转跟随鼠标效果 - 优化版
 const handleMouseMove = (event: MouseEvent) => {
@@ -90,11 +93,12 @@ const fetchPictures = async (isLoadMore = false) => {
   }
 }
 
-// 加载更多
-const loadMore = () => {
-  if (!hasMore.value || loading.value) return
-  current.value++
-  fetchPictures(true)
+// 页码变化处理
+const handlePageChange = (page: number) => {
+  goToPage(page)
+  fetchPictures()
+  // 滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // 打开图片详情 - 根据宽高比判断跳转到横屏或竖屏详情页
@@ -209,20 +213,20 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- 加载更多 -->
-    <div v-if="hasMore && pictures.length > 0" class="load-more-container">
-      <button class="load-more-btn" :disabled="loading" @click="loadMore">
-        <span v-if="loading" class="loading-text">
-          <span class="loading-spinner-small"></span>
-          加载中...
-        </span>
-        <span v-else>加载更多</span>
-      </button>
-    </div>
+    <!-- 分页组件 -->
+    <Pagination
+      v-if="pictures.length > 0"
+      :current="current || 1"
+      :total-pages="totalPages || 1"
+      :total="total || 0"
+      :page-size="pageSize || 20"
+      :loading="loading"
+      @change="handlePageChange"
+    />
 
-    <!-- 没有更多数据 -->
-    <div v-else-if="!hasMore && pictures.length > 0" class="no-more-data">
-      <span>—— 已经到底了 ——</span>
+    <!-- 没有数据 -->
+    <div v-else-if="!loading && pictures.length === 0" class="empty-state">
+      <p>暂无图片数据</p>
     </div>
   </div>
 </template>
@@ -293,7 +297,7 @@ onMounted(() => {
   border-radius: 13px;
   overflow: hidden;
   cursor: default;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(77, 70, 70, 0.15); /* 大幅度半透明背景 */
   /* 左边和上边的白框 + 右下方向阴影 */
   border-left: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid rgba(255, 255, 255, 0.3);
@@ -325,7 +329,7 @@ onMounted(() => {
   width: 100%;
   padding-bottom: 69.94%; /* 320.5 / 458.15 = 0.6994313，精确匹配指定尺寸比例 */
   overflow: hidden;
-  background: #f0f0f0;
+  background: rgba(200, 200, 200, 0.3); /* 半透明灰色背景 */
   /* 保持3D效果 */
   transform-style: preserve-3d;
   transform: translateZ(0);

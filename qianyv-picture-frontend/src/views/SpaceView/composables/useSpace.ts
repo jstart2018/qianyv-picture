@@ -4,8 +4,9 @@
  */
 
 import { ref, computed } from 'vue'
-import { useSpaceStore } from '@/stores/space'
+import { message } from 'ant-design-vue'
 import { getUserSpaceList, addSpace, editSpace } from '@/api/spaceController'
+import { useSpaceStore } from '@/stores/space'
 
 export interface Space {
   id: number
@@ -79,7 +80,10 @@ export function useSpace() {
 
         // 默认选中第一个空间
         if (mySpaces.value.length > 0 && !currentSpace.value) {
-          selectSpace(mySpaces.value[0])
+          const firstSpace = mySpaces.value[0]
+          if (firstSpace) {
+            selectSpace(firstSpace)
+          }
         }
       } else {
         console.error('获取我的空间数据失败', res.data?.message || '未知错误')
@@ -164,16 +168,16 @@ export function useSpace() {
     try {
       const res = await addSpace()
       if (res.data && res.data.code === 0) {
-        alert('空间创建成功!')
+        message.success('空间创建成功!')
         await fetchMySpaces()
         return true
       } else {
-        alert('空间创建失败: ' + (res.data?.message || '未知错误'))
+        message.error('空间创建失败: ' + (res.data?.message || '未知错误'))
         return false
       }
     } catch (e) {
       console.error('createNewSpace error', e)
-      alert('空间创建失败，请稍后重试')
+      message.error('空间创建失败，请稍后重试')
       return false
     }
   }
@@ -232,18 +236,36 @@ export function useSpace() {
         // 重置编辑状态
         cancelEditSpaceName()
 
-        alert('空间名称修改成功')
+        message.success('空间名称修改成功')
         return true
       } else {
-        alert('空间名称修改失败: ' + (res.data?.message || '未知错误'))
+        message.error('空间名称修改失败: ' + (res.data?.message || '未知错误'))
         cancelEditSpaceName()
         return false
       }
     } catch (e) {
       console.error('saveSpaceName error', e)
-      alert('保存失败，请稍后重试')
+      message.error('保存失败，请稍后重试')
       cancelEditSpaceName()
       return false
+    }
+  }
+
+  /**
+   * 刷新当前空间信息
+   */
+  const refreshCurrentSpace = async () => {
+    if (!currentSpace.value) return
+
+    const spaceId = currentSpace.value.id
+
+    // 重新获取我的空间列表（包含容量信息）
+    await fetchMySpaces()
+
+    // 更新当前空间数据
+    const updatedSpace = mySpaces.value.find((s) => s.id === spaceId)
+    if (updatedSpace) {
+      currentSpace.value = { ...updatedSpace }
     }
   }
 
@@ -297,6 +319,7 @@ export function useSpace() {
     startEditSpaceName,
     cancelEditSpaceName,
     saveSpaceName,
+    refreshCurrentSpace,
     toggleMySpaces,
     toggleJoinedSpaces,
     toggleJoinedManageable,

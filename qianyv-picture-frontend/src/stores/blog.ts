@@ -5,45 +5,79 @@ import { blogList } from '@/api/blogController'
 export const useBlogStore = defineStore('blog', () => {
   // 博客列表
   const blogs = ref<API.BlogsVO[]>([])
-  const total = ref(0)
-  const current = ref(1)
-  const pageSize = ref(10)
-  const loading = ref(false) // 获取博客列表
-  const fetchBlogList = async (params?: Partial<API.BlogListDTO>) => {
+  const loading = ref(false)
+  const hasMore = ref(true) // 是否还有更多数据
+  const lastId = ref<number | undefined>(undefined) // 记录最后一条数据的id
+  const pageSize = 5 // 博客列表每页数据量
+
+  // 筛选条件
+  const searchText = ref('')
+  const isRecommend = ref<boolean | undefined>(undefined)
+  const upToDate = ref<boolean | undefined>(undefined)
+
+  // 获取博客列表（游标分页）
+  const fetchBlogList = async (reset = false) => {
+    if (loading.value) return
+
     loading.value = true
     try {
-      const res = await blogList({
-        current: current.value,
-        pageSize: pageSize.value,
-        ...params,
-      })
+      const params: API.BlogListDTO = {}
 
-      // 调试日志已移除
+      // 首次查询不传id，后续传入上次返回的最后一条数据的id
+      if (!reset && lastId.value !== undefined) {
+        params.id = lastId.value
+      }
+
+      // 添加筛选条件（只有选中时才添加）
+      if (searchText.value.trim()) {
+        params.searchText = searchText.value.trim()
+      }
+      if (isRecommend.value !== undefined) {
+        params.isRecommend = isRecommend.value ? 1 : 0
+      }
+      if (upToDate.value !== undefined) {
+        params.upToDate = upToDate.value
+      }
+
+      const res = await blogList(params)
 
       // 修改判断条件：code === 0 表示成功
       if (res.data?.code === 0 && res.data?.data) {
-        // 如果是第一页，替换数据；否则追加数据
-        if (current.value === 1) {
-          blogs.value = res.data.data.records || []
+        const newBlogs = res.data.data || []
+
+        // 如果是重置（首次查询或筛选条件变化），替换数据；否则追加数据
+        if (reset) {
+          blogs.value = newBlogs
         } else {
-          blogs.value = [...blogs.value, ...(res.data.data.records || [])]
+          blogs.value = [...blogs.value, ...newBlogs]
         }
-        total.value = res.data.data.total || 0
-        // 日志已移除
+
+        // 更新lastId为本次返回数据的最后一条id
+        if (newBlogs.length > 0) {
+          const lastBlog = newBlogs[newBlogs.length - 1]
+          lastId.value = lastBlog?.id
+        } else if (reset) {
+          // 如果reset且没有数据，重置lastId
+          lastId.value = undefined
+        }
+
+        // 根据返回的数据量判断是否还有更多数据
+        // 如果返回数据少于预期分页大小，说明已到最后一页
+        hasMore.value = newBlogs.length === pageSize
       } else {
         console.warn('后端返回code不为0:', res.data?.code, res.data?.message)
         // 如果code不为0，也尝试使用mock数据
-        if (current.value === 1) {
+        if (reset) {
           blogs.value = generateMockBlogs()
-          total.value = 25
+          hasMore.value = true
         }
       }
     } catch (error) {
       console.error('获取博客列表失败:', error)
       // 如果后端接口失败，使用 mock 数据（仅用于开发调试）
-      if (current.value === 1) {
+      if (reset) {
         blogs.value = generateMockBlogs()
-        total.value = 25
+        hasMore.value = true
       }
     } finally {
       loading.value = false
@@ -111,13 +145,23 @@ export const useBlogStore = defineStore('blog', () => {
     return []
   }
 
+  // 重置筛选条件
+  const resetFilters = () => {
+    searchText.value = ''
+    isRecommend.value = undefined
+    upToDate.value = undefined
+    lastId.value = undefined
+  }
+
   return {
     blogs,
-    total,
-    current,
-    pageSize,
     loading,
+    hasMore,
+    searchText,
+    isRecommend,
+    upToDate,
     fetchBlogList,
+    resetFilters,
     toggleLike,
     toggleCollect,
     fetchComments,
