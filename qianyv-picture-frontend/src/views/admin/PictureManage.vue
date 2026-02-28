@@ -8,6 +8,8 @@ import {
   ExclamationCircleOutlined,
   DeleteOutlined,
   DownloadOutlined,
+  StarOutlined,
+  StarFilled,
 } from '@ant-design/icons-vue'
 import * as pictureApi from '@/api/pictureController'
 import * as categoryApi from '@/api/picCategoryController'
@@ -249,6 +251,34 @@ const handleDelete = (record: API.PictureListVO) => {
   })
 }
 
+// ==================== 精选/取消精选 ====================
+const handleToggleFeatured = async (record: API.PictureListVO) => {
+  try {
+    const current = (record as any).isRecommend ?? 0
+    const target = current === 1 ? 0 : 1
+    loading.value = true
+    const res = await pictureApi.getFeaturedPictures({ pictureId: record.id!, isRecommend: target })
+    const result = res.data as any
+    if (result?.code === 0) {
+      message.success(target === 1 ? '已设置为精选' : '已取消精选')
+      // 更新表格中该项的 isRecommend 字段（本地）
+      dataSource.value = dataSource.value.map((item) => {
+        if (item.id === record.id) {
+          return { ...item, isRecommend: target }
+        }
+        return item
+      })
+    } else {
+      message.error(result?.message || '操作失败')
+    }
+  } catch (e) {
+    console.error('设置精选失败:', e)
+    message.error('设置精选失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 // ==================== 格式化工具 ====================
 const copyId = (id: string | number) => {
   navigator.clipboard
@@ -479,6 +509,18 @@ onMounted(() => {
                 <template #icon><DownloadOutlined /></template>
                 下载
               </a-button>
+              <a-button type="link" size="small" @click="handleToggleFeatured(record)">
+                <template #icon>
+                  <template v-if="record.isRecommend === 1">
+                    <StarFilled />
+                  </template>
+                  <template v-else>
+                    <StarOutlined />
+                  </template>
+                </template>
+                <template v-if="record.isRecommend === 1">取消精选</template>
+                <template v-else>设为精选</template>
+              </a-button>
               <a-button type="link" size="small" danger @click="handleDelete(record)">
                 <template #icon><DeleteOutlined /></template>
                 删除
@@ -624,4 +666,3 @@ onMounted(() => {
   text-decoration: underline;
 }
 </style>
-```

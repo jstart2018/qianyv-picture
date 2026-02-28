@@ -233,6 +233,11 @@ declare namespace API {
     id: number
   }
 
+  type getFeaturedPicturesParams = {
+    pictureId: number
+    isRecommend: number
+  }
+
   type getOneByIdParams = {
     id: number
     spaceId?: number
@@ -376,6 +381,7 @@ declare namespace API {
     categoryId?: number
     tags?: string
     spaceId?: number
+    aiDesc?: string
     reviewStatus?: number
     reviewMessage?: string
     reviewerId?: number
@@ -387,7 +393,10 @@ declare namespace API {
     blogId?: number
     spaceId?: number
     thumbUrl?: string
+    categoryName?: string
     tags?: string
+    aiDesc?: string
+    isRecommend?: number
     picScale?: number
     collectCount?: number
     reviewStatus?: number
@@ -417,9 +426,11 @@ declare namespace API {
     sortField?: string
     sortOrder?: string
     id?: number
+    thumbUrl?: string
     blogId?: number
     searchText?: string
     categoryId?: number
+    isRecommend?: number
     pictureType?: number
     reviewStatus?: number
     spaceId?: number
@@ -436,6 +447,7 @@ declare namespace API {
     thumbUrl?: string
     introduction?: string
     categoryId?: number
+    isRecommend?: number
     tags?: string
     picSize?: number
     picWidth?: number
