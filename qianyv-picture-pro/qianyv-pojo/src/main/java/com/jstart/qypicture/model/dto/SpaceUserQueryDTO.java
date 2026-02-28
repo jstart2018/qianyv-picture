@@ -31,7 +31,7 @@ public class SpaceUserQueryDTO extends PageRequest implements Serializable {
     private Long userId;
 
     /**
-     * 用户 id
+     * 用户名
      */
     private String username;
 

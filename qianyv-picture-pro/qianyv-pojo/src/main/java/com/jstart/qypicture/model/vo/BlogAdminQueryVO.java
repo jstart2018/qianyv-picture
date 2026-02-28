@@ -8,49 +8,55 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 图片表
+ * 博客表
  *
- * @TableName pub_picture
+ * @TableName blog
  */
+@TableName(value = "blog")
 @Data
-public class PictureListVO {
+public class BlogAdminQueryVO {
 
-    /**
-     * id
-     */
     private Long id;
 
     /**
-     * id
+     * 作者ID
      */
-    private Long blogId;
+    private Long userId;
 
     /**
-     * id
+     * 文章标题
      */
-    private Long spaceId;
+    private String title;
 
     /**
-     * 缩略图 url
+     * 文章内容
      */
-    private String thumbUrl;
+    private String content;
 
     /**
-     * 标签（JSON 数组）
+     * 浏览量
      */
-    private String tags;
+    private Integer viewCount;
 
     /**
-     * 宽高比
+     * 点赞数
      */
-    private Double picScale;
+    private Integer likeCount;
 
+    /**
+     * 评论数
+     */
+    private Integer commentCount;
 
     /**
      * 收藏数量
      */
     private Long collectCount;
 
+    /**
+     * 是否精选：0-否; 1-是
+     */
+    private Integer isRecommend;
 
     /**
      * 审核状态：0-待审核; 1-通过; 2-拒绝
@@ -68,13 +74,27 @@ public class PictureListVO {
     private Long reviewerId;
 
     /**
+     * 审核人 ID
+     */
+    private String reviewerName;
+
+    /**
      * 审核时间
      */
     private Date reviewTime;
 
     /**
-     * 图片简介
+     * 创建时间
      */
-    private String introduction;
+    private Date createTime;
 
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 逻辑删除：null-正常, 非null-删除时间
+     */
+    private Date deleteTime;
 }

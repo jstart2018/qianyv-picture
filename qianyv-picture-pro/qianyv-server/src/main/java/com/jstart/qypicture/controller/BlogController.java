@@ -1,24 +1,32 @@
 package com.jstart.qypicture.controller;
 
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.constant.RedisKey;
+import com.jstart.qypicture.enums.BlogAuditEnum;
+import com.jstart.qypicture.enums.BlogFeatureEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.model.dto.*;
 import com.jstart.qypicture.model.entity.Blog;
+import com.jstart.qypicture.model.entity.User;
+import com.jstart.qypicture.model.vo.BlogAdminQueryVO;
 import com.jstart.qypicture.model.vo.BlogSimpleVO;
 import com.jstart.qypicture.model.vo.BlogsVO;
 import com.jstart.qypicture.result.Result;
 import com.jstart.qypicture.service.BlogService;
+import com.jstart.qypicture.service.PictureService;
+import com.jstart.qypicture.service.UserService;
 import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -29,6 +37,10 @@ public class BlogController {
     private BlogService blogService;
     @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    private UserService userService;
+    @Resource
+    private PictureService pictureService;
 
 
     @PostMapping("/add")
@@ -60,16 +72,11 @@ public class BlogController {
 
     }
 
-    @DeleteMapping("/del")
-    public Result<?> delBlog(@RequestParam Long id) {
-        ThrowUtils.throwIf(id == null, ResultEnum.PARAMS_ERROR, "参数错误");
-
-        blogService.delBlog(id);
-
-        return Result.success("删除成功");
-
-    }
-
+    /**
+     * 博客游标查询
+     * @param blogListDTO
+     * @return
+     */
     @PostMapping("/list")
     public Result<List<BlogsVO>> blogList(@RequestBody BlogListDTO blogListDTO) {
         ThrowUtils.throwIf(blogListDTO == null, ResultEnum.PARAMS_ERROR, "请求参数为空");
@@ -92,6 +99,7 @@ public class BlogController {
 
         return Result.success(blogSimpleVOPage);
     }
+
 
     /**
      * 获取博客详情
@@ -163,6 +171,97 @@ public class BlogController {
         } catch (NotLoginException e) {
             return Result.success(Boolean.FALSE);
         }
+    }
+
+
+    //...管理端接口==============================================
+
+    //统计博客总数
+    @GetMapping("/count")
+    @SaCheckRole("admin")
+    public Result<Long> countBlog() {
+        long count = blogService.count();
+        return Result.success(count);
+    }
+
+    /**
+     * 分页查询博客列表（支持查询我发布的/我点赞的/我收藏的）
+     * @param blogListDTO
+     * @return
+     */
+    @PostMapping("/list/page/admin")
+    @SaCheckRole("admin")
+    public Result<Page<BlogAdminQueryVO>> blogListByPageForAdmin(@RequestBody BlogListDTO blogListDTO) {
+        ThrowUtils.throwIf(blogListDTO == null, ResultEnum.PARAMS_ERROR, "请求参数为空");
+
+        Page<BlogAdminQueryVO> blogAdminQueryVOPage = blogService.adminBlogPage(blogListDTO);
+
+        return Result.success(blogAdminQueryVOPage);
+    }
+
+    /**
+     * 博客审核
+     * @param blogAuditDTO
+     * @return
+     */
+    @PostMapping("/audit")
+    @SaCheckRole("admin")
+    public Result<?> auditBlog(@RequestBody BlogAuditDTO blogAuditDTO) {
+        ThrowUtils.throwIf(blogAuditDTO == null || blogAuditDTO.getId() == null, ResultEnum.PARAMS_ERROR, "参数错误");
+
+        blogService.auditBlog(blogAuditDTO);
+
+        return Result.success();
+    }
+
+    /**
+     * 删除博客
+     * @param id
+     * @return
+     */
+    @DeleteMapping("/del")
+    public Result<?> delBlog(@RequestParam Long id) {
+        ThrowUtils.throwIf(id == null, ResultEnum.PARAMS_ERROR, "参数错误");
+        Blog blog = blogService.getById(id);
+        ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
+        //仅管理员和本人能注销账号
+        if (!id.equals(StpUtil.getLoginIdAsLong()) && !StpUtil.hasRole("admin")) {
+            throw new BusinessException(ResultEnum.NO_AUTH_ERROR, "无权限");
+        }
+        blogService.delBlog(id);
+
+        // 同步删除博客下的图片
+        BlogsVO blogsVO = blogService.getBlogVOList(List.of(blog)).get(0);
+        if (blogsVO.getPictureVOList() != null) {
+            List<Long> pictureIdList = blogsVO.getPictureVOList().stream().map(p -> p.getId()).toList();
+            pictureService.delete(pictureIdList, null);
+        }
+
+        return Result.success("删除成功");
+
+    }
+
+    /**
+     * 精选博客
+     */
+    @PostMapping("/featured")
+    @SaCheckRole("admin")
+    public Result<?> featuredBlog(@RequestParam Long id, @RequestParam Boolean featured) {
+        ThrowUtils.throwIf(id == null || featured == null, ResultEnum.PARAMS_ERROR, "参数错误");
+        ThrowUtils.throwIf(blogService.getById(id) == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
+
+        Blog blog = new Blog();
+        if (featured){
+            blog.setIsRecommend(BlogFeatureEnum.FEATURE.getValue());
+        } else {
+            blog.setIsRecommend(BlogFeatureEnum.NORMAL.getValue());
+        }
+        blog.setId(id);
+
+        boolean result = blogService.updateById(blog);
+        ThrowUtils.throwIf(!result, ResultEnum.SYSTEM_ERROR, "操作失败，请稍后再试");
+
+        return Result.success();
     }
 
 

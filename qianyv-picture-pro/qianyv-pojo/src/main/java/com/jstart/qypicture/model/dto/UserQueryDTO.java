@@ -37,7 +37,7 @@ public class UserQueryDTO extends PageRequest {
     private Integer role;
 
     /**
-     * 状态：0-禁用,1-启用,2-锁定
+     * 状态：0-禁用,1-启用
      */
     private Integer status;
 
@@ -74,5 +74,5 @@ public class UserQueryDTO extends PageRequest {
     /**
      * 逻辑删除：null-正常, 非null-删除时间
      */
-    private Date deleteTime;
+    private Boolean isdelete = false;
 }

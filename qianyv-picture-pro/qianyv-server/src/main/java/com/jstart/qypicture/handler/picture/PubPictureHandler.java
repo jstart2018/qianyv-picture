@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.auth.SystemRoleEnum;
 import com.jstart.qypicture.enums.PicturePlaceEnum;
+import com.jstart.qypicture.enums.PictureStatusEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.mapper.PubPictureMapper;
 import com.jstart.qypicture.model.UploadPictureResult;
@@ -107,7 +108,8 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
                     ResultEnum.PARAMS_ERROR, "关联的博客不存在");
         }
         // 3. 权限校验：仅图片本人可编辑
-        ThrowUtils.throwIf(!Objects.equals(pubPicture.getUserId(), StpUtil.getLoginIdAsLong()),
+        ThrowUtils.throwIf(!Objects.equals(pubPicture.getUserId(), StpUtil.getLoginIdAsLong())
+                        && StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue()),
                 ResultEnum.NO_AUTH_ERROR);
         // 4. 更新图片信息
         PubPicture updatePubPicture = new PubPicture();
@@ -126,6 +128,15 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
         PubPicture query = new PubPicture();
         BeanUtils.copyProperties(pictureQueryListDTO, query);
         QueryWrapper<PubPicture> qw = getQueryWrapper(query);
+
+        //非管理员，只能查看已过审的
+        Integer reviewStatus = pictureQueryListDTO.getReviewStatus();
+        if (!StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())) {
+            reviewStatus = PictureStatusEnum.PASS.getValue();
+        }
+        qw.eq(reviewStatus != null, "review_status", reviewStatus);
+
+        //标签简介模糊查询
         if (StringUtils.isNotBlank(pictureQueryListDTO.getSearchText())) {
             qw.like("tags", pictureQueryListDTO.getSearchText())
                     .or()
@@ -145,12 +156,7 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
         Page<PubPicture> page = pubPictureMapper.selectPage(new Page<>(current, pageSize), qw);
         List<PictureListVO> voList = page.getRecords().stream().map(p -> {
             PictureListVO vo = new PictureListVO();
-            vo.setId(p.getId());
-            vo.setThumbUrl(p.getThumbUrl());
-            vo.setTags(p.getTags());
-            vo.setPicScale(p.getPicScale());
-            vo.setCollectCount(p.getCollectCount());
-            vo.setIntroduction(p.getIntroduction());
+            BeanUtils.copyProperties(p, vo);
             return vo;
         }).collect(Collectors.toList());
         Page<PictureListVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
@@ -181,6 +187,11 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
         Date updateTime = pubPicture.getUpdateTime();
 
         QueryWrapper<PubPicture> qw = new QueryWrapper<>();
+
+        //如果是本人或者管理员，才可以看没有blogId的图片（即AI生成的图片）
+        if (!Objects.equals(StpUtil.getLoginIdAsLong(), userId) && !StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())){
+            qw.isNotNull("blog_id");
+        }
 
         qw.eq(id != null, "id", id);
         qw.eq(userId != null, "user_id", userId);
@@ -214,6 +225,9 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
 
     @Override
     public String downLoad(PictureDownLoadDTO pictureDownLoadDTO) {
+        PubPicture pubPicture = pubPictureMapper.selectById(pictureDownLoadDTO.getPictureId());
+        ThrowUtils.throwIf(pubPicture == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
+
         pubPictureMapper.update(new UpdateWrapper<PubPicture>()
                 .setSql("download_count = download_count + 1")
                 .eq("id", pictureDownLoadDTO.getPictureId())

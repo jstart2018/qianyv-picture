@@ -44,6 +44,8 @@ public interface PictureService {
      */
     Page<PictureListVO> pageList(PictureQueryListDTO pictureQueryListDTO);
 
+
+
     /**
      * 根据图片id获取图片
      * @param id
@@ -67,4 +69,10 @@ public interface PictureService {
      * @return
      */
     Page<PictureListVO> selectPictureByPage(PicturePageQueryDTO picturePageQueryDTO);
+
+    /**
+     * 统计图片总数
+     * @return
+     */
+    Long count();
 }

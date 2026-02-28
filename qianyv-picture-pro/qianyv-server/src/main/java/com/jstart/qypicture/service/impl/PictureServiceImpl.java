@@ -7,10 +7,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.constant.RedisKey;
 import com.jstart.qypicture.enums.CollectionEnum;
 import com.jstart.qypicture.enums.PicturePlaceEnum;
+import com.jstart.qypicture.enums.PictureStatusEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.handler.picture.PictureHandler;
 import com.jstart.qypicture.handler.picture.PictureHandlerFactory;
 import com.jstart.qypicture.mapper.PubPictureMapper;
+import com.jstart.qypicture.mapper.SpaPictureMapper;
 import com.jstart.qypicture.model.dto.PictureDownLoadDTO;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
 import com.jstart.qypicture.model.dto.PicturePageQueryDTO;
@@ -28,6 +30,7 @@ import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -56,6 +59,8 @@ public class PictureServiceImpl implements PictureService {
     private CollectionService collectionService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private SpaPictureMapper spaPictureMapper;
 
     /**
      * 上传图片
@@ -163,7 +168,7 @@ public class PictureServiceImpl implements PictureService {
     }
 
     /**
-     * 图片分页查询（支持查询我发布的/我收藏的）
+     * 公共图库：图片分页查询（支持查询我发布的/我收藏的）
      * @param dto
      * @return
      */
@@ -175,7 +180,7 @@ public class PictureServiceImpl implements PictureService {
         Long categoryId = dto.getCategoryId();
         Integer pictureType = dto.getPictureType();
         Integer isRecommend = dto.getIsRecommend();
-        Integer reviewStatus = dto.getReviewStatus();
+        Integer reviewStatus = PictureStatusEnum.PASS.getValue();
 
         QueryWrapper<PubPicture> qw = new QueryWrapper<>();
         List<Long> pictureIds = null;
@@ -244,6 +249,13 @@ public class PictureServiceImpl implements PictureService {
         Page<PictureListVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         voPage.setRecords(voList);
         return voPage;
+    }
+
+    @Override
+    public Long count() {
+        Long pubCount = pubPictureMapper.selectCount(null);
+        Long spaCount = spaPictureMapper.selectCount(null);
+        return pubCount + spaCount;
     }
 
 }

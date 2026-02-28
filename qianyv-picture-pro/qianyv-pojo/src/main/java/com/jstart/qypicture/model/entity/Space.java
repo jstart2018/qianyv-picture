@@ -31,9 +31,15 @@ public class Space {
     private String spaceName;
 
     /**
-     * 空间级别：0-普通版 1-专业版 2-旗舰版
+     * 空间级别：0-免费版 1-普通版 2-专业版 3-旗舰版
      */
     private Integer spaceLevel;
+
+
+    /**
+     * 状态：0-禁用 1-启用
+     */
+    private Integer status;
 
     /**
      * 空间图片的最大总大小

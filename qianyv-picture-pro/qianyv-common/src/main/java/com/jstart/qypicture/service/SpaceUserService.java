@@ -31,6 +31,12 @@ public interface SpaceUserService extends IService<SpaceUser> {
      */
     boolean kickOutMember(Long spaceId, Long userId);
 
+
+    /**
+     * 离开空间
+     */
+    boolean quitSpace(Long spaceId);
+
     /**
      * 获取空间成员列表
      */
@@ -52,4 +58,5 @@ public interface SpaceUserService extends IService<SpaceUser> {
     List<SpaceUserVO> getSpaceUserVOList(List<SpaceUser> spaceUserList);
 
     SpaceUser getUserRoleInSpace(long loginIdAsLong, Long spaceId);
+
 }

@@ -52,9 +52,7 @@ public class SpringAiChatMemoryServiceImpl extends ServiceImpl<SpringAiChatMemor
         List<ChatMemoryVO> voList = memoryList.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
-        
-        // 反转列表，让时间早的在前面
-        java.util.Collections.reverse(voList);
+
         
         return voList;
     }

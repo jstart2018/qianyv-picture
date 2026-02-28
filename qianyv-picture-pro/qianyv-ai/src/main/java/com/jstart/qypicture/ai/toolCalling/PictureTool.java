@@ -9,7 +9,11 @@ import cn.hutool.http.Method;
 import cn.hutool.json.JSONUtil;
 import com.jstart.qypicture.ai.entity.QwenImageGenerateRequest;
 import com.jstart.qypicture.ai.enums.PictureSizeEnum;
+import com.jstart.qypicture.enums.PictureStatusEnum;
+import com.jstart.qypicture.model.dto.PictureEditDTO;
+import com.jstart.qypicture.model.entity.Blog;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
+import com.jstart.qypicture.service.BlogService;
 import com.jstart.qypicture.service.PictureService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -124,6 +128,13 @@ public class PictureTool {
                 // 上传图片到图床服务
                 log.info("开始上传图片到图床服务，图片URL：{}", imageUrl);
                 PictureUploadVO uploadResult = pictureService.upload(imageUrl, null);
+
+                PictureEditDTO pictureEditDTO = new PictureEditDTO();
+                pictureEditDTO.setId(uploadResult.getId());
+                pictureEditDTO.setReviewStatus(PictureStatusEnum.PASS.getValue());
+                pictureEditDTO.setReviewMessage("AI生成图片，自动审核通过");
+                pictureEditDTO.setReviewerId(StpUtil.getLoginIdAsLong());
+                pictureService.edit(pictureEditDTO);
                 log.info("生成图片成功，图片URL：{}", uploadResult.getThumbUrl());
                 return uploadResult.getThumbUrl();
             } catch (Exception e) {

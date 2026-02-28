@@ -4,16 +4,23 @@ package com.jstart.qypicture.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jstart.qypicture.auth.SpaceRoleEnum;
+import com.jstart.qypicture.auth.SystemRoleEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.enums.SpaceLevelEnum;
 import com.jstart.qypicture.exception.BusinessException;
+import com.jstart.qypicture.mapper.SpaPictureMapper;
 import com.jstart.qypicture.mapper.SpaceMapper;
+import com.jstart.qypicture.model.dto.PictureQueryListDTO;
 import com.jstart.qypicture.model.dto.SpaceQueryDTO;
+import com.jstart.qypicture.model.dto.SpaceUserQueryDTO;
+import com.jstart.qypicture.model.entity.SpaPicture;
 import com.jstart.qypicture.model.entity.Space;
 import com.jstart.qypicture.model.entity.SpaceUser;
 import com.jstart.qypicture.model.vo.SpaceVO;
+import com.jstart.qypicture.service.PictureService;
 import com.jstart.qypicture.service.SpaceService;
 import com.jstart.qypicture.service.SpaceUserService;
 import com.jstart.qypicture.service.UserService;
@@ -22,12 +29,15 @@ import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author 28435
@@ -51,6 +61,10 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     private TransactionTemplate transactionTemplate;
     @Resource
     private SpaceMapper spaceMapper;
+    @Resource
+    private PictureService pictureService;
+    @Resource
+    private SpaPictureMapper spaPictureMapper;
 
     /**
      * 创建空间
@@ -66,22 +80,21 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         //4、填充信息
         Space space = new Space();
         space.setUserId(userId);
-        space.setSpaceLevel(SpaceLevelEnum.COMMON.getValue()); //默认普通空间
+        space.setSpaceLevel(SpaceLevelEnum.FREE.getValue()); //默认普通空间
         space.setSpaceName(String.format("%s的%s", userService.getById(userId).getNickname(), "空间"));
         this.validSpace(space, true);
-        this.fillSpaceBySpaceLevel(space);
 
         // 6、为当前用户获取一个锁对象，在锁内完成事务提交，防止并发问题
         Object lock = userLockMap.computeIfAbsent(userId, k -> new Object());
         synchronized (lock) {
             Long newSpaceId = transactionTemplate.execute(status -> {
                 try {
-                    // 先查询数据库确认该用户是否已经有对应空间
+                    /*// 先查询数据库确认该用户是否已经有对应空间
                     if (this.lambdaQuery()
                             .eq(Space::getUserId, userId)
                             .exists()) {
                         throw new BusinessException(ResultEnum.PARAMS_ERROR, "只能创建一个空间");
-                    }
+                    }*/
                     // 创建空间
                     boolean saveResult = this.save(space);
                     ThrowUtils.throwIf(!saveResult, ResultEnum.OPERATION_ERROR);
@@ -93,6 +106,10 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                     spaceUser.setSpaceRole(SpaceRoleEnum.CREATOR.getKey());
                     boolean saveUserSaveResult = spaceUserService.save(spaceUser);
                     ThrowUtils.throwIf(!saveUserSaveResult, ResultEnum.OPERATION_ERROR, "添加空间成员关系失败");
+
+                    //填充空间容量相关信息
+                    fillSpaceBySpaceLevel(space);
+
                     return space.getId();
                 } finally {
                     // 清理锁对象，防止内存泄漏
@@ -130,12 +147,51 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      */
     @Override
     public boolean upgradeSpace(Long spaceId, Integer level) {
+        SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(level);
+        ThrowUtils.throwIf(spaceLevelEnum == null, ResultEnum.PARAMS_ERROR, "没有该空间等级");
+
         Space space = this.getById(spaceId);
         ThrowUtils.throwIf(space == null, ResultEnum.PARAMS_ERROR, "空间不存在");
         space.setSpaceLevel(level);
         this.validSpace(space, false);//校验参数
         fillSpaceBySpaceLevel(space);
-        return updateById(space);
+        return true;
+    }
+
+    /**
+     * 删除空间
+     *
+     * @param spaceId 空间id
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteSpace(Long spaceId) {
+        Space space = this.getById(spaceId);
+        ThrowUtils.throwIf(space == null, ResultEnum.PARAMS_ERROR, "空间不存在");
+        //1.校验权限
+        if (!StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue()) && !space.getUserId().equals(StpUtil.getLoginIdAsLong())) {
+            throw new BusinessException(ResultEnum.NO_AUTH_ERROR, "没有权限删除空间");
+        }
+
+        //2.删除空间成员关系
+        SpaceUser spaceUser = new SpaceUser();
+        spaceUser.setSpaceId(spaceId);
+        boolean removeSpaceUserResult = spaceUserService.remove(spaceUserService.getQueryWrapper(spaceUser));
+        ThrowUtils.throwIf(!removeSpaceUserResult, ResultEnum.OPERATION_ERROR, "删除空间成员关系失败");
+
+        //3.删除空间下的图片等相关数据
+        List<SpaPicture> spaPictures = spaPictureMapper
+                .selectList(new QueryWrapper<SpaPicture>().lambda().eq(SpaPicture::getSpaceId, spaceId));
+        List<Long> pictureIds = spaPictures.stream().map(SpaPicture::getId).toList();
+        pictureService.delete(pictureIds, spaceId);
+
+        //4.删除空间
+        boolean removeResult = this.removeById(spaceId);
+        ThrowUtils.throwIf(!removeResult, ResultEnum.OPERATION_ERROR, "删除空间失败");
+
+        return true;
+
     }
 
 
@@ -167,7 +223,14 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         }
     }
 
-
+    /**
+     * 获取空间信息列表
+     *
+     * @param spaceId   空间id
+     * @param userId    用户id
+     * @param spaceRole 空间角色
+     * @return 空间信息列表
+     */
     @Override
     public List<SpaceVO> getUserSpaceInfoList(Long spaceId, Long userId, HashSet<Integer> spaceRole) {
         List<SpaceVO> userSpaceList = spaceMapper.getUserSpaceList(spaceId, userId, spaceRole);
@@ -212,11 +275,48 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      */
     @Override
     public void fillSpaceBySpaceLevel(Space space) {
-        ThrowUtils.throwIf(space == null, ResultEnum.PARAMS_ERROR, "空间对象不能为空");
+        ThrowUtils.throwIf(space == null || space.getId() == null, ResultEnum.PARAMS_ERROR, "空间不能为空");
         ThrowUtils.throwIf(space.getSpaceLevel() == null, ResultEnum.PARAMS_ERROR, "空间级别错误");
         SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(space.getSpaceLevel());
         ThrowUtils.throwIf(spaceLevelEnum == null, ResultEnum.PARAMS_ERROR, "没有该空间级别");
 
+        boolean update = this.lambdaUpdate()
+                .set(Space::getSpaceLevel, spaceLevelEnum.getValue())
+                .set(Space::getMaxSize, spaceLevelEnum.getMaxSize())
+                .set(Space::getMaxCount, spaceLevelEnum.getMaxCount())
+                .eq(Space::getId, space.getId())
+                .update();
+        ThrowUtils.throwIf(!update, ResultEnum.OPERATION_ERROR, "更新空间信息失败");
+    }
+
+    @Override
+    public Page<List<SpaceVO>> listByPage(SpaceQueryDTO spaceQueryDTO) {
+
+        QueryWrapper<Space> qw = getQueryWrapper(spaceQueryDTO);
+        Page<Space> spaces = this.page(new Page<>(spaceQueryDTO.getCurrent(), spaceQueryDTO.getPageSize()), qw);
+
+        List<SpaceVO> spaceVOList = spaces.getRecords().stream().map(space ->
+                getUserSpaceInfoList(space.getId(), null, null).getFirst()
+        ).collect(Collectors.toList());
+        Page<List<SpaceVO>> page = new Page<>(spaces.getCurrent(), spaces.getSize(), spaces.getTotal());
+        page.setRecords(Collections.singletonList(spaceVOList));
+        return page;
+    }
+
+    /**
+     * 修改空间状态
+     *
+     * @param spaceId 空间id
+     * @param status  状态
+     * @return 是否成功
+     */
+    @Override
+    public boolean changeSpaceStatus(Long spaceId, Integer status) {
+        ThrowUtils.throwIf(spaceId == null || status == null, ResultEnum.PARAMS_ERROR);
+        return lambdaUpdate()
+                .set(Space::getStatus, status)
+                .eq(Space::getId, spaceId)
+                .update();
     }
 
 }

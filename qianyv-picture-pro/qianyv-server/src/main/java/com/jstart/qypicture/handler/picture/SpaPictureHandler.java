@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.auth.SpaceRoleEnum;
+import com.jstart.qypicture.auth.SystemRoleEnum;
 import com.jstart.qypicture.enums.PicturePlaceEnum;
 import com.jstart.qypicture.enums.ResultEnum;
+import com.jstart.qypicture.enums.UserStatusEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.mapper.SpaPictureMapper;
 import com.jstart.qypicture.model.UploadPictureResult;
@@ -25,6 +27,7 @@ import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Date;
@@ -57,6 +60,11 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
     public PictureUploadVO upload(Object inputSource, Long spaceId) {
 
         Space space = validateSpaceAuth(spaceId, SpaceRoleEnum.EDITOR);
+
+        //检查空间状态
+        if (!StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())){
+            ThrowUtils.throwIf(space.getStatus() == UserStatusEnum.DISABLE.getValue(), ResultEnum.NO_AUTH_ERROR, "空间已禁用");
+        }
         //校验空间额度
         if (space.getTotalCount() >= space.getMaxCount()) {
             throw new BusinessException(ResultEnum.OPERATION_ERROR, "空间余额不足");
@@ -105,14 +113,26 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public List<String> delete(List<Long> ids, Long spaceId) {
         //1.校验图片是否存在
         List<SpaPicture> pictureList = spaPictureMapper.selectByIds(ids);
         ThrowUtils.throwIf(pictureList == null || pictureList.isEmpty(), ResultEnum.NOT_FOUND_ERROR, "图片不存在");
         //2.校验空间权限
         validateSpaceAuth(spaceId, SpaceRoleEnum.EDITOR);
+        //3.检查空间状态
+        Space space = spaceService.getById(spaceId);
+        if (!StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())){
+            ThrowUtils.throwIf(space.getStatus() == UserStatusEnum.DISABLE.getValue(), ResultEnum.NO_AUTH_ERROR, "空间已禁用");
+        }
 
-        //3.删除图片
+        //4.更新空间信息（总数、总大小）
+        boolean updateResult = spaceService.lambdaUpdate().eq(Space::getId, spaceId)
+                .setSql("total_size = total_size-" + pictureList.stream().mapToLong(SpaPicture::getPicSize).sum())
+                .setSql("total_count = total_count- " + pictureList.size())
+                .update();
+        ThrowUtils.throwIf(!updateResult, ResultEnum.OPERATION_ERROR, "空间更新失败");
+        //5.删除图片
         int delete = spaPictureMapper.deleteByIds(ids);
         ThrowUtils.throwIf(delete <= 0, ResultEnum.OPERATION_ERROR, "图片删除失败");
 
@@ -127,12 +147,19 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
         Long spaceId = pictureEditDTO.getSpaceId();
         // 1. 空间权限校验
         validateSpaceAuth(spaceId, SpaceRoleEnum.EDITOR);
-        // 2. 校验图片存在且归属该空间
+
+        //2. 检查空间状态
+        Space space = spaceService.getById(spaceId);
+        if (!StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())){
+            ThrowUtils.throwIf(space.getStatus() == UserStatusEnum.DISABLE.getValue(), ResultEnum.NO_AUTH_ERROR, "空间已禁用");
+        }
+
+        // 3. 校验图片存在且归属该空间
         SpaPicture dbSpaPicture = spaPictureMapper.selectById(pictureEditDTO.getId());
         ThrowUtils.throwIf(dbSpaPicture == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
         ThrowUtils.throwIf(!Objects.equals(dbSpaPicture.getSpaceId(), spaceId),
                 ResultEnum.NO_AUTH_ERROR, "无权编辑该空间图片");
-        // 3. 仅更新允许编辑的字段（简介、标签等）
+        // 4. 仅更新允许编辑的字段（简介、标签等）
         SpaPicture updateSpaPicture = new SpaPicture();
         updateSpaPicture.setId(pictureEditDTO.getId());
         updateSpaPicture.setSpaceId(spaceId);
@@ -146,7 +173,15 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
     @Override
     public Page<PictureListVO> pageList(PictureQueryListDTO pictureQueryListDTO) {
 
+        // 1. 校验权限（只要有查看权限即可）
         validateSpaceAuth(pictureQueryListDTO.getSpaceId(), SpaceRoleEnum.VIEWER);
+
+        //2、检查空间状态
+        Space space = spaceService.getById(pictureQueryListDTO.getSpaceId());
+        if (!StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())){
+            ThrowUtils.throwIf(space.getStatus() == UserStatusEnum.DISABLE.getValue(), ResultEnum.NO_AUTH_ERROR, "空间已禁用");
+        }
+
 
         long current = pictureQueryListDTO.getCurrent();
         long pageSize = pictureQueryListDTO.getPageSize();
@@ -155,15 +190,16 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
         BeanUtils.copyProperties(pictureQueryListDTO, query);
         query.setSpaceId(pictureQueryListDTO.getSpaceId());
         QueryWrapper<SpaPicture> qw = getQueryWrapper(query);
-        qw.like("tags", pictureQueryListDTO.getSearchText())
+        qw.nested(i -> i.like("tags", pictureQueryListDTO.getSearchText())
                 .or()
-                .like("introduction", pictureQueryListDTO.getSearchText());
+                .like("introduction", pictureQueryListDTO.getSearchText()));
         Page<SpaPicture> page = spaPictureMapper.selectPage(new Page<>(current, pageSize), qw);
         List<PictureListVO> voList = page.getRecords().stream().map(p -> {
             PictureListVO vo = new PictureListVO();
             vo.setId(p.getId());
             vo.setThumbUrl(p.getThumbUrl());
             vo.setTags(p.getTags());
+            vo.setSpaceId(p.getSpaceId());
             vo.setIntroduction(p.getIntroduction());
             return vo;
         }).collect(Collectors.toList());
@@ -223,6 +259,17 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
 
     @Override
     public String downLoad(PictureDownLoadDTO pictureDownLoadDTO) {
+
+
+        // 1. 校验权限（只要有查看权限即可）
+        validateSpaceAuth(pictureDownLoadDTO.getSpaceId(), SpaceRoleEnum.VIEWER);
+
+        //2. 检查空间状态
+        Space space = spaceService.getById(pictureDownLoadDTO.getSpaceId());
+        if (!StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())){
+            ThrowUtils.throwIf(space.getStatus() == UserStatusEnum.DISABLE.getValue(), ResultEnum.NO_AUTH_ERROR, "空间已禁用");
+        }
+
         spaPictureMapper.update(new UpdateWrapper<SpaPicture>()
                 .setSql("download_count = download_count + 1")
                 .eq("id", pictureDownLoadDTO.getPictureId())

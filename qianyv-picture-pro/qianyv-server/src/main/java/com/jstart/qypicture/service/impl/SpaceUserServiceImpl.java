@@ -1,5 +1,6 @@
 package com.jstart.qypicture.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jstart.qypicture.auth.SpaceRoleEnum;
 import com.jstart.qypicture.enums.ResultEnum;
+import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.model.dto.SpaceUserAddDTO;
 import com.jstart.qypicture.model.dto.SpaceUserEditDTO;
 import com.jstart.qypicture.model.dto.SpaceUserQueryDTO;
@@ -76,6 +78,13 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         return spaceUser.getId();
     }
 
+    /**
+     * 获取空间成员数量
+     *
+     * @param spaceId 空间 id
+     * @param roleSet 统计的角色,null统计所有角色
+     * @return
+     */
     @Override
     public Long memberCountInSpace(Long spaceId, Set<Integer> roleSet) {
         ThrowUtils.throwIf(ObjUtil.isEmpty(spaceId), ResultEnum.PARAMS_ERROR);
@@ -101,6 +110,20 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         return this.remove(queryWrapper);
     }
 
+    @Override
+    public boolean quitSpace(Long spaceId) {
+        Space space = spaceService.getById(spaceId);
+        ThrowUtils.throwIf(space == null, ResultEnum.NOT_FOUND_ERROR, "空间不存在");
+        if (space.getUserId().equals(StpUtil.getLoginIdAsLong())) {
+            throw new BusinessException(ResultEnum.OPERATION_ERROR, "空间创建者不能退出空间");
+        }
+        SpaceUser spaceUser = new SpaceUser();
+        spaceUser.setSpaceId(spaceId);
+        spaceUser.setUserId(StpUtil.getLoginIdAsLong());
+        QueryWrapper<SpaceUser> queryWrapper = this.getQueryWrapper(spaceUser);
+        return this.remove(queryWrapper);
+    }
+
     /**
      * 查看空间成员列表
      */
@@ -122,7 +145,13 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         Set<Long> userIdSet = spaceUserList.stream().map(SpaceUser::getUserId).collect(Collectors.toSet());
         List<User> userList = userService.listByIds(userIdSet);
         Map<Long, String> userIdNameMap = userList.stream().collect(Collectors.toMap(User::getId, User::getNickname));
-        Map<Long, String> userIdAvatarMap = userList.stream().collect(Collectors.toMap(User::getId, User::getAvatar));
+        Map<Long, String> userIdAvatarMap
+                = userList.stream()
+                .collect(Collectors.toMap(
+                        User::getId,
+                        user -> user.getAvatar() == null ? "null" : user.getAvatar()
+                ));
+
         spaceUserVOList.forEach(spaceUserVO -> {
             spaceUserVO.setUserName(userIdNameMap.get(spaceUserVO.getUserId()));
             spaceUserVO.setUserAvatar(userIdAvatarMap.get(spaceUserVO.getUserId()));

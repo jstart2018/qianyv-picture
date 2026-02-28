@@ -96,7 +96,7 @@ public class PictureController {
     }
 
     /**
-     * 编辑图片
+     * 批量编辑图片
      */
     @PostMapping("/editByBatch")
     public Result<Boolean> editByBatch(@RequestBody List<PictureEditDTO> pictureEditDTOList) {
@@ -120,7 +120,7 @@ public class PictureController {
     }
 
     /**
-     * 图片分页查询（支持查询我发布的/我收藏的）
+     * 公共图片：图片分页查询（支持查询我发布的/我收藏的）
      */
     @PostMapping("/list/page")
     public Result<Page<PictureListVO>> listByPage(@RequestBody PicturePageQueryDTO picturePageQueryDTO) {
@@ -148,6 +148,7 @@ public class PictureController {
     @PostMapping("/download")
     public Result<String> pictureDownload(@RequestBody PictureDownLoadDTO pictureDownLoadDTO) {
 
+        StpUtil.getLoginIdAsLong();
         String url = pictureService.downLoad(pictureDownLoadDTO);
 
         return Result.success(url);
@@ -181,5 +182,12 @@ public class PictureController {
         }
     }
 
+
+    //统计图片数
+    @GetMapping("/count")
+    public Result<Long> count() {
+        Long count = pictureService.count();
+        return Result.success(count);
+    }
 
 }

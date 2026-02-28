@@ -2,11 +2,10 @@ package com.jstart.qypicture.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.jstart.qypicture.model.dto.BlogCreateDTO;
-import com.jstart.qypicture.model.dto.BlogListDTO;
-import com.jstart.qypicture.model.dto.BlogPageQueryDTO;
+import com.jstart.qypicture.model.dto.*;
 import com.jstart.qypicture.model.entity.Blog;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jstart.qypicture.model.vo.BlogAdminQueryVO;
 import com.jstart.qypicture.model.vo.BlogSimpleVO;
 import com.jstart.qypicture.model.vo.BlogsVO;
 
@@ -56,4 +55,17 @@ public interface BlogService extends IService<Blog> {
      * @return
      */
     List<BlogSimpleVO> getBlogSimpleVOList(List<Blog> blogList);
+
+    /**
+     * 管理员查询博客分页
+     * @param blogListDTO
+     * @return
+     */
+    Page<BlogAdminQueryVO> adminBlogPage(BlogListDTO blogListDTO);
+
+    /**
+     * 博客审核
+     * @param blogAuditDTO
+     */
+    void auditBlog(BlogAuditDTO blogAuditDTO);
 }

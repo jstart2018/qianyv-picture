@@ -1,8 +1,10 @@
 package com.jstart.qypicture.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.model.dto.SpaceQueryDTO;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jstart.qypicture.model.dto.SpaceUserQueryDTO;
 import com.jstart.qypicture.model.entity.Space;
 import com.jstart.qypicture.model.vo.SpaceVO;
 
@@ -33,6 +35,11 @@ public interface SpaceService extends IService<Space> {
     boolean upgradeSpace(Long spaceId, Integer level);
 
     /**
+     * 删除空间
+     */
+    boolean deleteSpace(Long spaceId);
+
+    /**
      * 校验图片空间数据，更新时使用
      */
     void validSpace(Space space, boolean add);
@@ -56,5 +63,17 @@ public interface SpaceService extends IService<Space> {
      */
     void fillSpaceBySpaceLevel(Space space);
 
+
+    /**
+     * 管理端：分页获取空间列表
+     * @param spaceQueryDTO
+     * @return
+     */
+    Page<List<SpaceVO>> listByPage(SpaceQueryDTO spaceQueryDTO);
+
+    /**
+     * 空间状态修改
+     */
+    boolean changeSpaceStatus(Long spaceId, Integer status);
 
 }

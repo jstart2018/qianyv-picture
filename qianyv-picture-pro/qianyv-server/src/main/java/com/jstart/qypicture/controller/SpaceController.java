@@ -1,10 +1,13 @@
 package com.jstart.qypicture.controller;
 
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jstart.qypicture.enums.ResultEnum;
+import com.jstart.qypicture.enums.UserStatusEnum;
 import com.jstart.qypicture.exception.BusinessException;
+import com.jstart.qypicture.model.dto.SpaceQueryDTO;
 import com.jstart.qypicture.model.dto.SpaceUserAddDTO;
 import com.jstart.qypicture.model.dto.SpaceUserEditDTO;
 import com.jstart.qypicture.model.dto.SpaceUserQueryDTO;
@@ -22,7 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 
 @RestController
-@RequestMapping("/space/")
+@RequestMapping("/space")
 public class SpaceController {
 
     @Resource
@@ -37,7 +40,7 @@ public class SpaceController {
      * @param userId 用户id
      * @return 空间id
      */
-    @GetMapping("checkHas")
+    @GetMapping("/checkHas")
     public Result<Long> checkHasSpace(@RequestParam("userId") Long userId) {
         if (userId == null) {
             return Result.error(ResultEnum.PARAMS_ERROR, "用户错误");
@@ -57,7 +60,7 @@ public class SpaceController {
      *
      * @return spaceId
      */
-    @GetMapping("add")
+    @GetMapping("/add")
     public Result<Long> addSpace() {
 
         long spaceId = spaceService.createSpace();
@@ -72,7 +75,7 @@ public class SpaceController {
      *
      * @return spaceId
      */
-    @GetMapping("addCategory")
+    @GetMapping("/addCategory")
     public Result<Long> addCategory(String categoryName) {
         return null;
     }
@@ -81,7 +84,7 @@ public class SpaceController {
     /**
      * 更改空间
      */
-    @PostMapping("edit")
+    @PostMapping("/edit")
     public Result<Boolean> editSpace(@RequestParam("spaceId") Long spaceId,
                                      @RequestParam("name") String name) {
         boolean result = spaceService.editSpace(spaceId, name);
@@ -94,7 +97,7 @@ public class SpaceController {
     /**
      * 空间升级
      */
-    @PostMapping("upgrade")
+    @PostMapping("/upgrade")
     public Result<Boolean> upgradeSpace(@RequestParam("spaceId") Long spaceId,
                                         @RequestParam("level") Integer level) {
         boolean result = spaceService.upgradeSpace(spaceId, level);
@@ -110,7 +113,7 @@ public class SpaceController {
      * @param spaceId 空间id
      * @return 空间信息
      */
-    @GetMapping("getSpaceInfo")
+    @GetMapping("/getSpaceInfo")
     public Result<SpaceVO> getSpaceInfo(@RequestParam("spaceId") Long spaceId) {
 
         SpaceVO spaceVO = spaceService.getUserSpaceInfoList(spaceId, null, null).getFirst();
@@ -125,15 +128,12 @@ public class SpaceController {
      * @param spaceRole 查看拥有该角色的空间
      * @return 空间信息
      */
-    @GetMapping("getUserSpaceList")
+    @GetMapping("/getUserSpaceList")
     public Result<List<SpaceVO>> getUserSpaceList(@RequestParam(value = "spaceRole") HashSet<Integer> spaceRole) {
 
         List<SpaceVO> spaceInfoList = null;
-        try {
             spaceInfoList = spaceService.getUserSpaceInfoList(null, StpUtil.getLoginIdAsLong(), spaceRole);
-        } catch (Exception e) {
-            throw new BusinessException(ResultEnum.NO_AUTH_ERROR);
-        }
+
 
         return Result.success(spaceInfoList);
 
@@ -142,7 +142,7 @@ public class SpaceController {
     /**
      * todo 邀请成员controller
      */
-    @PostMapping("inviteMember")
+    @PostMapping("/inviteMember")
     public Result<Boolean> inviteMember(@RequestParam("spaceId") Long spaceId,
                                         @RequestParam("userId") Long userId) {
         SpaceUserAddDTO spaceUserAddDTO = new SpaceUserAddDTO();
@@ -158,12 +158,24 @@ public class SpaceController {
     /**
      * 踢出成员
      */
-    @PostMapping("kickout")
+    @PostMapping("/kickout")
     public Result<Boolean> kickOutMember(@RequestParam("spaceId") Long spaceId,
                                          @RequestParam("userId") Long userId) {
         boolean result = spaceUserService.kickOutMember(spaceId, userId);
         if (!result) {
             return Result.error(ResultEnum.SYSTEM_ERROR, "踢出成员失败");
+        }
+        return Result.success(true);
+    }
+
+    /**
+     * 成员主动退出空间
+     */
+    @PostMapping("/quit")
+    public Result<Boolean> quitSpace(@RequestParam("spaceId") Long spaceId) {
+        boolean result = spaceUserService.quitSpace(spaceId);
+        if (!result) {
+            return Result.error(ResultEnum.SYSTEM_ERROR, "退出空间失败");
         }
         return Result.success(true);
     }
@@ -183,7 +195,7 @@ public class SpaceController {
     /**
      * 修改成员角色
      */
-    @PostMapping("editRole")
+    @PostMapping("/editRole")
     public Result<Boolean> editUserRole(@RequestBody SpaceUserEditDTO spaceUserEditDTO) {
         boolean result = spaceUserService.editUserRole(spaceUserEditDTO);
         if (!result) {
@@ -192,5 +204,60 @@ public class SpaceController {
         return Result.success(true);
     }
 
+
+    /**
+     * 删除空间
+     */
+    @DeleteMapping("/delete")
+    public Result<Boolean> deleteSpace(@RequestParam("spaceId") Long spaceId) {
+        boolean result = spaceService.deleteSpace(spaceId);
+        if (!result) {
+            return Result.error(ResultEnum.SYSTEM_ERROR, "删除空间失败");
+        }
+        return Result.success(true);
+    }
+
+    // ...管理端功能===========================================================
+
+    //统计空间总数
+    @GetMapping("/count")
+    @SaCheckRole("admin")
+    public Result<Long> count() {
+        long count = spaceService.count();
+        return Result.success(count);
+    }
+
+    /**
+     * 管理端：分页获取空间信息
+     *
+     * @param spaceQueryDTO
+     * @return
+     */
+    @PostMapping("/list/page")
+    @SaCheckRole("admin")
+    public Result<Page<List<SpaceVO>>> adminListSpaceByPage(@RequestBody SpaceQueryDTO spaceQueryDTO) {
+        ThrowUtils.throwIf(spaceQueryDTO == null, ResultEnum.PARAMS_ERROR, "请求参数错误");
+
+        Page<List<SpaceVO>> listPage = spaceService.listByPage(spaceQueryDTO);
+        return Result.success(listPage);
+    }
+
+    /**
+     * 改变空间状态（禁用/启用）
+     */
+    @PostMapping("/changeStatus")
+    @SaCheckRole("admin")
+    public Result<Boolean> changeSpaceStatus(@RequestParam("spaceId") Long spaceId,
+                                              @RequestParam("status") Integer status) {
+        ThrowUtils.throwIf(spaceId == null || status == null, ResultEnum.PARAMS_ERROR, "请求参数错误");
+        UserStatusEnum userStatusEnum = UserStatusEnum.getEnumByValue(status);
+        ThrowUtils.throwIf(userStatusEnum == null, ResultEnum.PARAMS_ERROR, "状态参数错误");
+
+        boolean result = spaceService.changeSpaceStatus(spaceId, status);
+        if (!result) {
+            return Result.error(ResultEnum.SYSTEM_ERROR, "改变空间状态失败");
+        }
+        return Result.success(true);
+    }
 
 }

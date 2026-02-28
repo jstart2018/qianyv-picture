@@ -146,7 +146,8 @@ create table if not exists space
     id          bigint auto_increment comment 'id' primary key,
     user_id     bigint                             not null comment '创建用户 id',
     space_name  varchar(128)                       null comment '空间名称',
-    space_level int      default 0                 null comment '空间级别：0-普通版 1-专业版 2-旗舰版',
+    space_level int      default 0                 null comment '空间级别：0-免费版 1-普通版 2-专业版 3-旗舰版',
+    status      tinyint  default 1                 null comment '状态：0-禁用 1-启用',
     max_size    bigint   default 0                 null comment '空间图片的最大总大小',
     max_count   bigint   default 0                 null comment '空间图片的最大数量',
     total_size  bigint   default 0                 null comment '当前空间下图片的总大小',
@@ -165,7 +166,7 @@ drop table if exists space_user;
 create table if not exists space_user
 (
     id          bigint auto_increment comment 'id' primary key,
-        space_id    bigint                             not null comment '空间 id',
+    space_id    bigint                             not null comment '空间 id',
     user_id     bigint                             not null comment '用户 id',
     space_role  tinyint  default '3'               not null comment '空间角色：0-creator；1-admin；2-editor；3-viewer',
     status      tinyint  default '1'               not null comment '状态：0-禁用；1-启用',

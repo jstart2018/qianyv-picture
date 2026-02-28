@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jstart.qypicture.constant.RedisKey;
 import com.jstart.qypicture.constant.UserConstant;
 import com.jstart.qypicture.enums.ResultEnum;
+import com.jstart.qypicture.enums.UserStatusEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.model.dto.ChangePasswordDTO;
 import com.jstart.qypicture.model.entity.Follow;
@@ -110,6 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //4. 不存在则注册
         if (this.count(getQueryWrapper(user)) == 0) {
             user.setNickname("千语" + ((int) ((Math.random() * 9 + 1) * 100000)));
+            user.setAvatar(UserConstant.USER_DEFAULT_AVATAR);
             user.setPassword(userLoginByCodeDTO.getEmailOrPhone());//初始化密码和账号一致
             try {
                 this.saveOrUpdate(user);
@@ -120,6 +122,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         user = this.getOne(getQueryWrapper(user));
         //5. 存在则登录
+        //校验账号状态
+        if (user.getStatus() != UserStatusEnum.NORMAL.getValue()) {
+            throw new BusinessException(ResultEnum.FORBIDDEN_ERROR, "账号状态异常");
+        }
         StpUtil.login(user.getId());
 
         //6. 删除验证码
@@ -131,14 +137,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public void loginWithPassword(UserLoginByPasswordDTO userLoginByPasswordDTO) {
         // 查询用户是否存在
-        User user = new User();
-        user.setPassword(SaSecureUtil.sha256(userLoginByPasswordDTO.getPassword()));
+        User user = null;
         if (userLoginByPasswordDTO.getAccount().contains("@")) {
-            user.setEmail(userLoginByPasswordDTO.getAccount());
+            user = lambdaQuery()
+                    .eq(User::getEmail, userLoginByPasswordDTO.getAccount())
+                    .eq(User::getPassword, SaSecureUtil.sha256(userLoginByPasswordDTO.getPassword()))
+                    .one();
         } else {
-            user.setPhone(userLoginByPasswordDTO.getAccount());
+            user = lambdaQuery()
+                    .eq(User::getPhone, userLoginByPasswordDTO.getAccount())
+                    .eq(User::getPassword, SaSecureUtil.sha256(userLoginByPasswordDTO.getPassword()))
+                    .one();
         }
-        user = this.getOne(getQueryWrapper(user));
+
         ThrowUtils.throwIf(user == null, ResultEnum.NOT_FOUND_ERROR, "账号或密码错误");
         //存在就登录
         StpUtil.login(user.getId());
@@ -155,17 +166,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         Integer gender = user.getGender();
         String tag = user.getTag();
         String introduction = user.getIntroduction();
+        Date createTime = user.getCreateTime();
+        Date lastLoginTime = user.getLastLoginTime();
+        Date deleteTime = user.getDeleteTime();
 
         QueryWrapper<User> qw = new QueryWrapper<>();
         qw.eq(id != null, "id", id);
-        qw.eq(!StringUtils.isBlank(email), "email", email);
-        qw.eq(!StringUtils.isBlank(phone), "phone", phone);
+        qw.like(!StringUtils.isBlank(email), "email", email);
+        qw.like(!StringUtils.isBlank(phone), "phone", phone);
         qw.like(!StringUtils.isBlank(nickname), "nickname", nickname);
         qw.eq(role != null, "role", role);
         qw.eq(status != null, "status", status);
         qw.eq(gender != null, "gender", gender);
         qw.like(!StringUtils.isBlank(tag), "tag", tag);
         qw.like(!StringUtils.isBlank(introduction), "introduction", introduction);
+        //时间过滤，小于
+        qw.ge(createTime != null, "create_time", createTime);
+        qw.ge(lastLoginTime != null, "last_login_time", lastLoginTime);
+        qw.isNotNull(deleteTime == null,"delete_time");// 时间字段为空时，查询已删除的用户
+
+        qw.orderBy(true,true,"role");
+        qw.orderBy(true, false, "delete_time"); // 降序
+        qw.orderBy(true, false, "create_time"); // 降序
+        qw.orderBy(true, false, "update_time"); // 降序
         return qw;
     }
 
@@ -336,7 +359,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 LocalDate.now(),
                 UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12),
                 suffix);
-        String key = String.format("avatar/%s/%s", loginUserId, fileName);
+        String key = String.format("avatar/%s", fileName);
 
         // 4. 上传新头像到COS
         File tempFile = null;
@@ -362,7 +385,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         // 6. 删除旧头像（仅删除COS上的头像）
         String oldAvatar = user.getAvatar();
-        if (oldAvatar != null && oldAvatar.startsWith(cosClientConfig.getHost())) {
+        if (oldAvatar != null  //不为空
+                && oldAvatar.startsWith(cosClientConfig.getHost()) // 以COS域名开头
+                && !oldAvatar.equals(UserConstant.USER_DEFAULT_AVATAR)) // 不是默认头像，默认头像不删除
+        {
             // 从COS URL中提取key
             String oldKey = oldAvatar.substring(cosClientConfig.getHost().length() + 1);
             try {

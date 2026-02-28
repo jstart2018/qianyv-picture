@@ -5,20 +5,16 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jstart.qypicture.auth.SystemRoleEnum;
 import com.jstart.qypicture.constant.RedisKey;
+import com.jstart.qypicture.enums.BlogAuditEnum;
 import com.jstart.qypicture.enums.CollectionEnum;
 import com.jstart.qypicture.enums.ResultEnum;
 import com.jstart.qypicture.exception.BusinessException;
 import com.jstart.qypicture.mapper.PubPictureMapper;
-import com.jstart.qypicture.model.dto.BlogCreateDTO;
-import com.jstart.qypicture.model.dto.BlogListDTO;
-import com.jstart.qypicture.model.dto.BlogPageQueryDTO;
-import com.jstart.qypicture.model.dto.PictureEditDTO;
+import com.jstart.qypicture.model.dto.*;
 import com.jstart.qypicture.model.entity.*;
-import com.jstart.qypicture.model.vo.BlogAuthorVO;
-import com.jstart.qypicture.model.vo.BlogSimpleVO;
-import com.jstart.qypicture.model.vo.BlogsVO;
-import com.jstart.qypicture.model.vo.PictureListVO;
+import com.jstart.qypicture.model.vo.*;
 import com.jstart.qypicture.service.*;
 import com.jstart.qypicture.mapper.BlogMapper;
 import com.jstart.qypicture.utils.ThrowUtils;
@@ -61,8 +57,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
     private PicCategoryService picCategoryService;
 
 
-
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createBlog(BlogCreateDTO blogCreateDTO) {
@@ -85,7 +79,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
             pictureEditDTO.setBlogId(blog.getId());
             pictureEditDTO.setSpaceId(null);
             //如果没有设置标签就设置为分类名
-            if (StrUtil.isBlank(pictureEditDTO.getTags())){
+            if (StrUtil.isBlank(pictureEditDTO.getTags())) {
                 PicCategory picCategory = picCategoryService.getById(pictureEditDTO.getCategoryId());
                 pictureEditDTO.setTags(picCategory.getCategoryName());
             }
@@ -124,11 +118,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
 
     /**
      * 博客游标查询
+     *
      * @param blogListDTO
      * @return
      */
     @Override
     public List<BlogsVO> selectList(BlogListDTO blogListDTO) {
+        blogListDTO.setReviewStatus(BlogAuditEnum.PASS.getValue());
         QueryWrapper<Blog> queryWrapper = getQueryWrapper(blogListDTO);
 
         //每次查五条
@@ -144,11 +140,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
 
     /**
      * 博客分页查询
+     *
      * @param blogListDTO
      * @return
      */
     @Override
     public List<BlogsVO> selectListByPage(BlogListDTO blogListDTO) {
+        blogListDTO.setReviewStatus(BlogAuditEnum.PASS.getValue());
         QueryWrapper<Blog> queryWrapper = getQueryWrapper(blogListDTO);
 
         //分页查询
@@ -255,6 +253,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
         if (blogList == null || blogList.size() == 0) {
             return Collections.emptyList();
         }
+        //非管理员过滤掉未审核的博客
+        if (!StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())) {
+            blogList = blogList.stream()
+                    .filter(blog -> blog.getReviewStatus() == BlogAuditEnum.PASS.getValue())
+                    .collect(Collectors.toList());
+        }
 
         List<BlogsVO> blogsVOList = blogList.stream().map(blog -> {
             Long id = blog.getId();
@@ -311,6 +315,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
 
     /**
      * 博客分页查询（支持查询我发布的/我点赞的/我收藏的）
+     *
      * @param dto
      * @return
      */
@@ -321,7 +326,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
         Boolean myCollect = dto.getMyCollect();
         String searchText = dto.getSearchText();
         Integer isRecommend = dto.getIsRecommend();
-        Integer reviewStatus = dto.getReviewStatus();
+        Integer reviewStatus = BlogAuditEnum.PASS.getValue();
 
         QueryWrapper<Blog> qw = new QueryWrapper<>();
         List<Long> blogIds = null;
@@ -390,6 +395,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
 
     /**
      * 将Blog列表转换为BlogSimpleVO列表（不包含图片）
+     *
      * @param blogList
      * @return
      */
@@ -432,6 +438,58 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog>
         });
 
         return blogSimpleVOList;
+    }
+
+    @Override
+    public Page<BlogAdminQueryVO> adminBlogPage(BlogListDTO blogListDTO) {
+        QueryWrapper<Blog> queryWrapper = getQueryWrapper(blogListDTO);
+        Page<Blog> blogPage = this.page(new Page<>(blogListDTO.getCurrent(), blogListDTO.getPageSize()), queryWrapper);
+
+        Page<BlogAdminQueryVO> voPage = new Page<>(blogPage.getCurrent(), blogPage.getSize(), blogPage.getTotal());
+        voPage.setRecords(blogPage.getRecords().stream().map(blog -> {
+            BlogAdminQueryVO blogAdminQueryVO = new BlogAdminQueryVO();
+            BeanUtils.copyProperties(blog, blogAdminQueryVO);
+            //填充审核人
+            User user = userservice.getById(blog.getReviewerId());
+            blogAdminQueryVO.setReviewerName(user.getNickname());
+            return blogAdminQueryVO;
+        }).collect(Collectors.toList()));
+
+        return voPage;
+    }
+
+    @Override
+    public void auditBlog(BlogAuditDTO blogAuditDTO) {
+        Blog blog = this.getById(blogAuditDTO.getId());
+        ThrowUtils.throwIf(blog == null, ResultEnum.NOT_FOUND_ERROR, "博客不存在");
+
+        if (blogAuditDTO.getReviewMessage() == null){
+            blogAuditDTO.setReviewMessage("无");
+        }
+
+        //审核信息填充
+        if (BlogAuditEnum.getEnumByValue(blogAuditDTO.getReviewStatus()) == null) {
+            throw new BusinessException(ResultEnum.PARAMS_ERROR, "审核状态不合法");
+        }
+        blog.setReviewStatus(blogAuditDTO.getReviewStatus());
+        blog.setReviewerId(StpUtil.getLoginIdAsLong());
+        blog.setReviewTime(new Date());
+        blog.setReviewMessage(blogAuditDTO.getReviewMessage());
+        //更新博客审核状态
+        boolean result = this.updateById(blog);
+        ThrowUtils.throwIf(!result, ResultEnum.SYSTEM_ERROR, "审核失败，请稍后再试");
+
+        //同步更新图片审核状态
+        this.getBlogVOList(List.of(blog)).get(0).getPictureVOList().forEach(pictureVO -> {
+            PictureEditDTO pictureEditDTO = new PictureEditDTO();
+            pictureEditDTO.setId(pictureVO.getId());
+            pictureEditDTO.setReviewStatus(blogAuditDTO.getReviewStatus());
+            pictureEditDTO.setReviewerId(StpUtil.getLoginIdAsLong());
+            pictureEditDTO.setReviewTime(new Date());
+            pictureEditDTO.setReviewMessage(blogAuditDTO.getReviewMessage()+"(跟随博客审核结果)");
+            pictureService.edit(pictureEditDTO);
+        });
+
     }
 }
 

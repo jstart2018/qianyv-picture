@@ -37,6 +37,7 @@
         u.id,
         u.nickname,
         u.avatar,
+        u.role,
         u.gender,
         u.introduction,
         u.email,
