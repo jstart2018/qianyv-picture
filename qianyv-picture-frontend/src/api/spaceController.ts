@@ -25,6 +25,21 @@ export async function addCategory(
   })
 }
 
+/** 此处后端没有提供注释 POST /space/changeStatus */
+export async function changeSpaceStatus(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.changeSpaceStatusParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultBoolean>('/space/changeStatus', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 GET /space/checkHas */
 export async function checkHasSpace(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -33,6 +48,29 @@ export async function checkHasSpace(
 ) {
   return request<API.ResultLong>('/space/checkHas', {
     method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 GET /space/count */
+export async function count1(options?: { [key: string]: any }) {
+  return request<API.ResultLong>('/space/count', {
+    method: 'GET',
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 DELETE /space/delete */
+export async function deleteSpace(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.deleteSpaceParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultBoolean>('/space/delete', {
+    method: 'DELETE',
     params: {
       ...params,
     },
@@ -119,6 +157,36 @@ export async function kickOutMember(
   options?: { [key: string]: any }
 ) {
   return request<API.ResultBoolean>('/space/kickout', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /space/list/page */
+export async function adminListSpaceByPage(
+  body: API.SpaceQueryDTO,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultPageListSpaceVO>('/space/list/page', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /space/quit */
+export async function quitSpace(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.quitSpaceParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultBoolean>('/space/quit', {
     method: 'POST',
     params: {
       ...params,

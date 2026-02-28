@@ -1,17 +1,27 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { message } from 'ant-design-vue'
-import { getSpaceInfo, editSpace, upgradeSpace } from '@/api/spaceController'
+import { ref, watch, h } from 'vue'
+import { message, Modal } from 'ant-design-vue'
+import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
+import {
+  getSpaceInfo,
+  editSpace,
+  upgradeSpace,
+  deleteSpace,
+  quitSpace,
+} from '@/api/spaceController'
 
 interface Props {
   show: boolean
   spaceId: number | null
+  role?: number
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'updated'): void
+  (e: 'deleted'): void
+  (e: 'quit'): void
 }>()
 
 // 空间详情
@@ -26,9 +36,10 @@ const upgradeOptions = ref<{ key: number; title: string; desc: string }[]>([])
 
 // 空间级别映射
 const levelMap: Record<number, { label: string; class: string }> = {
-  0: { label: '普通版', class: 'level-0' },
-  1: { label: '专业版', class: 'level-1' },
-  2: { label: '旗舰版', class: 'level-2' },
+  0: { label: '免费版', class: 'level-0' },
+  1: { label: '普通版', class: 'level-1' },
+  2: { label: '专业版', class: 'level-2' },
+  3: { label: '旗舰版', class: 'level-3' },
 }
 
 // 获取空间详情
@@ -118,8 +129,9 @@ const openUpgradeModal = () => {
 
   const currentLevel = spaceDetail.value.spaceLevel || 0
   upgradeOptions.value = [
-    { key: 1, title: '专业版', desc: '更大容量，适合小团队使用' },
-    { key: 2, title: '旗舰版', desc: '无限可能，适合企业级应用' },
+    { key: 1, title: '普通版', desc: '基础容量，适合个人使用' },
+    { key: 2, title: '专业版', desc: '更大容量，适合小团队使用' },
+    { key: 3, title: '旗舰版', desc: '无限可能，适合企业级应用' },
   ].filter((opt) => opt.key > currentLevel)
 
   if (upgradeOptions.value.length === 0) {
@@ -165,6 +177,87 @@ const formatFileSize = (size?: number) => {
   if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB'
   if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024)).toFixed(2) + ' MB'
   return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+}
+
+// 删除空间
+const handleDeleteSpace = () => {
+  if (!props.spaceId) return
+
+  Modal.confirm({
+    title: '确认删除空间',
+    icon: h(ExclamationCircleOutlined),
+    content: h('div', [
+      h(
+        'p',
+        { style: { marginBottom: '8px', color: '#ff4d4f', fontWeight: '600' } },
+        '此操作不可撤销！',
+      ),
+      h('p', { style: { marginBottom: '4px', color: '#666' } }, '删除空间将会：'),
+      h('ul', { style: { paddingLeft: '20px', color: '#666', fontSize: '13px' } }, [
+        h('li', '永久删除该空间的所有图片'),
+        h('li', '移除所有成员的访问权限'),
+        h('li', '清除所有空间数据'),
+      ]),
+    ]),
+    okText: '确认删除',
+    okType: 'danger',
+    cancelText: '取消',
+    async onOk() {
+      try {
+        const res = await deleteSpace({ spaceId: props.spaceId! })
+        if (res.data && res.data.code === 0) {
+          message.success('空间已删除')
+          emit('close')
+          emit('deleted')
+        } else {
+          message.error(res.data?.message || '删除失败')
+        }
+      } catch (err) {
+        console.error('删除空间失败:', err)
+        message.error('删除失败，请重试')
+      }
+    },
+  })
+}
+
+// 退出空间
+const handleQuitSpace = () => {
+  if (!props.spaceId) return
+
+  Modal.confirm({
+    title: '确认退出空间',
+    icon: h(ExclamationCircleOutlined),
+    content: h('div', [
+      h(
+        'p',
+        { style: { marginBottom: '8px', color: '#d97706', fontWeight: '600' } },
+        '退出后将无法访问该空间的内容',
+      ),
+      h(
+        'p',
+        { style: { color: '#666', fontSize: '13px' } },
+        '如需重新加入，需要空间管理员重新邀请您。',
+      ),
+    ]),
+    okText: '确认退出',
+    okType: 'danger',
+    cancelText: '取消',
+    async onOk() {
+      try {
+        const res = await quitSpace({ spaceId: props.spaceId! })
+        if (res.data && res.data.code === 0) {
+          message.success('已退出空间')
+          emit('close')
+          emit('quit')
+        } else {
+          message.error(res.data?.message || '退出失败')
+        }
+      } catch (err) {
+        console.error('退出空间失败:', err)
+        message.error('退出失败，请重试')
+      }
+    },
+  })
 }
 </script>
 
@@ -223,10 +316,10 @@ const formatFileSize = (size?: number) => {
                 <span class="info-label">空间级别</span>
                 <div class="level-wrapper">
                   <span class="level-badge" :class="levelMap[spaceDetail.spaceLevel]?.class">
-                    {{ levelMap[spaceDetail.spaceLevel]?.label || '普通版' }}
+                    {{ levelMap[spaceDetail.spaceLevel]?.label || '免费版' }}
                   </span>
                   <button
-                    v-if="spaceDetail.spaceLevel < 2"
+                    v-if="spaceDetail.spaceLevel < 3"
                     class="upgrade-btn"
                     @click="openUpgradeModal"
                   >
@@ -265,11 +358,63 @@ const formatFileSize = (size?: number) => {
                 <span class="info-label">成员数量</span>
                 <span class="info-value">{{ spaceDetail.memberCount || 1 }} 人</span>
               </div>
-
               <!-- 创建时间 -->
               <div class="info-item" v-if="spaceDetail.createTime">
                 <span class="info-label">创建时间</span>
                 <span class="info-value">{{ spaceDetail.createTime }}</span>
+              </div>
+
+              <!-- 退出空间 - 非创建者可见 -->
+              <div v-if="role !== 0" class="danger-zone quit-zone">
+                <div class="danger-zone-title quit-zone-title">退出空间</div>
+                <div class="danger-zone-content">
+                  <div class="danger-info">
+                    <span class="danger-label">退出空间</span>
+                    <span class="danger-desc">退出后需管理员重新邀请才能加入</span>
+                  </div>
+                  <button class="quit-space-btn" @click="handleQuitSpace">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      style="width: 14px; height: 14px; margin-right: 4px"
+                    >
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    退出空间
+                  </button>
+                </div>
+              </div>
+
+              <!-- 危险操作区域 - 仅创建者可见 -->
+              <div v-if="role === 0" class="danger-zone">
+                <div class="danger-zone-title">危险操作</div>
+                <div class="danger-zone-content">
+                  <div class="danger-info">
+                    <span class="danger-label">删除空间</span>
+                    <span class="danger-desc">删除后所有数据将永久丢失，无法恢复</span>
+                  </div>
+                  <button class="delete-space-btn" @click="handleDeleteSpace">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      style="width: 14px; height: 14px; margin-right: 4px"
+                    >
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path
+                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                      ></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                    删除空间
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -531,16 +676,21 @@ const formatFileSize = (size?: number) => {
 }
 
 .level-0 {
+  background: #f0f0f0;
+  color: #8c8c8c;
+}
+
+.level-1 {
   background: #e0f2fe;
   color: #0369a1;
 }
 
-.level-1 {
+.level-2 {
   background: #fef3c7;
   color: #d97706;
 }
 
-.level-2 {
+.level-3 {
   background: #fce7f3;
   color: #db2777;
 }
@@ -697,5 +847,102 @@ const formatFileSize = (size?: number) => {
 
 .cancel-btn:hover {
   background: #e2e8f0;
+}
+
+/* 危险操作区域 */
+.danger-zone {
+  margin-top: 8px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.danger-zone-title {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #dc2626;
+  background: #fef2f2;
+  border-bottom: 1px solid #fecaca;
+}
+
+.danger-zone-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #fff;
+}
+
+.danger-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.danger-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.danger-desc {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.delete-space-btn {
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  background: #fff;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.delete-space-btn:hover {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* 退出空间区域 */
+.quit-zone {
+  border-color: #fed7aa;
+}
+
+.quit-zone-title {
+  color: #d97706 !important;
+  background: #fffbeb !important;
+  border-bottom-color: #fed7aa !important;
+}
+
+.quit-space-btn {
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  background: #fff;
+  color: #d97706;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.quit-space-btn:hover {
+  background: #d97706;
+  color: #fff;
+  border-color: #d97706;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
 }
 </style>

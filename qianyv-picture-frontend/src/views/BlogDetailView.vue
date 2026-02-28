@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import * as blogApi from '@/api/blogController'
 import UserAvatar from '@/components/UserAvatar.vue'
 import CommentSection from '@/components/CommentSection.vue'
 import { useBlogActions } from '@/composables'
+import Masonry from 'masonry-layout'
 
 const route = useRoute()
+const router = useRouter()
 const blogId = computed(() => route.params.id as string)
 
 // 博客详情
@@ -62,8 +64,49 @@ watch([composableLikeCount, composableCollectCount], ([newLikeCount, newCollectC
   collectCount.value = newCollectCount
 })
 
+// ==================== Masonry 瀑布流 ====================
+const imagesContainer = ref<HTMLElement | null>(null)
+let masonryInstance: Masonry | null = null
+
+// 打开图片详情页（在新标签页中打开）
+const openPictureDetail = (picture: API.PictureListVO) => {
+  if (!picture || !picture.id) return
+  const isHorizontal = picture.picScale === undefined || picture.picScale >= 1
+  const routeUrl = router.resolve({
+    name: isHorizontal ? 'horizontalPictureDetail' : 'verticalPictureDetail',
+    params: { id: picture.id },
+  })
+  window.open(routeUrl.href, '_blank')
+}
+
+// 初始化 Masonry 布局
+const initMasonry = () => {
+  if (!imagesContainer.value) return
+  if (masonryInstance) {
+    masonryInstance.destroy()
+  }
+  masonryInstance = new Masonry(imagesContainer.value, {
+    itemSelector: '.image-item',
+    columnWidth: '.image-item',
+    gutter: 12,
+    percentPosition: true,
+    transitionDuration: '0.3s',
+  })
+}
+
+// 图片加载完成后重新布局
+const handleImageLoad = () => {
+  if (masonryInstance) {
+    masonryInstance.layout()
+  }
+}
+
 onMounted(async () => {
   await fetchBlogDetail()
+  if (blog.value?.pictureVOList && blog.value.pictureVOList.length > 0) {
+    await nextTick()
+    initMasonry()
+  }
 })
 </script>
 
@@ -178,12 +221,29 @@ onMounted(async () => {
           <p class="blog-text">{{ blog.content || '暂无内容' }}</p>
         </div>
       </div>
-
       <!-- 博客图片区域 -->
       <div v-if="blog.pictureVOList && blog.pictureVOList.length > 0" class="blog-images-section">
-        <div class="blog-images">
-          <div v-for="pic in blog.pictureVOList" :key="pic.id" class="image-item">
-            <img :src="pic.thumbUrl" :alt="pic.tags" />
+        <div ref="imagesContainer" class="blog-images">
+          <div
+            v-for="pic in blog.pictureVOList"
+            :key="pic.id"
+            class="image-item"
+            @click="openPictureDetail(pic)"
+          >
+            <img :src="pic.thumbUrl" :alt="pic.tags" @load="handleImageLoad" />
+            <div class="image-overlay">
+              <div class="image-zoom">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>view</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -821,10 +881,9 @@ onMounted(async () => {
   margin-top: 16px;
 }
 
+/* Masonry 瀑布流布局 - 等宽3列 */
 .blog-images {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  position: relative;
 }
 
 .image-item {
@@ -834,6 +893,8 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  width: calc(33.333% - 8px);
+  margin-bottom: 12px;
 }
 
 .image-item:hover {
@@ -848,10 +909,54 @@ onMounted(async () => {
   object-fit: cover;
 }
 
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-item:hover .image-overlay {
+  opacity: 1;
+}
+
+.image-zoom {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.image-zoom svg {
+  width: 15px;
+  height: 15px;
+  stroke: rgba(255, 255, 255, 0.6);
+  stroke-width: 2;
+  fill: none;
+}
+
+.image-zoom span {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* 响应式设计 */
 @media (max-width: 1200px) {
-  .blog-images {
-    grid-template-columns: repeat(2, 1fr);
+  .image-item {
+    width: calc(50% - 6px);
   }
 }
 
@@ -865,13 +970,12 @@ onMounted(async () => {
     align-items: flex-start;
     gap: 12px;
   }
-
   .blog-title {
     font-size: 20px;
   }
 
-  .blog-images {
-    grid-template-columns: 1fr;
+  .image-item {
+    width: 100%;
   }
 }
 </style>

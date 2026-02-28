@@ -1,15 +1,24 @@
 <script setup lang="ts">
 import { watch, onMounted, ref, computed, nextTick } from 'vue'
 import { usePicture } from '../../composables/usePicture'
-import { pictureDownload } from '@/api/pictureController'
-import { message } from 'ant-design-vue'
+import { pictureDownload, delete2 as deletePicture } from '@/api/pictureController'
+import { message, Modal } from 'ant-design-vue'
+import { h } from 'vue'
+import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
 
 interface Props {
   spaceId: number | null
   refreshKey?: number
+  canDelete?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  canDelete: false,
+})
+
+const emit = defineEmits<{
+  (e: 'deleted'): void
+}>()
 
 const {
   pictures,
@@ -129,6 +138,51 @@ const handleDownload = async (picture: any) => {
     downloadingId.value = null
   }
 }
+
+// 删除状态
+const deletingId = ref<number | null>(null)
+
+// 删除图片
+const handleDelete = (picture: any) => {
+  if (!props.spaceId) {
+    message.error('空间ID不能为空')
+    return
+  }
+
+  Modal.confirm({
+    title: '确认删除图片',
+    icon: h(ExclamationCircleOutlined),
+    content: '确定删除该图片吗？删除后不可恢复。',
+    okText: '确认删除',
+    okButtonProps: { danger: true },
+    cancelText: '取消',
+    async onOk() {
+      deletingId.value = picture.id
+      try {
+        const res = await deletePicture({
+          id: picture.id,
+          spaceId: props.spaceId!,
+        })
+        if (res.data && res.data.code === 0) {
+          message.success('删除成功')
+          // 刷新图片列表
+          if (props.spaceId) {
+            fetchPictures(props.spaceId)
+          }
+          // 通知父组件刷新空间信息
+          emit('deleted')
+        } else {
+          message.error(res.data?.message || '删除失败')
+        }
+      } catch (err) {
+        console.error('删除失败:', err)
+        message.error('删除失败，请重试')
+      } finally {
+        deletingId.value = null
+      }
+    },
+  })
+}
 </script>
 
 <template>
@@ -209,6 +263,31 @@ const handleDownload = async (picture: any) => {
                 </svg>
                 <span v-else class="loading-dot"></span>
                 <span class="download-text">下载</span>
+              </button>
+              <!-- 删除按钮 -->
+              <button
+                v-if="canDelete"
+                class="delete-btn"
+                :class="{ deleting: deletingId === picture.id }"
+                :disabled="deletingId === picture.id"
+                @click.stop="handleDelete(picture)"
+                title="删除图片"
+              >
+                <svg
+                  v-if="deletingId !== picture.id"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                  <path d="M10 11v6"></path>
+                  <path d="M14 11v6"></path>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                </svg>
+                <span v-else class="loading-dot"></span>
+                <span class="delete-text">删除</span>
               </button>
             </div>
           </div>
@@ -419,6 +498,48 @@ const handleDownload = async (picture: any) => {
 }
 
 .download-text {
+  font-size: 12px;
+}
+
+/* 删除按钮 */
+.delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: white;
+  color: #ff4d4f;
+  border: 1px solid #ff4d4f;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.picture-card:hover .delete-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.delete-btn:hover {
+  background: #fff1f0;
+}
+
+.delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.delete-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.delete-text {
   font-size: 12px;
 }
 

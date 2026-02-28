@@ -23,9 +23,9 @@ export const SPACE_ROLE_MAP = {
 // 空间等级映射
 export const SPACE_LEVEL_MAP = {
   0: 'Lv0-免费版',
-  1: 'Lv1-专业版',
-  2: 'Lv2-旗舰版',
-  3: 'Lv3-企业版',
+  1: 'Lv1-普通版',
+  2: 'Lv2-专业版',
+  3: 'Lv3-旗舰版',
 } as const
 
 /**

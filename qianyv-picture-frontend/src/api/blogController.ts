@@ -28,6 +28,18 @@ export async function addBlog(body: API.BlogCreateDTO, options?: { [key: string]
   })
 }
 
+/** 此处后端没有提供注释 POST /blog/audit */
+export async function auditBlog(body: API.BlogAuditDTO, options?: { [key: string]: any }) {
+  return request<API.ResultObject>('/blog/audit', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /blog/blogCollect */
 export async function collectToggle1(
   body: API.BlogLikeOrCollectDTO,
@@ -88,6 +100,14 @@ export async function checkBlogLike(
   })
 }
 
+/** 此处后端没有提供注释 GET /blog/count */
+export async function countBlog(options?: { [key: string]: any }) {
+  return request<API.ResultLong>('/blog/count', {
+    method: 'GET',
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 DELETE /blog/del */
 export async function delBlog(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -115,6 +135,21 @@ export async function editBlog(body: API.BlogEditDTO, options?: { [key: string]:
   })
 }
 
+/** 此处后端没有提供注释 POST /blog/featured */
+export async function featuredBlog(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.featuredBlogParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultObject>('/blog/featured', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /blog/list */
 export async function blogList(body: API.BlogListDTO, options?: { [key: string]: any }) {
   return request<API.ResultListBlogsVO>('/blog/list', {
@@ -130,6 +165,21 @@ export async function blogList(body: API.BlogListDTO, options?: { [key: string]:
 /** 此处后端没有提供注释 POST /blog/list/page */
 export async function blogListByPage(body: API.BlogPageQueryDTO, options?: { [key: string]: any }) {
   return request<API.ResultPageBlogSimpleVO>('/blog/list/page', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /blog/list/page/admin */
+export async function blogListByPageForAdmin(
+  body: API.BlogListDTO,
+  options?: { [key: string]: any }
+) {
+  return request<API.ResultPageBlogAdminQueryVO>('/blog/list/page/admin', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -47,6 +47,14 @@ export async function checkCollect(
   })
 }
 
+/** 此处后端没有提供注释 GET /picture/count */
+export async function count2(options?: { [key: string]: any }) {
+  return request<API.ResultLong>('/picture/count', {
+    method: 'GET',
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 DELETE /picture/delete */
 export async function delete2(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

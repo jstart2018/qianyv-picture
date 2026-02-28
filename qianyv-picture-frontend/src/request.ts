@@ -78,7 +78,7 @@ myAxios.interceptors.response.use(
     if (data.code === 40100) {
       // 不是获取用户信息的请求，并且用户目前不是已经在登录页面，则跳转到登录页面
       if (
-        !response.request.responseURL.includes('user/get/login') &&
+        !response.request.responseURL.includes('user/loginUser') &&
         !window.location.pathname.includes('/login')
       ) {
         message.warning('请先登录')

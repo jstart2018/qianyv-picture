@@ -1,9 +1,19 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import * as userApi from '@/api/userController'
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<API.UserInfoVO | null>(null)
+
+  /** 是否为管理员（Boss=0 或 管理员=1） */
+  const isAdmin = computed(() => {
+    return user.value?.role !== undefined && user.value.role <= 1
+  })
+
+  /** 是否为 Boss（role=0） */
+  const isBoss = computed(() => {
+    return user.value?.role === 0
+  })
 
   async function fetchUser() {
     try {
@@ -34,5 +44,5 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  return { user, fetchUser, logout }
+  return { user, isAdmin, isBoss, fetchUser, logout }
 })

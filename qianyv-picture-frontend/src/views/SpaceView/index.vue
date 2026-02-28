@@ -95,9 +95,31 @@ const handleUploadComplete = async () => {
   }
 }
 
+// 处理图片删除完成
+const handleDeleteComplete = async () => {
+  if (currentSpace.value) {
+    // 刷新空间信息（更新容量进度条和图片数量）
+    await refreshCurrentSpace()
+  }
+}
+
 // 处理选择空间
 const handleSelectSpace = (space: any) => {
   selectSpace(space)
+}
+
+// 处理空间删除
+const handleSpaceDeleted = async () => {
+  currentSpace.value = null
+  showSettingModal.value = false
+  await loadAllSpaces()
+}
+
+// 处理退出空间
+const handleSpaceQuit = async () => {
+  currentSpace.value = null
+  showSettingModal.value = false
+  await loadAllSpaces()
 }
 </script>
 
@@ -146,7 +168,12 @@ const handleSelectSpace = (space: any) => {
         </div>
 
         <div class="detail-content">
-          <ImageGallery :space-id="currentSpace?.id" :refresh-key="refreshKey" />
+          <ImageGallery
+            :space-id="currentSpace?.id"
+            :refresh-key="refreshKey"
+            :can-delete="(currentSpace?.role ?? 3) <= 1"
+            @deleted="handleDeleteComplete"
+          />
         </div>
       </div>
 
@@ -175,8 +202,11 @@ const handleSelectSpace = (space: any) => {
     <SpaceSettingModal
       :show="showSettingModal"
       :space-id="currentSpace?.id ?? null"
+      :role="currentSpace?.role"
       @close="closeSettingModal"
       @updated="refreshCurrentSpace"
+      @deleted="handleSpaceDeleted"
+      @quit="handleSpaceQuit"
     />
   </div>
 </template>

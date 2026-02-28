@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, computed, watch } from 'vue'
+import { ref, nextTick, onMounted, computed, watch, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from '@/request'
+import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 // 会话ID - 从路由参数获取（使用string避免大整数精度丢失）
 const conversationId = ref<string | null>(null)
@@ -15,6 +17,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  rawTimestamp?: string // 保留后端原始时间戳字符串，用于游标查询
   streaming?: boolean
 }
 
@@ -31,6 +34,8 @@ const hasMoreHistory = ref(true) // 是否还有更多历史消息
 
 // 聊天容器引用
 const chatContainerRef = ref<HTMLElement | null>(null)
+const topSentinelRef = ref<HTMLElement | null>(null)
+let topObserver: IntersectionObserver | null = null
 
 // 判断是否有会话
 const hasSession = computed(() => conversationId.value !== null)
@@ -44,25 +49,31 @@ const scrollToBottom = () => {
   })
 }
 
+// 是否正在恢复滚动位置（恢复期间禁止触发加载）
+let isRestoringScroll = false
+
 // 加载历史消息
 const loadChatHistory = async (isInitial = false) => {
-  if (!conversationId.value || loadingHistory.value || !hasMoreHistory.value) {
+  if (loadingHistory.value || !hasMoreHistory.value) return
+
+  const userId = userStore.user?.id
+  if (!userId) {
+    console.warn('用户未登录，无法加载聊天记录')
     return
   }
 
   loadingHistory.value = true
   try {
-    // 获取cursor：首次加载不传，加载更多时使用列表第一条的timestamp
-    const cursor =
-      isInitial || messages.value.length === 0 ? undefined : messages.value[0]?.timestamp
-
+    const pageSize = 10
     const requestBody: any = {
-      conversationId: conversationId.value,
-      pageSize: 20,
+      conversationId: String(userId),
+      pageSize,
     }
 
-    if (cursor) {
-      requestBody.cursor = cursor
+    // 后端现在返回：较新的消息在前（降序）
+    // 初次加载不带 cursor，后端会返回最新的一页；上拉加载更多时，传入当前已显示消息中最早一条的 rawTimestamp，获取更早的消息
+    if (!isInitial && messages.value.length > 0) {
+      requestBody.cursor = messages.value[0]?.rawTimestamp
     }
 
     const res = await axios.post('/app/chat/history', requestBody)
@@ -70,34 +81,90 @@ const loadChatHistory = async (isInitial = false) => {
     if (res.data?.code === 0 && res.data?.data) {
       const historyData = res.data.data
 
-      // 如果返回空数组，表示没有更多历史
-      if (historyData.length === 0) {
+      if (!Array.isArray(historyData) || historyData.length === 0) {
         hasMoreHistory.value = false
         return
       }
 
-      // 记录当前滚动位置
-      const container = chatContainerRef.value
-      const oldScrollHeight = container?.scrollHeight || 0
+      if (historyData.length < pageSize) {
+        hasMoreHistory.value = false
+      }
 
-      // 将历史消息转换为Message格式并添加到列表头部
-      const historyMessages: Message[] = historyData.map((item: any) => ({
-        id: Date.now() + Math.random(), // 生成唯一ID
+      // backend 返回降序（最新在前），把每条转换为 Message 后 reverse 为升序（最早在前）方便在 UI 中按时间从上到下展示
+      const historyMessages: Message[] = historyData.map((item: any, index: number) => ({
+        id: Date.now() * 1000 + index,
         role: item.type === 'USER' ? 'user' : 'assistant',
         content: item.content,
         timestamp: new Date(item.timestamp),
+        rawTimestamp: item.timestamp,
       }))
 
-      // prepend到列表头部
+      // reverse -> 正序（时间早的在前）
+      historyMessages.reverse()
+
+      const container = chatContainerRef.value
+
+      if (isInitial) {
+        // 初次加载：直接展示后端最新一页（已 reverse 为正序），并滚动到底部
+        messages.value = historyMessages
+        // 等 DOM 渲染完再滚动到底部
+        nextTick(() => scrollToBottom())
+        return
+      }
+
+      // 记录当前第一条消息的 id 作为锚点
+      const anchorId = messages.value[0]?.id
+
+      // 记录旧的滚动高度与位置（在 DOM 更新前）
+      const oldScrollHeight = container?.scrollHeight || 0
+      const oldScrollTop = container?.scrollTop || 0
+
+      // 记录锚点元素的 offsetTop（相对容器），用于更精确的恢复滚动
+      const anchorElBefore =
+        anchorId !== undefined
+          ? (container?.querySelector(`[data-msg-id="${anchorId}"]`) as HTMLElement | null)
+          : null
+      const anchorOffsetBefore = anchorElBefore ? anchorElBefore.offsetTop : undefined
+
+      // prepend 到列表
+      isRestoringScroll = true
       messages.value = [...historyMessages, ...messages.value]
 
-      // 保持滚动位置
+      // 等 DOM 完全渲染后，基于锚点位置恢复滚动位置，避免使用 scrollIntoView 导致对齐偏移
       nextTick(() => {
-        if (container) {
-          const newScrollHeight = container.scrollHeight
-          container.scrollTop = newScrollHeight - oldScrollHeight
-        }
+        nextTick(() => {
+          try {
+            if (container) {
+              if (anchorOffsetBefore !== undefined) {
+                const anchorElAfter = container.querySelector(
+                  `[data-msg-id=\"${anchorId}\"]`,
+                ) as HTMLElement | null
+                if (anchorElAfter) {
+                  const anchorOffsetAfter = anchorElAfter.offsetTop
+                  // 将视口滚动量增加锚点偏移差，以保持用户看到的内容不跳动
+                  container.scrollTop =
+                    (oldScrollTop || 0) + (anchorOffsetAfter - anchorOffsetBefore)
+                } else {
+                  // 回退到高度差的恢复方式
+                  const newScrollHeight = container.scrollHeight
+                  container.scrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight)
+                }
+              } else {
+                const newScrollHeight = container.scrollHeight
+                container.scrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight)
+              }
+            }
+          } catch (e) {
+            console.error('恢复滚动位置失败', e)
+          }
+          // 延迟解除锁定，确保不会被连续触发
+          setTimeout(() => {
+            isRestoringScroll = false
+          }, 500)
+        })
       })
+    } else {
+      hasMoreHistory.value = false
     }
   } catch (error) {
     console.error('加载历史消息失败:', error)
@@ -106,15 +173,19 @@ const loadChatHistory = async (isInitial = false) => {
   }
 }
 
-// 处理滚动事件，检测是否滚动到顶部
+// 处理滚动事件（仍保留防抖作为保险）
+let scrollTimer: ReturnType<typeof setTimeout> | null = null
 const handleScroll = () => {
   const container = chatContainerRef.value
   if (!container) return
-
-  // 当滚动到顶部时（预留50px触发距离），加载更多历史
-  if (container.scrollTop < 50 && !loadingHistory.value && hasMoreHistory.value) {
-    loadChatHistory()
-  }
+  if (isRestoringScroll) return
+  if (scrollTimer) clearTimeout(scrollTimer)
+  scrollTimer = setTimeout(() => {
+    if (isRestoringScroll) return
+    if (container.scrollTop < 50 && !loadingHistory.value && hasMoreHistory.value) {
+      loadChatHistory()
+    }
+  }, 300)
 }
 
 // 创建会话
@@ -324,7 +395,6 @@ watch(
   () => route.params.conversationId,
   (newId) => {
     if (newId) {
-      // 保持字符串类型，避免大整数精度丢失
       conversationId.value = String(newId)
     } else {
       conversationId.value = null
@@ -333,15 +403,51 @@ watch(
   { immediate: true },
 )
 
-// 初始化 - 不自动创建会话
+// 初始化 - 加载历史聊天记录
 onMounted(() => {
   // 从路由获取 conversationId（保持字符串类型，避免大整数精度丢失）
   if (route.params.conversationId) {
     conversationId.value = String(route.params.conversationId)
-    // 如果有会话ID，加载历史消息
-    loadChatHistory(true)
   }
-  // 不再自动调用 initSession()
+
+  // 只要用户已登录，就加载历史聊天记录（使用用户ID作为会话ID）
+  if (userStore.user?.id) {
+    loadChatHistory(true)
+    scrollToBottom()
+  }
+
+  nextTick(() => {
+    if (chatContainerRef.value && topSentinelRef.value) {
+      topObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            // 额外检查容器 scrollTop，避免 observer 在不合适时机触发
+            const container = chatContainerRef.value
+            const nearTop = container ? container.scrollTop < 50 : true
+            if (
+              entry.isIntersecting &&
+              nearTop &&
+              !isRestoringScroll &&
+              !loadingHistory.value &&
+              hasMoreHistory.value
+            ) {
+              loadChatHistory()
+            }
+          })
+        },
+        {
+          root: chatContainerRef.value,
+          rootMargin: '50px 0px',
+          threshold: 0,
+        },
+      )
+      topObserver.observe(topSentinelRef.value)
+    }
+  })
+})
+
+onBeforeUnmount(() => {
+  if (topObserver && topSentinelRef.value) topObserver.unobserve(topSentinelRef.value)
 })
 </script>
 
@@ -355,25 +461,24 @@ onMounted(() => {
           <h2>智慧小千语</h2>
         </div>
       </div>
-
       <!-- 消息列表 -->
       <div
         ref="chatContainerRef"
         class="chat-container"
-        :class="{ 'is-centered': !hasSession || messages.length === 0 }"
+        :class="{ 'is-centered': !loadingHistory && (!hasSession || messages.length === 0) }"
         @scroll="handleScroll"
       >
-        <!-- 加载历史消息提示 -->
-        <div v-if="loadingHistory" class="loading-history">
-          <div class="loading-spinner-small"></div>
-          <span>加载中...</span>
-        </div>
+        <!-- 顶部 sentinel -->
+        <div ref="topSentinelRef" class="top-sentinel"></div>
+
+        <!-- 创建会话中 -->
         <div v-if="loading && messages.length === 0" class="loading-state">
           <div class="loading-spinner"></div>
           <p>正在创建会话...</p>
         </div>
 
-        <div v-else-if="messages.length === 0" class="empty-state">
+        <!-- 空状态欢迎页 -->
+        <div v-else-if="!loadingHistory && messages.length === 0" class="empty-state">
           <div class="welcome-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -403,11 +508,27 @@ onMounted(() => {
           <p>有什么可以帮助您的吗？</p>
         </div>
 
+        <!-- 消息列表（含顶部提示） -->
         <div v-else class="messages-list">
+          <!-- 顶部 sentinel：IntersectionObserver 监听触发上拉加载 -->
+          <div ref="topSentinelRef" class="top-sentinel" style="height: 1px; width: 100%"></div>
+
+          <!-- 加载历史消息提示 -->
+          <div v-if="loadingHistory" class="loading-history">
+            <div class="loading-spinner-small"></div>
+            <span>加载历史消息...</span>
+          </div>
+
+          <!-- 没有更多历史提示 -->
+          <div v-if="!hasMoreHistory && messages.length > 0" class="no-more-history">
+            <span>— 已加载全部聊天记录 —</span>
+          </div>
+
           <div
             v-for="msg in messages"
             :key="msg.id"
             :class="['message-item', msg.role === 'user' ? 'user-message' : 'ai-message']"
+            :data-msg-id="msg.id"
           >
             <div class="message-content">
               <!-- 解析并渲染消息内容（支持文本和图片） -->
@@ -564,6 +685,16 @@ onMounted(() => {
   padding: var(--spacing-md);
   color: var(--text-tertiary);
   font-size: 14px;
+}
+
+.no-more-history {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  color: var(--text-tertiary);
+  font-size: 12px;
+  opacity: 0.6;
 }
 
 .loading-spinner-small {
@@ -769,3 +900,4 @@ onMounted(() => {
   }
 }
 </style>
+```

@@ -2,8 +2,10 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import UserAvatar from './UserAvatar.vue'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 interface User {
   id?: number
@@ -51,6 +53,11 @@ const formatNumber = (num: number = 0) => {
     return (num / 10000).toFixed(1) + 'w'
   }
   return num.toString()
+}
+
+// 跳转管理端
+const goAdmin = () => {
+  router.push('/admin')
 }
 </script>
 
@@ -103,6 +110,27 @@ const formatNumber = (num: number = 0) => {
         </div>
       </div>
     </div>
+
+    <!-- 管理后台入口 - 仅管理员可见 -->
+    <button v-if="isLoggedIn && userStore.isAdmin" class="admin-btn" @click="goAdmin">
+      <svg class="admin-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      管理后台
+    </button>
 
     <button class="share-btn" @click="handleShare">
       <svg class="plane-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -323,5 +351,70 @@ const formatNumber = (num: number = 0) => {
 
 .share-btn:hover .plane-icon {
   transform: translateX(3px) translateY(-3px);
+}
+
+/* 管理后台按钮 */
+.admin-btn {
+  width: 100%;
+  padding: 14px 32px;
+  background: rgba(114, 46, 209, 0.08);
+  color: #2d3748;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(114, 46, 209, 0.1);
+  margin-bottom: 12px;
+}
+
+.admin-btn::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+  transition:
+    width 0.5s ease,
+    height 0.5s ease;
+  transform: translate(-50%, -50%);
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+}
+
+.admin-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.admin-btn:hover {
+  background: rgba(114, 46, 209, 0.15);
+  border-color: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 15px rgba(255, 255, 255, 0.5),
+    0 0 30px rgba(114, 46, 209, 0.3),
+    0 4px 12px rgba(114, 46, 209, 0.15);
+}
+
+.admin-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.admin-btn:hover .admin-icon {
+  transform: rotate(45deg);
 }
 </style>

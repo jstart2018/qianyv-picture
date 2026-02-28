@@ -3,6 +3,33 @@ declare namespace API {
     categoryName: string
   }
 
+  type BlogAdminQueryVO = {
+    id?: number
+    userId?: number
+    title?: string
+    content?: string
+    viewCount?: number
+    likeCount?: number
+    commentCount?: number
+    collectCount?: number
+    isRecommend?: number
+    reviewStatus?: number
+    reviewMessage?: string
+    reviewerId?: number
+    reviewerName?: string
+    reviewTime?: string
+    createTime?: string
+    updateTime?: string
+    deleteTime?: string
+  }
+
+  type BlogAuditDTO = {
+    id?: number
+    reviewStatus?: number
+    reviewMessage?: string
+    reviewTime?: string
+  }
+
   type BlogAuthorVO = {
     id?: number
     nickname?: string
@@ -97,6 +124,16 @@ declare namespace API {
     userId: number
   }
 
+  type changeSpaceStatusParams = {
+    spaceId: number
+    status: number
+  }
+
+  type changeStatusParams = {
+    userId: number
+    status: number
+  }
+
   type ChatMemoryQueryDTO = {
     conversationId?: string
     cursor?: string
@@ -165,6 +202,10 @@ declare namespace API {
     spaceId?: number
   }
 
+  type deleteSpaceParams = {
+    spaceId: number
+  }
+
   type doChatParams = {
     input: string
     conversationId: number
@@ -173,6 +214,11 @@ declare namespace API {
   type editSpaceParams = {
     spaceId: number
     name: string
+  }
+
+  type featuredBlogParams = {
+    id: number
+    featured: boolean
   }
 
   type followToggleParams = {
@@ -219,6 +265,20 @@ declare namespace API {
     asc?: boolean
   }
 
+  type PageBlogAdminQueryVO = {
+    records?: BlogAdminQueryVO[]
+    total?: number
+    size?: number
+    current?: number
+    orders?: OrderItem[]
+    optimizeCountSql?: PageBlogAdminQueryVO
+    searchCount?: PageBlogAdminQueryVO
+    optimizeJoinOfCountSql?: boolean
+    maxLimit?: number
+    countId?: string
+    pages?: number
+  }
+
   type PageBlogSimpleVO = {
     records?: BlogSimpleVO[]
     total?: number
@@ -227,6 +287,20 @@ declare namespace API {
     orders?: OrderItem[]
     optimizeCountSql?: PageBlogSimpleVO
     searchCount?: PageBlogSimpleVO
+    optimizeJoinOfCountSql?: boolean
+    maxLimit?: number
+    countId?: string
+    pages?: number
+  }
+
+  type PageListSpaceVO = {
+    records?: SpaceVO[][]
+    total?: number
+    size?: number
+    current?: number
+    orders?: OrderItem[]
+    optimizeCountSql?: PageListSpaceVO
+    searchCount?: PageListSpaceVO
     optimizeJoinOfCountSql?: boolean
     maxLimit?: number
     countId?: string
@@ -302,15 +376,25 @@ declare namespace API {
     categoryId?: number
     tags?: string
     spaceId?: number
+    reviewStatus?: number
+    reviewMessage?: string
+    reviewerId?: number
+    reviewTime?: string
   }
 
   type PictureListVO = {
     id?: number
+    blogId?: number
+    spaceId?: number
     thumbUrl?: string
     tags?: string
     picScale?: number
-    introduction?: string
     collectCount?: number
+    reviewStatus?: number
+    reviewMessage?: string
+    reviewerId?: number
+    reviewTime?: string
+    introduction?: string
   }
 
   type PicturePageQueryDTO = {
@@ -337,6 +421,7 @@ declare namespace API {
     searchText?: string
     categoryId?: number
     pictureType?: number
+    reviewStatus?: number
     spaceId?: number
   }
 
@@ -361,6 +446,10 @@ declare namespace API {
     collectCount?: number
     downLoadCount?: number
     userInfoVO?: UserInfoVO
+  }
+
+  type quitSpaceParams = {
+    spaceId: number
   }
 
   type removeCommonParams = {
@@ -433,9 +522,21 @@ declare namespace API {
     message?: string
   }
 
+  type ResultPageBlogAdminQueryVO = {
+    code?: number
+    data?: PageBlogAdminQueryVO
+    message?: string
+  }
+
   type ResultPageBlogSimpleVO = {
     code?: number
     data?: PageBlogSimpleVO
+    message?: string
+  }
+
+  type ResultPageListSpaceVO = {
+    code?: number
+    data?: PageListSpaceVO
     message?: string
   }
 
@@ -448,6 +549,12 @@ declare namespace API {
   type ResultPageSpaceUserVO = {
     code?: number
     data?: PageSpaceUserVO
+    message?: string
+  }
+
+  type ResultPageUser = {
+    code?: number
+    data?: PageUser
     message?: string
   }
 
@@ -498,6 +605,17 @@ declare namespace API {
 
   type ServerSentEventString = true
 
+  type SpaceQueryDTO = {
+    current?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
+    id?: number
+    userId?: number
+    spaceName?: string
+    spaceLevel?: number
+  }
+
   type SpaceUserEditDTO = {
     userId?: number
     spaceId?: number
@@ -535,6 +653,7 @@ declare namespace API {
     id?: number
     spaceName?: string
     spaceLevel?: number
+    status?: number
     maxSize?: number
     maxCount?: number
     totalSize?: number
@@ -588,6 +707,7 @@ declare namespace API {
     phone?: string
     nickname?: string
     avatar?: string
+    role?: number
     tag?: string
     introduction?: string
     downloadCount?: number
@@ -624,6 +744,6 @@ declare namespace API {
     createTime?: string
     updateTime?: string
     lastLoginTime?: string
-    deleteTime?: string
+    isdelete?: boolean
   }
 }
