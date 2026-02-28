@@ -5,6 +5,7 @@ import com.jstart.qypicture.ai.chatMemory.AiMemoryWindows;
 import com.jstart.qypicture.ai.chatMemory.MySQLBasedChatMemory;
 import com.jstart.qypicture.service.SpringAiChatMemoryService;
 import com.jstart.qypicture.utils.ResourceTxtReaderUtils;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -19,6 +20,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class ChatClientConfig {
+
+    @Resource
+    private ChatMemory mySQLBasedChatMemory;
 
     /**
      * 路由用户意图AI（qwen-flash）
@@ -37,15 +41,14 @@ public class ChatClientConfig {
      * 生成图片模型（qwen3-max，支持tool calling）
      */
     @Bean
-    public ChatClient generatePictureClient(ChatModel qwen3MaxChatModel, JdbcChatMemoryRepository chatMemoryRepository, SpringAiChatMemoryService springAiChatMemoryService) {
-        ChatMemory chatMemory = new MySQLBasedChatMemory(springAiChatMemoryService);
+    public ChatClient generatePictureClient(ChatModel qwen3MaxChatModel) {
         log.info("初始化 generatePictureClient(图片生成AI)...");
         String sysPrompt = ResourceTxtReaderUtils
                 .loadPromptFromResource("prompt/create-picture-system-prompt.txt");
         return ChatClient.builder(qwen3MaxChatModel)
                 .defaultSystem(sysPrompt)
                 .defaultAdvisors(MessageChatMemoryAdvisor
-                        .builder(chatMemory).build())
+                        .builder(mySQLBasedChatMemory).build())
                 .build();
     }
 
@@ -53,33 +56,27 @@ public class ChatClientConfig {
      * 普通聊天AI（deepseek-v3）
      */
     @Bean
-    public ChatClient normalChatClient(ChatModel deepSeekV3ChatModel,
-                                       //JdbcChatMemoryRepository chatMemoryRepository,
-                                       SpringAiChatMemoryService springAiChatMemoryService) {
-        ChatMemory chatMemory = new MySQLBasedChatMemory(springAiChatMemoryService);
+    public ChatClient normalChatClient(ChatModel deepSeekV3ChatModel) {
         log.info("初始化 normalChatClient(普通聊天AI)...");
         String sysPrompt = ResourceTxtReaderUtils
                 .loadPromptFromResource("prompt/normal-chat.txt");
         return ChatClient.builder(deepSeekV3ChatModel)
                 .defaultSystem(sysPrompt)
                 .defaultAdvisors(MessageChatMemoryAdvisor
-                        .builder(chatMemory)
+                        .builder(mySQLBasedChatMemory)
                         .build())
                 .build();
     }
 
     @Bean
-    public ChatClient chatSummaryClient(ChatModel qwen3MaxChatModel,
-                                        SpringAiChatMemoryService springAiChatMemoryService
-                                        ) {
-        ChatMemory chatMemory = new MySQLBasedChatMemory(springAiChatMemoryService);
+    public ChatClient chatSummaryClient(ChatModel qwen3MaxChatModel) {
         log.info("初始化 chatSummaryChatClient(聊天总结图像意图AI)...");
         String sysPrompt = ResourceTxtReaderUtils
                 .loadPromptFromResource("prompt/chat-summary-system-prompt.txt");
         return ChatClient.builder(qwen3MaxChatModel)
                 .defaultSystem(sysPrompt)
                 .defaultAdvisors(MessageChatMemoryAdvisor
-                        .builder(chatMemory)
+                        .builder(mySQLBasedChatMemory)
                         .build())
                 .build();
     }
@@ -95,6 +92,40 @@ public class ChatClientConfig {
                 .loadPromptFromResource("prompt/parse-picture-system-prompt.txt");
         return ChatClient.builder(qwen3VlPlusChatModel)
                 .defaultSystem(sysPrompt)
+                .build();
+    }
+
+    /**
+     * 功能介绍（qwen-flash）
+     */
+    @Bean
+    public ChatClient introFunctionClient(ChatModel qwenFlashChatModel) {
+        log.info("初始化 introFunctionClient(功能介绍AI)...");
+        String sysPrompt = ResourceTxtReaderUtils
+                .loadPromptFromResource("prompt/intro-function-system-prompt.txt");
+        return ChatClient.builder(qwenFlashChatModel)
+                .defaultSystem(sysPrompt)
+                .defaultAdvisors(MessageChatMemoryAdvisor
+                        .builder(mySQLBasedChatMemory)
+                        .build())
+                .build();
+    }
+
+    /**
+     * 图片推荐（qwen-flash）
+     * @param qwenFlashChatModel
+     * @return
+     */
+    @Bean
+    public ChatClient sendImgClient(ChatModel qwenFlashChatModel) {
+        log.info("初始化 sendImgClient(发送图片AI)...");
+        String sysPrompt = ResourceTxtReaderUtils
+                .loadPromptFromResource("prompt/send-img-system-prompt.txt");
+        return ChatClient.builder(qwenFlashChatModel)
+                .defaultSystem(sysPrompt)
+                .defaultAdvisors(MessageChatMemoryAdvisor
+                        .builder(mySQLBasedChatMemory)
+                        .build())
                 .build();
     }
 

@@ -1,14 +1,14 @@
 package com.jstart.qypicture.service.impl;
 
+import cn.dev33.satoken.context.mock.SaTokenContextMockUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.jstart.qypicture.ai.handle.ParseImgService;
+import com.jstart.qypicture.ai.toolCalling.ParsePictureTool;
 import com.jstart.qypicture.constant.RedisKey;
-import com.jstart.qypicture.enums.CollectionEnum;
-import com.jstart.qypicture.enums.PicturePlaceEnum;
-import com.jstart.qypicture.enums.PictureStatusEnum;
-import com.jstart.qypicture.enums.ResultEnum;
+import com.jstart.qypicture.enums.*;
 import com.jstart.qypicture.handler.picture.PictureHandler;
 import com.jstart.qypicture.handler.picture.PictureHandlerFactory;
 import com.jstart.qypicture.mapper.PubPictureMapper;
@@ -30,14 +30,19 @@ import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 // todo 每次用switch分支判断公共和空间，考虑策略模式优化
@@ -59,8 +64,13 @@ public class PictureServiceImpl implements PictureService {
     private CollectionService collectionService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
-    @Autowired
+    @Resource
     private SpaPictureMapper spaPictureMapper;
+    @Resource
+    @Lazy
+    private ParsePictureTool parsePictureTool;
+    @Resource
+    private VectorStore redisVectorStore;
 
     /**
      * 上传图片
@@ -161,7 +171,7 @@ public class PictureServiceImpl implements PictureService {
         PubPicture pubPicture = pubPictureMapper.selectById(id);
         ThrowUtils.throwIf(pubPicture == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
 
-        collectionService.collectionToggle(StpUtil.getLoginIdAsLong(),id, CollectionEnum.PICTURE);
+        collectionService.collectionToggle(StpUtil.getLoginIdAsLong(), id, CollectionEnum.PICTURE);
 
         //pubPictureMapper.updateCollectCount(id,1L);
 
@@ -169,6 +179,7 @@ public class PictureServiceImpl implements PictureService {
 
     /**
      * 公共图库：图片分页查询（支持查询我发布的/我收藏的）
+     *
      * @param dto
      * @return
      */
@@ -256,6 +267,52 @@ public class PictureServiceImpl implements PictureService {
         Long pubCount = pubPictureMapper.selectCount(null);
         Long spaCount = spaPictureMapper.selectCount(null);
         return pubCount + spaCount;
+    }
+
+    @Override
+    public List<PictureListVO> slectList(PictureQueryListDTO pictureQueryListDTO) {
+        ThrowUtils.throwIf(pictureQueryListDTO == null, ResultEnum.PARAMS_ERROR, "参数错误");
+        PicturePlaceEnum manageType = PicturePlaceEnum.getManageType(pictureQueryListDTO.getSpaceId());
+        ThrowUtils.throwIf(manageType == null, ResultEnum.PARAMS_ERROR, "参数错误");
+        PictureHandler<?> pictureSpaceHandler = pictureHandlerFactory.getPictureSpaceHandler(manageType);
+        return pictureSpaceHandler.slectList(pictureQueryListDTO);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void featured(Long id, Integer isRecommend) {
+
+        RecommendStatusEnum.getEnumByValue(isRecommend);
+        ThrowUtils.throwIf(RecommendStatusEnum.getEnumByValue(isRecommend) == null, ResultEnum.PARAMS_ERROR, "参数错误");
+
+        PictureVO pictureVO = this.getOneById(id, null);
+        ThrowUtils.throwIf(pictureVO == null, ResultEnum.NOT_FOUND_ERROR, "图片不存在");
+        PubPicture pubPicture = new PubPicture();
+        pubPicture.setId(id);
+        pubPicture.setIsRecommend(isRecommend);
+
+        if (isRecommend.equals(RecommendStatusEnum.RECOMMENDED.getValue())) {
+            String tokenValue = StpUtil.getTokenValue();
+            // 异步解析图片
+            new Thread(() -> {
+                SaTokenContextMockUtil.setMockContext(() -> {
+                    StpUtil.setTokenValueToStorage(tokenValue);
+                    try {
+                        parsePictureTool.act(pictureVO.getThumbUrl(), id);
+                    } catch (Exception e) {
+                        log.error("异步解析图片失败，图片ID：{}，URL：{}", id, pictureVO.getThumbUrl(), e);
+                    }
+                });
+            }).start();
+        } else {
+            // 通过metadata过滤删除（根据图片ID）
+            FilterExpressionBuilder builder = new FilterExpressionBuilder();
+            Filter.Expression filter = builder.eq("picture_id", pictureVO.getId().toString()).build();
+            redisVectorStore.delete(filter);
+        }
+
+        pubPictureMapper.updateById(pubPicture);
+
     }
 
 }

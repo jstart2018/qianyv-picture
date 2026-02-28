@@ -16,6 +16,11 @@ public class PictureQueryListDTO extends PageRequest {
     private Long id;
 
     /**
+     * 图片thumb_url
+     */
+    private String thumbUrl;
+
+    /**
      * 关联博客id
      */
     private Long blogId;
@@ -29,6 +34,11 @@ public class PictureQueryListDTO extends PageRequest {
      * 分类id
      */
     private Long categoryId;
+
+    /**
+     * 是否精选：0-否; 1-是
+     */
+    private Integer isRecommend;
 
     /**
      * 图片类型，横屏/竖屏

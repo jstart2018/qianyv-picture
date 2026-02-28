@@ -26,6 +26,11 @@ public class PictureVO {
     private String thumbUrl;
 
     /**
+     * AI 描述
+     */
+    private String aiDesc;
+
+    /**
      * 简介
      */
     private String introduction;
@@ -34,6 +39,11 @@ public class PictureVO {
      * 分类id
      */
     private Long categoryId;
+
+    /**
+     * 是否精选 0-否; 1-是
+     */
+    private Integer isRecommend;
 
     /**
      * 标签（JSON 数组）

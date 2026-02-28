@@ -277,6 +277,11 @@ public class SpaPictureHandler implements PictureHandler<SpaPicture> {
         return spaPictureMapper.selectById(pictureDownLoadDTO.getPictureId()).getUrl();
     }
 
+    @Override
+    public List<PictureListVO> slectList(PictureQueryListDTO pictureQueryListDTO) {
+        return List.of();
+    }
+
     //校验空间属性、成员权限
     private Space validateSpaceAuth(Long spaceId, SpaceRoleEnum reqRole) {
         Space space = spaceService.getById(spaceId);

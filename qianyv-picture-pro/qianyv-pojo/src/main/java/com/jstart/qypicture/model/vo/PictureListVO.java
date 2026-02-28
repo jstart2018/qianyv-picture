@@ -41,6 +41,21 @@ public class PictureListVO {
     private String tags;
 
     /**
+     * AI 描述
+     */
+    private String aiDesc;
+
+    /**
+     * 分类id
+     */
+    private Long categoryId;
+
+    /**
+     * 是否精选 0-否; 1-是
+     */
+    private Integer isRecommend;
+
+    /**
      * 宽高比
      */
     private Double picScale;

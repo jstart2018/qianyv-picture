@@ -2,7 +2,7 @@ package com.jstart.qypicture.ai.handle;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.jstart.qypicture.ai.enums.AiActEnum;
-import com.jstart.qypicture.ai.toolCalling.PictureTool;
+import com.jstart.qypicture.ai.toolCalling.GenPictureTool;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -21,11 +21,11 @@ public class GenImgService implements AiActHandler {
     private ChatClient generatePictureClient;
 
     @Resource
-    private PictureTool pictureTool;
+    private GenPictureTool genPictureTool;
 
     @Override
     public String getActName() {
-        return AiActEnum.GENERATE_IMAGE.getName();
+        return AiActEnum.GENERATE_IMG.getName();
     }
 
     @Override
@@ -39,7 +39,7 @@ public class GenImgService implements AiActHandler {
                         .user(input)
                         .advisors(memory -> memory.param(ChatMemory.CONVERSATION_ID, conversationId))
                         .advisors(advisor -> advisor.param("conversationId", conversationId))
-                        .tools(pictureTool)
+                        .tools(genPictureTool)
                         .toolContext(Map.of("conversationId", conversationId,
                                 "tokenValue", tokenValue))
                         .call()  // 使用同步调用而不是 stream()

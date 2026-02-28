@@ -75,4 +75,15 @@ public interface PictureService {
      * @return
      */
     Long count();
+
+    /**
+     * 图片查询（不分页，查全部）
+     */
+    List<PictureListVO> slectList(PictureQueryListDTO pictureQueryListDTO);
+
+    /**
+     * 图片精选
+     * @param id
+     */
+    void featured(Long id, Integer isRecommend);
 }

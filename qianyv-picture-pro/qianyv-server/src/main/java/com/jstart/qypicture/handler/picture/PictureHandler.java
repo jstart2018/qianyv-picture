@@ -61,4 +61,5 @@ public interface PictureHandler<T> {
 
     String downLoad(PictureDownLoadDTO pictureDownLoadDTO);
 
+    List<PictureListVO> slectList(PictureQueryListDTO pictureQueryListDTO);
 }

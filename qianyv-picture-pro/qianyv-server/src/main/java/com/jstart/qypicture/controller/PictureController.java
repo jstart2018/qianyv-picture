@@ -1,6 +1,7 @@
 package com.jstart.qypicture.controller;
 
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -185,9 +186,19 @@ public class PictureController {
 
     //统计图片数
     @GetMapping("/count")
+    @SaCheckRole("admin")
     public Result<Long> count() {
         Long count = pictureService.count();
         return Result.success(count);
+    }
+
+    //精选图片
+    @PostMapping("/featured")
+    @SaCheckRole("admin")
+    public Result getFeaturedPictures(Long pictureId, Integer isRecommend) {
+        ThrowUtils.throwIf(pictureId == null || isRecommend == null, ResultEnum.PARAMS_ERROR, "参数错误");
+        pictureService.featured(pictureId,isRecommend);
+        return Result.success();
     }
 
 }

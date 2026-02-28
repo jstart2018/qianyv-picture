@@ -7,13 +7,12 @@ import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.http.Method;
 import cn.hutool.json.JSONUtil;
+import com.jstart.qypicture.ai.entity.HistoryMsgEntity;
 import com.jstart.qypicture.ai.entity.QwenImageGenerateRequest;
 import com.jstart.qypicture.ai.enums.PictureSizeEnum;
 import com.jstart.qypicture.enums.PictureStatusEnum;
 import com.jstart.qypicture.model.dto.PictureEditDTO;
-import com.jstart.qypicture.model.entity.Blog;
 import com.jstart.qypicture.model.vo.PictureUploadVO;
-import com.jstart.qypicture.service.BlogService;
 import com.jstart.qypicture.service.PictureService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -27,11 +26,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Slf4j
 @Component
-public class PictureTool {
+public class GenPictureTool {
 
     @Value("${api-key.dashscope}")
     private String dashscopeApiKey;
@@ -58,14 +58,26 @@ public class PictureTool {
 
         //2. 根据conversationId获取聊天记录
         List<Message> historyMessage = chatMemoryRepository.findByConversationId(String.valueOf(conversationId));
-        
-        // 拼接用户输入和历史记录作为上下文
+
+        //3. 拼接用户输入和历史记录作为上下文
         String context = userInput;
         if (historyMessage != null && !historyMessage.isEmpty()) {
-            context = "用户当前输入：" + userInput + "\n历史对话上下文：" + historyMessage.toString();
+            //(1)保留最近10条
+            historyMessage = historyMessage.subList(Math.max(0, historyMessage.size() - 10), historyMessage.size());
+            //(2)提取必要数据
+            List<HistoryMsgEntity> result = historyMessage.stream()
+                    .map(message -> {
+                        String text = message.getText();
+                        return new HistoryMsgEntity() {{
+                            setMessageType(JSONUtil.parseObj(text).getStr("messageType"));
+                            setTextContent(JSONUtil.parseObj(text).getStr("textContent"));
+                        }};
+                    })
+                    .collect(Collectors.toList());
+            context = "用户当前输入：" + userInput + "\n历史对话上下文：" + result.toString();
         }
 
-        //3. 调用chatSummaryClient生成专业提示词
+        //4. 调用chatSummaryClient生成专业提示词
         String prompt;
         try {
             prompt = chatSummaryClient.prompt()
@@ -131,6 +143,8 @@ public class PictureTool {
 
                 PictureEditDTO pictureEditDTO = new PictureEditDTO();
                 pictureEditDTO.setId(uploadResult.getId());
+                pictureEditDTO.setTags("AI");
+                pictureEditDTO.setCategoryId(8L);//添加到AI分类
                 pictureEditDTO.setReviewStatus(PictureStatusEnum.PASS.getValue());
                 pictureEditDTO.setReviewMessage("AI生成图片，自动审核通过");
                 pictureEditDTO.setReviewerId(StpUtil.getLoginIdAsLong());

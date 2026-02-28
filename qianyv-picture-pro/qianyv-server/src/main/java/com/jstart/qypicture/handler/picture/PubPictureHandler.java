@@ -23,6 +23,8 @@ import com.jstart.qypicture.template.uploadFileTemplate.PictureUploadTemplate;
 import com.jstart.qypicture.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 @Component
 public class PubPictureHandler implements PictureHandler<PubPicture> {
 
+    private static final Logger log = LoggerFactory.getLogger(PubPictureHandler.class);
     @Resource
     private PictureUploadTemplate filePictureUpload;
     @Resource
@@ -109,7 +112,7 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
         }
         // 3. 权限校验：仅图片本人可编辑
         ThrowUtils.throwIf(!Objects.equals(pubPicture.getUserId(), StpUtil.getLoginIdAsLong())
-                        && StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue()),
+                        && !StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue()),
                 ResultEnum.NO_AUTH_ERROR);
         // 4. 更新图片信息
         PubPicture updatePubPicture = new PubPicture();
@@ -188,10 +191,21 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
 
         QueryWrapper<PubPicture> qw = new QueryWrapper<>();
 
-        //如果是本人或者管理员，才可以看没有blogId的图片（即AI生成的图片）
-        if (!Objects.equals(StpUtil.getLoginIdAsLong(), userId) && !StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())){
+        try {
+            //不是管理员，只能查看已过审的
+            if ( !StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())){
+                reviewStatus = PictureStatusEnum.PASS.getValue();
+            }
+
+            //如果是本人或者管理员，才可以看没有blogId的图片（即AI生成的图片）
+            if (!Objects.equals(StpUtil.getLoginIdAsLong(), userId) && !StpUtil.hasRole(SystemRoleEnum.ADMIN.getValue())){
+                qw.isNotNull("blog_id");
+            }
+        } catch (Exception e) {
             qw.isNotNull("blog_id");
+            log.warn("未登录情况下查询图片，时间{}", new Date());
         }
+
 
         qw.eq(id != null, "id", id);
         qw.eq(userId != null, "user_id", userId);
@@ -233,5 +247,21 @@ public class PubPictureHandler implements PictureHandler<PubPicture> {
                 .eq("id", pictureDownLoadDTO.getPictureId())
         );
         return pubPictureMapper.selectById(pictureDownLoadDTO.getPictureId()).getUrl();
+    }
+
+    @Override
+    public List<PictureListVO> slectList(PictureQueryListDTO pictureQueryListDTO) {
+        ThrowUtils.throwIf(pictureQueryListDTO == null, ResultEnum.PARAMS_ERROR, "参数错误");
+
+        PubPicture pubPicture = new PubPicture();
+        BeanUtils.copyProperties(pictureQueryListDTO, pubPicture);
+
+        QueryWrapper<PubPicture> qw = getQueryWrapper(pubPicture);
+        List<PubPicture> pubPictures = pubPictureMapper.selectList(qw);
+        return pubPictures.stream().map(p -> {
+            PictureListVO vo = new PictureListVO();
+            BeanUtils.copyProperties(p, vo);
+            return vo;
+        }).collect(Collectors.toList());
     }
 }
