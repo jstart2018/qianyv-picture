@@ -1,0 +1,86 @@
+server:
+  port: 8123
+  servlet:
+    context-path: /api
+
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB  # 上传文件大小限制
+      max-request-size: 10MB # 上传请求大小限制
+  profiles:
+    active: local
+  datasource:
+    url: jdbc:mysql://localhost:3306/qypicture?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      database: 0
+      password: 123456
+  mail:
+    host: ${email.host}
+    username: ${email.username}
+    password: ${email.password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  ai:
+    openai:
+      base-url: https://api.deepseek.com
+      api-key: sk-ae90b3568ea5df85a77be5gni7105cbf # 随便填的，避免自动装配报错
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
+ai:
+  dashscope:
+    base-url: https://dashscope.aliyuncs.com/compatible-mode
+    api-key: ${api-key.dashscope}
+  deepseek:
+    base-url: https://api.deepseek.com
+    api-key: ${api-key.deepseek}
+  siliconflow:
+    api-key: ${api-key.siliconflow}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true # 开启驼峰命名
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: delete_time # 开启逻辑删除
+      logic-delete-value: now()
+      logic-not-delete-value: 'null'
+
+cos:
+  client:
+    host: ${cosClient.host} #域名
+    secretId: ${cosClient.secretId} #秘钥id
+    secretKey: ${cosClient.secretKey}   #秘钥key
+    region: ${cosClient.region}  #区域
+    bucket: ${cosClient.bucket} #桶名
+
+
+
+knife4j:
+  enable: true
+  openapi:
+    title: 接口文档
+    version: v1.0
+    group:
+      default: #组别
+        # group-name: 默认分组  组名(如果要写尽量写英文，避免前端自动生成接口错误)
+        api-rule: package   #用什么规则识别接口，package表示扫描包，把这个包下的接口扫描出来
+        api-rule-resources:
+          - com.jstart.qypicture.controller # 包的位置

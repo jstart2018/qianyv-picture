@@ -1,0 +1,14 @@
+# 所有文件默认使用 LF 换行符
+* text=auto eol=lf
+
+# 特殊文件：mvnw 强制用 LF（其实和上面默认规则一致，可保留也可删除）
+/mvnw text eol=lf
+
+# 特殊文件：.cmd 后缀的文件强制用 CRLF
+*.cmd text eol=crlf
+
+# 二进制文件（如图片、压缩包等），不进行换行符转换
+*.png binary
+*.jpg binary
+*.zip binary
+# 可根据项目中二进制文件的实际类型，继续添加类似规则

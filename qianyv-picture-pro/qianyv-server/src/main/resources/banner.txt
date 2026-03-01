@@ -1,0 +1,12 @@
+  ╭─────────────────────────────────────╮
+  │                                     │
+  │    ${AnsiColor.CYAN}(\___/)    ✨${AnsiColor.BLACK} Version: ${spring-boot.version}     │
+  │    ${AnsiColor.CYAN}(='.'=)    🎉${AnsiColor.BLACK} Port:    ${server.port}      │
+  │    ${AnsiColor.CYAN}(")_(")    🚀${AnsiColor.BLACK} Env:     ${spring.profiles.active}     │
+  │       祝你今天工作顺利                 │
+  │         coding无BUG~ 🐛❌           │
+  │  ✅ 📊 💻 🎯📅                     │
+  │  ${AnsiColor.MAGENTA}┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ${AnsiColor.BLACK}  │
+  │  ${AnsiColor.MAGENTA}┃   🎉 欢迎使用 千语Pic!🎉       ┃ ${AnsiColor.BLACK}  │
+  │  ${AnsiColor.MAGENTA}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ${AnsiColor.BLACK}  │
+  ╰─────────────────────────────────────╯
